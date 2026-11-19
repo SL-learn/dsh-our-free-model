@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { restrictPermissions } from './open-external.js'
 import { loopbackFetch } from './loopback-fetch.js'
+import { restoreExcludedEnabled } from './magpie-policy.js'
 import { hasEnginePayload, materializeEngine } from './engine-payload.js'
 import {
   POLICY_REFUSED, assertEngineMutation, deniedLookup, filterEngineJSON, policyMutation, policyResponse,
@@ -729,6 +730,13 @@ export function createMagpieEngine({ dataDir, logger, binary } = {}) {
       const config = path.join(dirs.config, 'magpie')
       const prefs = await jsonFile(path.join(config, 'settings.json'), { noAccountDiscovery: true, noStats: true, noUsageStats: true })
       if (!prefs || typeof prefs !== 'object' || Array.isArray(prefs)) throw engineError('Invalid engine settings')
+      // MOD (restore-excluded): the community plugins' subscription sign-in is
+      // gated by the engine's own account-discovery switch ("subscription
+      // accounts are off in magpie"), whatever the management boundary allows.
+      // With the excluded channels restored the switch must be on for WorkBuddy
+      // to be signable; without the switch the product's privacy default holds,
+      // and a saved preference never overrides either way.
+      prefs.noAccountDiscovery = restoreExcludedEnabled() ? false : true
       let gatewayPort = prefs.port
       if (gatewayPort !== undefined && (!Number.isInteger(gatewayPort) || gatewayPort < 1024 || gatewayPort > 65535)) {
         throw engineError('Saved engine gateway port is invalid')

@@ -27,6 +27,7 @@
  * 也不做凭据持久化（那是 `raccoon-auth.ts` 的职责）。全部函数可离线单测。
  */
 
+import { appendRaccoonDebugLog, scrubBody } from './raccoon-debug-log.js'
 import { randomBytes } from 'node:crypto'
 import {
   RACCOON_IAM_PREFIX,
@@ -117,6 +118,8 @@ async function postJson(
       signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS),
     })
   } catch (error) {
+    // 落盘：网络层异常（超时/DNS/连接拒绝）原先全部不可见
+    appendRaccoonDebugLog({ event: 'http-error', url, error: String(error) })
     throw new Error(
       `raccoon: 请求失败：${error instanceof Error ? error.message : String(error)}`,
     )
@@ -125,8 +128,16 @@ async function postJson(
   try {
     parsed = await response.json()
   } catch {
+    appendRaccoonDebugLog({ event: 'http-non-json', url, httpStatus: response.status })
     throw new Error(`raccoon: 响应不是 JSON（HTTP ${response.status}）`)
   }
+  // 落盘：每次原始响应（脱敏截断）——诊断「扫码确认瞬间服务端到底回了什么」的关键现场
+  appendRaccoonDebugLog({
+    event: 'http',
+    url,
+    httpStatus: response.status,
+    body: scrubBody(JSON.stringify(parsed)),
+  })
   return { envelope: parseEnvelope(parsed, response.status), status: response.status }
 }
 
@@ -218,10 +229,21 @@ export async function pollRaccoonQrLogin(
       fetcher,
     )
     envelope = result.envelope
-  } catch {
+  } catch (error) {
+    appendRaccoonDebugLog({ event: 'poll-network-suppressed', error: String(error) })
     return { status: 'pending' }
   }
-  if (envelope.code !== 0 || envelope.data === undefined) return { status: 'pending' }
+  if (envelope.code !== 0 || envelope.data === undefined) {
+    // 落盘：被吞掉的业务失败原文（「已被使用」/「请求已结束」等都藏在这里，
+    // 是诊断一次性消费竞态的核心证据）
+    appendRaccoonDebugLog({
+      event: 'poll-biz-failure-suppressed',
+      code: envelope.code,
+      message: envelope.message,
+      details: envelope.details,
+    })
+    return { status: 'pending' }
+  }
 
   const raw = envelope.data.status
   const status = typeof raw === 'string' ? raw : ''
@@ -236,7 +258,14 @@ export async function pollRaccoonQrLogin(
     const accessToken = typeof envelope.data.access_token === 'string' ? envelope.data.access_token : ''
     const refreshToken = typeof envelope.data.refresh_token === 'string' ? envelope.data.refresh_token : ''
     // ⚠️ 缺 token 的 success 视为未完成：否则会产出空凭据并让流程卡死
-    if (accessToken.length === 0) return { status: 'pending' }
+    if (accessToken.length === 0) {
+      // 落盘：success 却缺 token——服务端行为与本地假设不符的现场（code 已被消费！）
+      appendRaccoonDebugLog({
+        event: 'poll-success-missing-token',
+        dataKeys: Object.keys(envelope.data).sort().join(','),
+      })
+      return { status: 'pending' }
+    }
     const expMs = decodeJwtExpMs(accessToken)
     return {
       status: 'success',

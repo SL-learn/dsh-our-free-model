@@ -28,6 +28,7 @@
  * - 手机号加密在宿主侧的 `/raccoon/sms/send` 里完成
  */
 
+import { appendRaccoonDebugLog } from './raccoon-debug-log.js'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import {
   RACCOON_LOGIN_TIMEOUT_MS,
@@ -120,6 +121,7 @@ export async function startRaccoonLoginFlow(
   // ⚠️ 扫码会话由服务端 IAM 域下发（不再本地自造 code）——申请失败即登录失败，
   // 因为没有有效 code 就没有可登录的二维码。
   const qr = await requestRaccoonQrSession(product, fetcher)
+  appendRaccoonDebugLog({ event: 'flow-start', codePrefix: qr.code.slice(0, 8), scanPath: qr.scanPath })
   const state: FlowState = {
     qr,
     phone: '',
@@ -238,6 +240,14 @@ async function handleRequest(
         .finally(() => { state.inflight = undefined })
     }
     const polled = await state.inflight
+    // 落盘：每次轮询的结果与当前防抖状态（诊断换码时序的核心序列）
+    appendRaccoonDebugLog({
+      event: 'poll',
+      status: polled.status,
+      staleStreak: state.staleStreak,
+      settled: deps.isSettled(),
+      codePrefix: state.qr.code.slice(0, 8),
+    })
     if (polled.status === 'success' && polled.accessToken !== undefined) {
       const credential: RaccoonCredential = {
         access_token: polled.accessToken,
@@ -245,6 +255,7 @@ async function handleRequest(
         ...polled.expiresAt !== undefined ? { expires_at: polled.expiresAt } : {},
       }
       deps.settleOk(credential)
+      appendRaccoonDebugLog({ event: 'login-success', codePrefix: state.qr.code.slice(0, 8) })
       writeJson(response, { status: 'success' })
       return
     }
@@ -257,16 +268,24 @@ async function handleRequest(
     if (polled.status === 'canceled' || polled.status === 'expired') {
       state.staleStreak += 1
       if (state.staleStreak < 3) {
+        appendRaccoonDebugLog({ event: 'debounce-hold', staleStreak: state.staleStreak })
         writeJson(response, { status: 'pending' })
         return
       }
       state.staleStreak = 0
+      const oldCodePrefix = state.qr.code.slice(0, 8)
       try {
         state.qr = await requestRaccoonQrSession(product, deps.fetcher)
-      } catch {
+      } catch (error) {
+        appendRaccoonDebugLog({ event: 'qr-refresh-failed', error: String(error) })
         writeJson(response, { status: 'pending' })
         return
       }
+      appendRaccoonDebugLog({
+        event: 'qr-refreshed',
+        oldCodePrefix,
+        newCodePrefix: state.qr.code.slice(0, 8),
+      })
       writeJson(response, {
         // 页面把 `canceled` 当「二维码已刷新」处理（换图 + 提示重扫），
         // 语义一致，前端无需新增状态。

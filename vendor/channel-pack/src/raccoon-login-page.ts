@@ -76,6 +76,16 @@ interface FlowState {
   /** 最近一次轮询的二维码有效期（供页面展示倒计时）。 */
   lastExpiredAt: string | undefined
   /**
+   * 连续收到 canceled/expired 的轮询次数（换码防抖）。
+   *
+   * ⚠️ **手机端确认成功的瞬间，服务端可能先短暂返回 canceled**
+   * （「本次请求已结束」），随后才把 code 置为 success——立即换码会把
+   * 马上到手的 success 毁掉（实测 2026-11-19：第一次登录成功后码被换，
+   * 新码再扫报「已被使用」）。故连续 3 轮（约 6 秒）仍失效才换码，
+   * 给 success 一个落地窗口；其余状态清零计数。
+   */
+  staleStreak: number
+  /**
    * 在飞的 IAM 轮询请求（**去重**）。
    *
    * ⚠️ 登录页前端是 2 秒固定节奏轮询，**不等上一次完成**；IAM 响应一旦
@@ -114,6 +124,7 @@ export async function startRaccoonLoginFlow(
     qr,
     phone: '',
     lastExpiredAt: undefined,
+    staleStreak: 0,
     inflight: undefined,
   }
 
@@ -238,10 +249,18 @@ async function handleRequest(
       return
     }
     if (polled.expiredAt !== undefined) state.lastExpiredAt = polled.expiredAt
-    // `canceled` / `expired`：当前二维码已不可用，向 IAM 域**重新申请**一个
-    // 新会话并换图（IAM 域下 code 是服务端资产，本地换 code 无效）。
-    // 重新申请失败（网络抖动）降级为 pending：页面继续轮询，下一轮再试。
+    // `canceled` / `expired`：**防抖后**才换码。手机端确认成功的瞬间服务端
+    // 可能先短暂返回 canceled（「本次请求已结束」），随后才置 success——
+    // 立即换码会把马上到手的 success 毁掉（实测 2026-11-19）。故连续
+    // 3 轮（约 6 秒，staleStreak）仍失效才向 IAM 域重新申请换码；期间
+    // 返回 pending 让页面保持等待，给 success 一个落地窗口。
     if (polled.status === 'canceled' || polled.status === 'expired') {
+      state.staleStreak += 1
+      if (state.staleStreak < 3) {
+        writeJson(response, { status: 'pending' })
+        return
+      }
+      state.staleStreak = 0
       try {
         state.qr = await requestRaccoonQrSession(product, deps.fetcher)
       } catch {
@@ -256,6 +275,7 @@ async function handleRequest(
       })
       return
     }
+    state.staleStreak = 0
     writeJson(response, {
       status: polled.status,
       ...polled.expiredAt !== undefined ? { expiredAt: polled.expiredAt } : {},

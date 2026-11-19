@@ -1,6 +1,32 @@
 
 import type { BadgePreference } from './badge-preferences.js'
 import type { TokenLedgerSnapshot, TokenLedgerHistoryDay, TokenLedgerModelRow } from './token-ledger.js'
+// MOD (CodeArts restore): DPoP JWK type used by CodeArtsCredential.
+import type { DpopPrivateJwk } from './oauth.js'
+
+/** MOD (CodeArts restore): snap-manager ticket 端点响应的传输格式。 */
+export interface CodeArtsCredentialResponse {
+  credential?: {
+    access?: string
+    secret?: string
+    securitytoken?: string
+    securityToken?: string
+    expires_at?: string
+    expiresAt?: string
+  }
+  result?: {
+    accessKeyId?: string
+    secretAccessKey?: string
+    securityToken?: string
+    expiration?: string
+    expiresAt?: string
+  }
+  domain_id?: string
+  user_id?: string
+  user_name?: string
+  error_code?: string
+  error_msg?: string
+}
 
 /**
  * ========================================
@@ -1445,4 +1471,42 @@ export interface RpcUsageAutoCheckinRequest {
 /** RPC: 自动签到开关响应（回显写入后的生效状态）。 */
 export interface RpcUsageAutoCheckinResponse {
   autoCheckin: RpcUsageAutoCheckinState
+}
+
+// ============================================================================
+// MOD (CodeArts restore): types required by the restored CodeArts channel.
+// ============================================================================
+
+/** 存储在 CODEARTS_ACCESS_TOKEN 下的归一化临时凭据。 */
+export interface CodeArtsCredential {
+  access_key_id: string
+  secret_access_key: string
+  security_token: string
+  expires_at: string
+  domain_id?: string
+  user_id?: string
+  user_name?: string
+  /** 刷新令牌（新式 IAM OAuth 流程签发；缺失表示旧 ticket 凭据，不可静默刷新）。 */
+  refresh_token?: string
+  /** PKCE 验证器，刷新换取时与 refresh_token 一起提交。 */
+  code_verifier?: string
+  /** DPoP ES256 私钥 JWK（随凭据持久化，刷新换取时签发 DPoP JWS）。 */
+  dpop_private_key_jwk?: DpopPrivateJwk
+  /** 模型速率限制/重置时间（框架层附加的运行时元数据，刷新凭据时需保留）。 */
+  model_rate_limits?: Record<string, unknown>
+}
+
+/** 一次登录流程的结果：已存储的凭据值及其过期时间。 */
+export interface LoginFlowResult {
+  access: string
+  expires: number
+  loginUrl: string
+}
+
+/** runLoginFlow 和 startCallbackServer 接受的选项。 */
+export interface LoginFlowOptions {
+  fetcher?: typeof fetch
+  openBrowser?: (url: string) => void | Promise<void>
+  maxAttempts?: number
+  flow?: 'oauth' | 'ticket'
 }

@@ -1,4 +1,25 @@
 /**
+ * ============================================================================
+ * MOD (local build only): restore excluded account channels.
+ *
+ * Set OFM_RESTORE_EXCLUDED=1 in the process environment to lift the exclusions
+ * below, so CodeArts (Huawei Cloud), WorkBuddy China/international (CodeBuddy)
+ * and Huawei Cloud MaaS can be installed, signed in to and served again.
+ * Default is off — every behaviour above and below this block is unchanged
+ * unless the switch is explicitly set. See
+ * docs/mod-plan-restore-excluded-channels.md for the rationale and scope.
+ *
+ * Read through a function (not a module constant) so a running process can be
+ * tested with the switch on and off without a restart.
+ * ============================================================================
+ */
+export const RESTORE_ENV_VAR = 'OFM_RESTORE_EXCLUDED'
+export function restoreExcludedEnabled(env = globalThis.process?.env) {
+  const value = env?.[RESTORE_ENV_VAR]
+  return value === '1' || value === 'true' || value === 'yes'
+}
+
+/**
  * Account channels this build does not offer.
  *
  * WorkBuddy is sold under two names and ships in two builds: the China build
@@ -41,8 +62,8 @@ function idOf(value) {
   return typeof value === 'string' ? value.replace(/^plugin:/i, '').replace(/-plugin$/i, '').toLowerCase() : ''
 }
 
-const deniedId = value => DENIED_IDS.has(idOf(value))
-const deniedText = value => typeof value === 'string' && DENIED_TEXT.test(value)
+const deniedId = value => !restoreExcludedEnabled() && DENIED_IDS.has(idOf(value))
+const deniedText = value => !restoreExcludedEnabled() && typeof value === 'string' && DENIED_TEXT.test(value)
 const deniedAny = list => Array.isArray(list) && list.some(value => deniedId(value) || deniedText(value))
 const deniedListing = listing => deniedText(listing?.package) || deniedAny(listing?.providers)
 const deniedEntry = entry => deniedText(entry?.spec) || deniedText(entry?.package) ||
@@ -102,7 +123,7 @@ function filterUpstream(body) {
  */
 const DENIED_TEXT_GLOBAL = new RegExp(DENIED_TEXT.source, 'gi')
 const CJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/
-const redactString = value => DENIED_TEXT.test(value)
+const redactString = value => deniedText(value)
   ? value.replace(DENIED_TEXT_GLOBAL, CJK.test(value) ? '某桌面编码工具' : 'a desktop coding tool')
   : value
 function redactExcludedNames(value) {

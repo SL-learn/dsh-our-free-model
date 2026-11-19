@@ -188,11 +188,13 @@ async function verify() {
         assert.equal(await (await transport({ fetchImpl: async () => new Response('explicit') }).fetch('https://never-dial.invalid/')).text(), 'explicit')
       } finally { directLane.fetch = saved }
     })
-    await check('完整及字符串/数字 4004 仅摘 benefit 头重试一次，重签名仍有效', async () => {
+    await check('完整及字符串/数字 4004 首次无头，补 maas_type 重试一次，重签名仍有效', async () => {
       for (const code of ['4004', 4004, 'InferHub.4004.200']) {
         const start = seen.length; nextError = code
         await collect(new CodeArtsAdapter(defaults).stream(options))
-        assert.equal(seen.length, start + 2); assert.equal(seen[start].headers.maas_type, 'benefit'); assert.equal(seen[start + 1].headers.maas_type, undefined)
+        // MOD (2026-11-19, benefit 通道下线): 默认不带 maas_type；积分通道报
+        // 4004（通道恢复后的 benefit-only 场景）时补头重试一次。
+        assert.equal(seen.length, start + 2); assert.equal(seen[start].headers.maas_type, undefined); assert.equal(seen[start + 1].headers.maas_type, 'benefit')
         assert.equal(seen[start].body, seen[start + 1].body); assert.ok(seen.slice(start).every(row => row.valid))
       }
       for (const [model, code] of [[options.model, '14004'], ['GLM-5.2', '4004']]) {

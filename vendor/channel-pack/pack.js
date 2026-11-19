@@ -56599,12 +56599,12 @@ var CodeArtsAdapter = class extends LlmAdapter8 {
     let response;
     let queueAttempts = 0;
     let authRefreshed = false;
-    let benefitHeaderDropped = false;
+    let benefitHeaderAdded = false;
     const rateLimitTried = /* @__PURE__ */ new Set();
     if (currentAccountId) rateLimitTried.add(currentAccountId);
     const isBenefitModel = isCodeArtsBenefitModel(options.model);
     for (; ; ) {
-      const extraSignedHeaders = isBenefitModel && !benefitHeaderDropped ? { maas_type: "benefit" } : void 0;
+      const extraSignedHeaders = isBenefitModel && benefitHeaderAdded ? { maas_type: "benefit" } : void 0;
       const signed = await signRequestHuawei(
         credential.access_key_id,
         credential.secret_access_key,
@@ -56660,8 +56660,8 @@ var CodeArtsAdapter = class extends LlmAdapter8 {
             throw new LlmError15(message2, QUOTA_EXCEEDED_CODE, { status: 200 });
           }
           if (error instanceof SseQueueRetryError) {
-          } else if (error instanceof LlmError15 && error.code === BENEFIT_NOT_FOUND_CODE && isBenefitModel && !benefitHeaderDropped) {
-            benefitHeaderDropped = true;
+          } else if (error instanceof LlmError15 && error.code === BENEFIT_NOT_FOUND_CODE && isBenefitModel && !benefitHeaderAdded) {
+            benefitHeaderAdded = true;
             continue;
           } else {
             throw error;
@@ -56676,6 +56676,10 @@ var CodeArtsAdapter = class extends LlmAdapter8 {
           if (credential === void 0 || !credential.access_key_id || !credential.secret_access_key || !credential.security_token) {
             throw new LlmError15("codearts: credential missing after refresh; log in again", "MISSING_CREDENTIAL");
           }
+          continue;
+        }
+        if (benefitHeaderAdded && response.status === 404 && errorText.includes("API does not exist")) {
+          benefitHeaderAdded = false;
           continue;
         }
         if (isSseQuotaExhaustedErrorCode(errorDetail4(errorText), errorText)) {

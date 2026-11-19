@@ -21,6 +21,15 @@ import {
 } from './llm-register-compat.js'
 import { reportLedgerAccount } from './token-ledger.js'
 
+/**
+ * MOD (CodeArts restore, 2026-11-19 真实调用实证): 聊天端点仍是 `/api/v2`。
+ * 曾在排查中误改 `/api/v1` —— 该路径返回 legacy `text` 空帧（非聊天端点）。
+ * 真正的变化是 **benefit 通道于 2026-10 整体下线**（对齐 CodeArts2API
+ * UPSTREAM.md 与本机实测）：带 `maas_type: benefit` 头的请求被 APIG 路由到
+ * 已下线通道，返回 `APIG.0101 The API does not exist...`；去头即走积分通道
+ * 正常推理（200 + 标准 chat.completion.chunk SSE）。benefit 头逻辑已反转，
+ * 见下方 `benefitHeaderAdded`。
+ */
 export const CHAT_API_BASE = 'https://snap-access.cn-north-4.myhuaweicloud.com/api/v2'
 export const PROVIDER = 'codearts'
 /**
@@ -1118,9 +1127,15 @@ export class CodeArtsAdapter extends LlmAdapter {
     // 鉴权失败（APIG.0602 / 401 / 403）后已刷新过凭据：避免死循环，
     // 同一次 stream() 调用最多 refresh 一次。
     let authRefreshed = false
-    // 该账号不带 benefit 包时去掉 `maas_type: benefit` 头重试一次：
-    // 只试一次，避免与真实失败互相掩盖。
-    let benefitHeaderDropped = false
+    // MOD (2026-11-19, benefit 通道下线): 默认**不带** `maas_type: benefit`。
+    // 华为云 2026-10 起下线了 benefit（免费权益）通道，带该头的请求被 APIG
+    // 路由到已下线通道，返回 `APIG.0101 The API does not exist...`；不带则走
+    // 积分通道正常推理。两向自适应：
+    //   - SSE 内 InferHub.002002009.404 "model is not registered"（通道恢复但
+    //     该模型只在 benefit 通道）→ 补头重试一次（benefitHeaderAdded）；
+    //   - HTTP 404 APIG.0101 且当前带了头 → 去头重试一次（回到积分通道）。
+    // 每个方向只试一次，避免与真实失败互相掩盖。
+    let benefitHeaderAdded = false
     // 因限流已尝试过的账号 id：保证每个账号只试一次，试完才判定"全部受限"。
     const rateLimitTried = new Set<string>()
     if (currentAccountId) rateLimitTried.add(currentAccountId)
@@ -1130,15 +1145,10 @@ export class CodeArtsAdapter extends LlmAdapter {
     // 使后端新增 benefit 模型时无需改代码即可自动识别。
     const isBenefitModel = isCodeArtsBenefitModel(options.model)
     for (;;) {
-      // benefit（免费额度）模型（glm-5.3-flash、deepseek-v4.1-flash 等）后端要求
-      // maas_type: benefit 头参与 SDK-HMAC-SHA256 签名，否则返回
-      // InferHub.002002009.404 "model is not registered"。
-      //
-      // 判定必须是**动态**的：早期只硬编码 glm-5.3-flash 一个模型，导致
-      // deepseek-v4.1-flash 等其它 benefit 模型调用失败（用户报障：
-      // 发消息后报 Insufficient Balance / QUOTA —— 缺该头时后端按非 benefit
-      // 通道处理该模型）。实证见 CODEARTS_BENEFIT_FALLBACK 注释。
-      const extraSignedHeaders = isBenefitModel && !benefitHeaderDropped ? { maas_type: 'benefit' } : undefined
+      // MOD (2026-11-19): 默认不带 maas_type（benefit 通道已下线，带头会被
+      // APIG 路由到死通道报 APIG.0101）；仅当积分通道报 "model is not
+      // registered"（通道恢复后的 benefit-only 模型）时才补头重试。
+      const extraSignedHeaders = isBenefitModel && benefitHeaderAdded ? { maas_type: 'benefit' } : undefined
       const signed = await signRequestHuawei(
         credential.access_key_id,
         credential.secret_access_key,
@@ -1217,10 +1227,12 @@ export class CodeArtsAdapter extends LlmAdapter {
             error instanceof LlmError
             && error.code === BENEFIT_NOT_FOUND_CODE
             && isBenefitModel
-            && !benefitHeaderDropped
+            && !benefitHeaderAdded
           ) {
-            // 该账号没有 benefit 包：去掉 maas_type 头重试一次
-            benefitHeaderDropped = true
+            // MOD (2026-11-19, benefit 通道下线后反转): 积分通道报
+            // "model is not registered" —— 该模型在恢复后的 benefit 通道上，
+            // 补 maas_type 头重试一次。
+            benefitHeaderAdded = true
             continue
           } else {
             throw error
@@ -1238,6 +1250,12 @@ export class CodeArtsAdapter extends LlmAdapter {
           if (credential === undefined || !credential.access_key_id || !credential.secret_access_key || !credential.security_token) {
             throw new LlmError('codearts: credential missing after refresh; log in again', 'MISSING_CREDENTIAL')
           }
+          continue
+        }
+        // MOD (2026-11-19): APIG.0101 —— 带 maas_type 时请求被路由到已下线的
+        // benefit 通道。去头走积分通道重试一次（双向自适应的另一向）。
+        if (benefitHeaderAdded && response.status === 404 && errorText.includes('API does not exist')) {
+          benefitHeaderAdded = false
           continue
         }
         // 额度用尽（**不可重试**）：与下面「限流/排队」是本质不同的两类。

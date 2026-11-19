@@ -3,10 +3,14 @@
  *
  * ## 两条登录路径
  *
- * 1. **微信扫码**（首选）：`code` 由**客户端本地随机生成**，服务端只做轮询查询。
- *    实测任意自造 code 都被接受并进入 `pending`，故完全绕开官方那条
- *    `office-raccoon://auth/callback` 自定义协议回调 —— 那是本插件（宿主侧
- *    Node 进程）无法接收的。
+ * 1. **微信扫码**（首选）：`qrcode_code` 由**服务端 IAM 域下发**
+ *    （`POST /api/iam/v1/auth/mp/qrcode`），轮询也走 IAM 域
+ *    （`POST /api/iam/v1/auth/mp/qrcode/login`）。⚠️ 旧实现的「本地自造 code +
+ *    web/auth 域 `login_with_qrcode_code` 轮询」**已失效**：该接口对任意 code
+ *    都返回 pending、永不 success（实测 2026-10-29）——这正是
+ *    「扫码后无法登录」的根源。 IAM 域签名是 `qrcode_code`，与客户端的
+ *    `office-raccoon://auth/callback` 自定义协议链路无关，宿主侧 Node 进程
+ *    可以直接轮询拿 token。
  * 2. **短信验证码**（次选）：手机号需 AES-128-CFB 加密，且 `send_sms` 要求
  *    先过阿里云滑块拿到 `captcha_param`。
  *
@@ -25,6 +29,7 @@
 
 import { randomBytes } from 'node:crypto'
 import {
+  RACCOON_IAM_PREFIX,
   RACCOON_QR_STATUS,
   RACCOON_REQUEST_TIMEOUT_MS,
   decodeJwtExpMs,
@@ -34,8 +39,18 @@ import {
 } from './raccoon.js'
 import { type RaccoonProduct } from './raccoon-product.js'
 
-/** 扫码轮询的状态值。 */
-export type RaccoonQrStatus = 'pending' | 'logging' | 'canceled' | 'success'
+/** 扫码轮询的状态值（expired：二维码过期，需重新申请）。 */
+export type RaccoonQrStatus = 'pending' | 'logging' | 'canceled' | 'expired' | 'success'
+
+/** 服务端下发的扫码会话（IAM 域，见 spec 实测记录 2026-10-29）。 */
+export interface RaccoonQrSession {
+  /** 服务端下发的 qrcode_code（**不再本地自造**——本地自造 code 轮询旧域永远 pending）。 */
+  code: string
+  /** 扫码页路径（以 / 开头，如 /login/mp）。 */
+  scanPath: string
+  /** 二维码有效期（毫秒；响应缺失时按 spec 兜底 5 分钟）。 */
+  expiresMs: number
+}
 
 /** 一次扫码轮询的结果。 */
 export interface RaccoonQrPollResult {
@@ -111,6 +126,8 @@ async function postJson(
 /**
  * 生成一个扫码用的 `qrcode_code`（32 位小写 hex = 16 字节随机）。
  *
+ * ⚠️ **仅作渲染占位/测试兜底**：主流程的 code 由服务端下发
+ * （`requestRaccoonQrSession`），本地自造 code 轮询旧 web/auth 域永远 pending。
  * 依据客户端：`CryptoJS.lib.WordArray.random(16)`（渲染层模块 68284 的 `yl()`）。
  */
 export function generateQrCode(): string {
@@ -118,24 +135,65 @@ export function generateQrCode(): string {
 }
 
 /**
- * 构造二维码承载的微信登录页 URL。
+ * 向 IAM 域申请扫码会话（服务端下发 code）。
  *
- * 依据客户端：`` `${base}/login/mp?code=${code}&appname=商汤小浣熊官网` ``。
- * 这是一个**公开页面**，扫码后在微信内完成授权，服务端据此把该 code 置为
- * `success`，我们轮询 `login_with_qrcode_code` 取回 token。
+ * ⚠️ **扫码登录必须走 IAM 域**（实测 2026-10-29，见 spec.md）：
+ * `POST /api/iam/v1/auth/mp/qrcode` → `{code:0, data:{qrcode_code, scan_path, expires_in}}`。
+ * 旧的 web/auth 域 `login_with_qrcode_code` 对任意随机 code 都返回 pending、
+ * 永不 success——这正是「扫码后无法登录」的根源。
  */
-export function buildQrImageUrl(product: RaccoonProduct, code: string): string {
-  const params = new URLSearchParams({ code, appname: '商汤小浣熊官网' })
-  return `${product.apiBase}/login/mp?${params.toString()}`
+export async function requestRaccoonQrSession(
+  product: RaccoonProduct,
+  fetcher: typeof fetch = fetch,
+): Promise<RaccoonQrSession> {
+  const { envelope, status } = await postJson(
+    `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode`,
+    {},
+    fetcher,
+  )
+  if (envelope.code !== 0 || envelope.data === undefined) {
+    throw envelopeError(envelope, `申请扫码二维码失败（HTTP ${status}）`)
+  }
+  const code = typeof envelope.data.qrcode_code === 'string' ? envelope.data.qrcode_code : ''
+  const scanPath = typeof envelope.data.scan_path === 'string' ? envelope.data.scan_path : ''
+  if (code.length === 0 || !scanPath.startsWith('/')) {
+    throw new Error('raccoon: 扫码二维码响应不合法（qrcode_code / scan_path 缺失）')
+  }
+  const expiresIn = typeof envelope.data.expires_in === 'number' && envelope.data.expires_in > 0
+    ? envelope.data.expires_in * 1000
+    : 5 * 60 * 1000
+  return { code, scanPath, expiresMs: expiresIn }
 }
 
 /**
- * 轮询一次扫码登录状态。
+ * 构造二维码承载的微信登录页 URL。
  *
- * ⚠️ **任何异常都降级为 `pending`**（网络抖动、响应畸形、未知 status）：
- * 轮询是 2 秒一次的循环，偶发失败不应中断整个登录流程；而把未知状态
- * 误判成 `success` 会让流程拿到空 token 后卡死，误判成 `canceled` 则会让
- * 用户正在扫码的二维码被无故刷新。
+ * ⚠️ 编码的是**扫描 URL**（不是 code 本身），且 `scan_path` 必须用
+ * **服务端下发的值**（`requestRaccoonQrSession` 返回的 `scanPath`）——
+ * 上游可以改扫码页路径，写死 `/login/mp` 会让扫码后的授权对不上 code。
+ * 依据 spec 实测：
+ * `` `${base}${scan_path}?code=${code}&appname=商汤小浣熊官网&source=platform` ``。
+ * 浏览器里 GET 该 URL 会 404 是正常的——它只对微信客户端有意义。
+ */
+export function buildQrImageUrl(product: RaccoonProduct, code: string, scanPath = '/login/mp'): string {
+  const params = new URLSearchParams({
+    code,
+    appname: '商汤小浣熊官网',
+    source: 'platform',
+  })
+  return `${product.apiBase}${scanPath}?${params.toString()}`
+}
+
+/**
+ * 轮询一次扫码登录状态（IAM 域）。
+ *
+ * ⚠️ **必须轮询 IAM 域** `POST /api/iam/v1/auth/mp/qrcode/login`
+ * （body `{qrcode_code}`，code 来自服务端下发）；旧 web/auth 域
+ * `login_with_qrcode_code` 对任意 code 永远 pending（实测 2026-10-29）。
+ *
+ * ⚠️ **网络异常降级为 `pending`**（轮询是 2 秒一次的循环，偶发失败不应
+ * 中断流程）；但**业务失败（code 非 0）与 status=expired 归为 `expired`**——
+ * 那意味着当前二维码已失效，宿主应重新申请二维码而不是干等。
  */
 export async function pollRaccoonQrLogin(
   product: RaccoonProduct,
@@ -145,7 +203,7 @@ export async function pollRaccoonQrLogin(
   let envelope: RaccoonEnvelope
   try {
     const result = await postJson(
-      `${product.apiBase}${product.authApiPrefix}/login_with_qrcode_code`,
+      `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode/login`,
       { qrcode_code: code },
       fetcher,
     )
@@ -153,13 +211,14 @@ export async function pollRaccoonQrLogin(
   } catch {
     return { status: 'pending' }
   }
-  if (envelope.code !== 0 || envelope.data === undefined) return { status: 'pending' }
+  if (envelope.code !== 0 || envelope.data === undefined) return { status: 'expired' }
 
   const raw = envelope.data.status
   const status = typeof raw === 'string' ? raw : ''
   const expiredAt = typeof envelope.data.expired_at === 'string' ? envelope.data.expired_at : undefined
 
   if (status === RACCOON_QR_STATUS.canceled) return { status: 'canceled' }
+  if (status === RACCOON_QR_STATUS.expired) return { status: 'expired' }
   if (status === RACCOON_QR_STATUS.logging) {
     return { status: 'logging', ...expiredAt !== undefined ? { expiredAt } : {} }
   }

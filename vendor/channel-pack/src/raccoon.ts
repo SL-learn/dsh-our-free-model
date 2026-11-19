@@ -60,13 +60,18 @@ export const RACCOON_QR_POLL_INTERVAL_MS = 2_000
 /** 扫码登录整体超时（毫秒）。 */
 export const RACCOON_LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 
-/** 扫码状态机的状态值。 */
+/** 扫码状态机的状态值（expired：二维码过期——IAM 域到期回报，见 spec 实测记录）。 */
 export const RACCOON_QR_STATUS = {
   pending: 'pending',
   logging: 'logging',
   canceled: 'canceled',
+  expired: 'expired',
   success: 'success',
 } as const
+
+/** IAM 域前缀（扫码登录必须走这里——旧 web/auth 域的 login_with_qrcode_code
+ *  对任意 code 都返回 pending、永不 success，实测 2026-10-29，见 docs/spec.md）。 */
+export const RACCOON_IAM_PREFIX = '/api/iam/v1'
 
 /**
  * raccoon 凭据。

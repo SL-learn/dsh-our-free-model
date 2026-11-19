@@ -38,7 +38,9 @@ import {
   generateQrCode,
   loginRaccoonWithSmsCode,
   pollRaccoonQrLogin,
+  requestRaccoonQrSession,
   sendRaccoonSmsCode,
+  type RaccoonQrSession,
 } from './raccoon-oauth.js'
 import { RACCOON, type RaccoonProduct } from './raccoon-product.js'
 import { renderQrSvg } from './raccoon-qr.js'
@@ -63,8 +65,12 @@ export interface StartedRaccoonLoginFlow {
 
 /** 流程内部状态（**只存在于宿主侧**）。 */
 interface FlowState {
-  /** 扫码用的 code（宿主侧生成，页面不知道）。 */
-  qrCode: string
+  /**
+   * 当前扫码会话（服务端 IAM 域下发：code + scan_path）。
+   * ⚠️ 不再本地自造 code——自造 code 轮询旧 web/auth 域永远 pending
+   * （实测 2026-10-29，正是「扫码后无法登录」的根源）。
+   */
+  qr: RaccoonQrSession
   /** 当前展示的短信目标手机号（未发过短信时为空）。 */
   phone: string
   /** 最近一次轮询的二维码有效期（供页面展示倒计时）。 */
@@ -91,8 +97,11 @@ export async function startRaccoonLoginFlow(
 ): Promise<StartedRaccoonLoginFlow> {
   const product = options.product ?? RACCOON
   const fetcher = options.fetcher ?? fetch
+  // ⚠️ 扫码会话由服务端 IAM 域下发（不再本地自造 code）——申请失败即登录失败，
+  // 因为没有有效 code 就没有可登录的二维码。
+  const qr = await requestRaccoonQrSession(product, fetcher)
   const state: FlowState = {
-    qrCode: generateQrCode(),
+    qr,
     phone: '',
     lastExpiredAt: undefined,
   }
@@ -188,12 +197,12 @@ async function handleRequest(
 
   if (url.pathname === RACCOON_LOGIN_PAGE_PATHS.login) {
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-    response.end(renderRaccoonLoginPage(product, state.qrCode))
+    response.end(renderRaccoonLoginPage(product, state.qr.code, state.qr.scanPath))
     return
   }
 
   if (url.pathname === RACCOON_LOGIN_PAGE_PATHS.poll) {
-    const polled = await pollRaccoonQrLogin(product, state.qrCode, deps.fetcher)
+    const polled = await pollRaccoonQrLogin(product, state.qr.code, deps.fetcher)
     if (polled.status === 'success' && polled.accessToken !== undefined) {
       const credential: RaccoonCredential = {
         access_token: polled.accessToken,
@@ -205,15 +214,27 @@ async function handleRequest(
       return
     }
     if (polled.expiredAt !== undefined) state.lastExpiredAt = polled.expiredAt
-    // `canceled` 时换一个新 code，让页面上的二维码重新可用（否则用户卡死）。
-    if (polled.status === 'canceled') {
-      state.qrCode = generateQrCode()
+    // `canceled` / `expired`：当前二维码已不可用，向 IAM 域**重新申请**一个
+    // 新会话并换图（IAM 域下 code 是服务端资产，本地换 code 无效）。
+    // 重新申请失败（网络抖动）降级为 pending：页面继续轮询，下一轮再试。
+    if (polled.status === 'canceled' || polled.status === 'expired') {
+      try {
+        state.qr = await requestRaccoonQrSession(product, deps.fetcher)
+      } catch {
+        writeJson(response, { status: 'pending' })
+        return
+      }
+      writeJson(response, {
+        // 页面把 `canceled` 当「二维码已刷新」处理（换图 + 提示重扫），
+        // 语义一致，前端无需新增状态。
+        status: 'canceled',
+        qr: renderQrSvg(buildQrImageUrl(product, state.qr.code, state.qr.scanPath)),
+      })
+      return
     }
     writeJson(response, {
       status: polled.status,
       ...polled.expiredAt !== undefined ? { expiredAt: polled.expiredAt } : {},
-      // code 变化时把新二维码给页面（页面据此换图）
-      ...polled.status === 'canceled' ? { qr: renderQrSvg(buildQrImageUrl(product, state.qrCode)) } : {},
     })
     return
   }
@@ -332,14 +353,15 @@ function listenOnRandomPort(server: Server): Promise<number> {
  * - 每 2 秒轮询 `/raccoon/poll`（与官方客户端一致）
  * - 短信 Tab 加载阿里云滑块脚本，拿到 `captchaParam` 后提交
  *
- * @param qrCode 当前会话的扫码 code（宿主侧生成）。**注意**：本函数只是把它
- *   渲染成二维码 —— 页面拿不到 code 本身（它被编码进二维码图像里）。
+ * @param qrCode 当前扫码会话的 code（**服务端 IAM 域下发**）。**注意**：本函数
+ *   只是把它渲染成二维码 —— 页面拿不到 code 本身（它被编码进二维码图像里）。
  *   这符合职责边界：页面不需要知道 code，只需要展示。
+ * @param scanPath 服务端下发的扫码页路径（缺省 /login/mp；二维码 URL 必须用它）。
  */
-export function renderRaccoonLoginPage(product: RaccoonProduct, qrCode?: string): string {
+export function renderRaccoonLoginPage(product: RaccoonProduct, qrCode?: string, scanPath = '/login/mp'): string {
   // 未传 code 时生成一个仅供渲染的占位（单测直接调本函数时用）。
   const code = qrCode ?? generateQrCode()
-  const qrSvg = renderQrSvg(buildQrImageUrl(product, code), { size: 200 })
+  const qrSvg = renderQrSvg(buildQrImageUrl(product, code, scanPath), { size: 200 })
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">

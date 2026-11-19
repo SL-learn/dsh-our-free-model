@@ -67,18 +67,25 @@ export interface RaccoonQrPollResult {
 
 /** 业务响应信封（失败可能带 HTTP 400/401，也可能 HTTP 200 + 非 0 code）。 */
 interface RaccoonEnvelope {
-  code: number
+  /** web 域是数字（0=成功）；IAM 域是**字符串 "OK"**（实测 2026-11-19）。 */
+  code: number | string
   message: string
   details: string
   data: Record<string, unknown> | undefined
 }
 
-/** 解析业务信封。`code === 0` 为成功。 */
+/** 解析业务信封。`code === 0` 为成功；IAM 域的字符串 "OK" 归一为 0。 */
 function parseEnvelope(payload: unknown, status: number): RaccoonEnvelope {
   const record = typeof payload === 'object' && payload !== null && !Array.isArray(payload)
     ? payload as Record<string, unknown>
     : {}
-  const code = typeof record.code === 'number' ? record.code : (status >= 400 ? status : 0)
+  // ⚠️ IAM 域成功码是字符串 "OK"（实测 /api/iam/v1/auth/mp/qrcode 响应），
+  //   归一为 0 让 `code === 0` 的判断对两个域都成立；其他字符串（错误码）
+  //   保留原值 —— `!== 0` 判定为失败，不会被误当成功。
+  const code = typeof record.code === 'number' ? record.code
+    : record.code === 'OK' ? 0
+    : typeof record.code === 'string' && record.code.length > 0 ? record.code
+    : (status >= 400 ? status : 0)
   const message = typeof record.message === 'string' ? record.message : ''
   const details = typeof record.details === 'string' ? record.details : ''
   const data = typeof record.data === 'object' && record.data !== null && !Array.isArray(record.data)

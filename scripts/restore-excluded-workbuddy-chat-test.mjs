@@ -7,7 +7,8 @@ import path from 'node:path'
 import os from 'node:os'
 import { startStandalone } from '../packages/standalone/service.mjs'
 
-const dataDir = path.join(os.tmpdir(), 'ofm-restore-e2e')
+const providerArg = process.argv[2] === "workbuddy-ai" ? "workbuddy-ai" : "workbuddy"
+const dataDir = path.join(os.tmpdir(), "ofm-restore-e2e")
 fs.mkdirSync(path.join(dataDir, 'channel-pack'), { recursive: true })
 fs.writeFileSync(path.join(dataDir, 'channel-pack/auto-checkin.json'), JSON.stringify({ enabled: false }))
 process.env.OFM_RESTORE_EXCLUDED = '1'
@@ -43,9 +44,9 @@ async function main() {
   // ① 登录状态确认
   const st = await fetch(service.url + '/api/management/engine/ui/api/providers', { headers: H }).then(r => r.json())
   const rows = Array.isArray(st) ? st : (st?.providers ?? [])
-  const wb = rows.find(x => x?.id === 'workbuddy')
+  const wb = rows.find(x => x?.id === providerArg)
   log('\n=== ① 登录状态 ===')
-  log('workbuddy signedIn:', wb?.signedIn ?? (rows.some(x => x?.id === 'workbuddy') ? '(listed)' : 'NOT LISTED'))
+  log('workbuddy signedIn:', wb?.signedIn ?? (rows.some(x => x?.id === providerArg) ? '(listed)' : 'NOT LISTED'))
 
   // ② gateway 模型列表
   log('\n=== ② GET /v1/models ===')
@@ -54,10 +55,10 @@ async function main() {
   }).then(r => r.json()).catch(e => ({ error: String(e) }))
   const ids = (models?.data ?? []).map(m => m.id)
   log('模型数:', ids.length)
-  const wbModels = ids.filter(id => id.includes('workbuddy'))
-  log('workbuddy 模型:', wbModels.join(', ') || '(无)')
+  const wbModels = ids.filter(id => id.startsWith(providerArg + '/'))
+  log(`${providerArg} 模型:`, wbModels.join(', ') || '(无)')
 
-  // ③ 真实推理调用
+  // ③ 真实推理调用（max_tokens 放宽：推理模型的 reasoning 会吃掉额度）
   const target = wbModels.find(id => /flash|auto/i.test(id)) ?? wbModels[0]
   log('\n=== ③ chat 调用 model=' + target + ' ===')
   const t0 = Date.now()
@@ -67,7 +68,7 @@ async function main() {
     body: JSON.stringify({
       model: target,
       messages: [{ role: 'user', content: '只回复两个字：成功' }],
-      max_tokens: 100,
+      max_tokens: 300,
     }),
     signal: AbortSignal.timeout(90000),
   })

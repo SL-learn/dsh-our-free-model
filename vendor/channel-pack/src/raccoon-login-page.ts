@@ -75,6 +75,16 @@ interface FlowState {
   phone: string
   /** 最近一次轮询的二维码有效期（供页面展示倒计时）。 */
   lastExpiredAt: string | undefined
+  /**
+   * 在飞的 IAM 轮询请求（**去重**）。
+   *
+   * ⚠️ 登录页前端是 2 秒固定节奏轮询，**不等上一次完成**；IAM 响应一旦
+   * 慢于 2 秒，请求就会堆积并发。而 IAM 域的 success 是**一次性消费**——
+   * 并发轮询会在 success 落地的同一时刻互相踩踏（拿到的全是
+   * 「二维码已被使用」错误），误触发换码把成功登录毁掉（实测 2026-11-19）。
+   * 故宿主侧同一时刻只放行一个 IAM 轮询，堆积的页面请求共用同一结果。
+   */
+  inflight: Promise<RaccoonQrPollResult> | undefined
 }
 
 /** `startRaccoonLoginFlow` 的选项。 */
@@ -104,6 +114,7 @@ export async function startRaccoonLoginFlow(
     qr,
     phone: '',
     lastExpiredAt: undefined,
+    inflight: undefined,
   }
 
   let resolveResult!: (value: RaccoonCredential) => void
@@ -129,7 +140,7 @@ export async function startRaccoonLoginFlow(
   }
 
   const server = createServer((request, response) => {
-    void handleRequest(request, response, { state, product, fetcher, settleOk }).catch(
+    void handleRequest(request, response, { state, product, fetcher, settleOk, isSettled: () => settled }).catch(
       (error: unknown) => {
         try {
           response
@@ -184,6 +195,8 @@ interface HandleDeps {
   product: RaccoonProduct
   fetcher: typeof fetch
   settleOk: (value: RaccoonCredential) => void
+  /** 登录已成功落定（后续轮询直接回 success，不再打 IAM、不再换码）。 */
+  isSettled: () => boolean
 }
 
 /** 处理一次本地请求。 */
@@ -202,7 +215,18 @@ async function handleRequest(
   }
 
   if (url.pathname === RACCOON_LOGIN_PAGE_PATHS.poll) {
-    const polled = await pollRaccoonQrLogin(product, state.qr.code, deps.fetcher)
+    // 登录已成功落定：直接回 success（success 是一次性消费，此后任何
+    // IAM 轮询都只会拿到「已被使用」错误，绝不能再触发换码）。
+    if (deps.isSettled()) {
+      writeJson(response, { status: 'success' })
+      return
+    }
+    // 在飞去重：堆积的页面轮询共用同一次 IAM 请求（见 FlowState.inflight）。
+    if (state.inflight === undefined) {
+      state.inflight = pollRaccoonQrLogin(product, state.qr.code, deps.fetcher)
+        .finally(() => { state.inflight = undefined })
+    }
+    const polled = await state.inflight
     if (polled.status === 'success' && polled.accessToken !== undefined) {
       const credential: RaccoonCredential = {
         access_token: polled.accessToken,

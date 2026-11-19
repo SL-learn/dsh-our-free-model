@@ -198,9 +198,12 @@ export function buildQrImageUrl(product: RaccoonProduct, code: string, scanPath 
  * （body `{qrcode_code}`，code 来自服务端下发）；旧 web/auth 域
  * `login_with_qrcode_code` 对任意 code 永远 pending（实测 2026-10-29）。
  *
- * ⚠️ **网络异常降级为 `pending`**（轮询是 2 秒一次的循环，偶发失败不应
- * 中断流程）；但**业务失败（code 非 0）与 status=expired 归为 `expired`**——
- * 那意味着当前二维码已失效，宿主应重新申请二维码而不是干等。
+ * ⚠️ **任何异常都降级为 `pending`**（网络抖动、响应畸形、限流、未知状态）：
+ * 轮询是 2 秒一次的循环，偶发失败不应中断流程。**业务失败（code 非 0）
+ * 绝不能归为「码失效」** —— IAM 域的 success 是**一次性消费**：用户确认后，
+ * 堆积的并发轮询会拿到「二维码已被使用」的业务错误（实测 2026-11-19），
+ * 若据此换码，会把刚确认成功的登录毁掉。真正的失效由
+ * `data.status === 'expired' / 'canceled'` 显式表达。
  */
 export async function pollRaccoonQrLogin(
   product: RaccoonProduct,
@@ -218,7 +221,7 @@ export async function pollRaccoonQrLogin(
   } catch {
     return { status: 'pending' }
   }
-  if (envelope.code !== 0 || envelope.data === undefined) return { status: 'expired' }
+  if (envelope.code !== 0 || envelope.data === undefined) return { status: 'pending' }
 
   const raw = envelope.data.status
   const status = typeof raw === 'string' ? raw : ''

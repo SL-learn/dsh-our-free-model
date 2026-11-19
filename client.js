@@ -5266,6 +5266,8 @@ window.__ModuleLoader__.load({
      * and logo tile; `login` picks the flow the card offers.
      */
     const CHANNEL_PROVIDERS = [
+      // MOD (CodeArts restore)
+      { id: 'codearts', name: 'CodeArts', org: '华为云', accent: '#C7000B', note: 'DeepSeek · GLM · openPangu，每日免费额度', login: 'browser' },
       { id: 'lobsterai', name: 'LobsterAI', org: '有道', accent: '#FF6A00', note: '龙虾 · 每日签到积分', login: 'browser' },
       { id: 'qoder', name: 'Qoder', org: '阿里系', accent: '#615CED', note: '每日 100 Credits，加密推理端点', login: 'browser' },
       { id: 'qodercn', name: 'Qoder 中国版', org: '阿里系', accent: '#7A6CF0', note: '中国版端点与模型池', login: 'browser' },
@@ -5280,6 +5282,8 @@ window.__ModuleLoader__.load({
 
     /** 与现有 RPC 的能力对应：余额、每日领取及独立签到状态分别判断。 */
     const CHANNEL_CREDITS = {
+      // MOD (CodeArts restore)
+      codearts: { claim: true },
       lobsterai: { claim: true },
       qoder: { claim: true },
       qodercn: { claim: true },

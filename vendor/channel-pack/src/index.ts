@@ -67,6 +67,11 @@ import { primeOpencodeCapabilities, refreshOpencodeCapabilities } from './openco
 import { closeAllProxyDispatchers } from './opencode-proxy.js'
 import { createChannelFetch, type ChannelOutlet } from './channel-fetch.js'
 export { createChannelFetch, parseWindowsProxy, channelProxyBypassed } from './channel-fetch.js'
+// MOD (CodeArts restore): the SDK-HMAC signed-outlet CodeArts channel.
+import { registerCodeArtsLlm, PROVIDER as CODEARTS_PROVIDER } from './llm-adapter.js'
+import { CODEARTS_CREDENTIAL_REF, CodeArtsAuth } from './service.js'
+import { createDirectFetch, attachDirectFetch } from './direct-fetch.js'
+import type { CodeArtsCredential } from './types.js'
 import { execFile } from 'node:child_process'
 
 /**
@@ -248,6 +253,12 @@ export function makeReadImageRequest(ctx: Context) {
 export function apply(ctx: Context, config: { disableOpencode?: boolean; outlet?: ChannelOutlet } = {}): void {
   const network = createChannelFetch({ outlet: config.outlet })
   ctx.effect(() => () => { void network.close() })
+  // MOD (CodeArts restore): SDK-HMAC signed outlet. CodeArts is the only channel
+  // needing request signing; SignedChannelOutlet extends ChannelOutlet, so the
+  // plain outlet is accepted unchanged.
+  const signedNetwork = createDirectFetch({ outlet: config.outlet })
+  const detachSignedNetwork = attachDirectFetch(signedNetwork.fetch)
+  ctx.effect(() => () => { detachSignedNetwork(); void signedNetwork.close() })
   // 本插件自带 Channel Pack 设置页，关闭 0.1.7 起由 Config schema 反渲染的自动表单
   // （老契约没有 configure()，静默跳过）。
   suppressAutoSettingsPage(ctx)
@@ -263,7 +274,7 @@ export function apply(ctx: Context, config: { disableOpencode?: boolean; outlet?
   // ⚠️ 2026-10-01 起各 provider 已**不再**声明为可配置 provider，故这批 namespace
   // 在模型设置页上已无消费者（详见该函数头的说明）。
   registerProviderSettings(
-    ctx, 'llm-lobsterai',
+    ctx, 'llm-codearts', 'llm-lobsterai',
     'llm-qoder', 'llm-qodercn', 'llm-trae', 'llm-cline', 'llm-loomy', 'llm-raccoon',
     'llm-minimax', 'llm-zcode', 'llm-gemini',
   )
@@ -334,6 +345,26 @@ export function apply(ctx: Context, config: { disableOpencode?: boolean; outlet?
       'QUOTA_EXCEEDED',
     )
   }
+
+  // ===== MOD (CodeArts restore): 华为云 CodeArts 渠道 =====
+  // 登录/状态/续期统一在 Channel Pack 设置页完成，不注册斜杠命令。
+  const codeartsService = new CodeArtsAuth(ctx, { fetcher: signedNetwork.fetch })
+  const codeartsAdapter = registerCodeArtsLlm(ctx, {
+    fetchImpl: signedNetwork.fetch,
+    credentialRef: credentialRef(CODEARTS_CREDENTIAL_REF),
+    resolveCredential: async () => {
+      const available = await pool.getAvailableAccount(CODEARTS_PROVIDER, '')
+      return available?.credential as CodeArtsCredential | undefined
+    },
+    refresh: async () => {
+      const available = await pool.getAvailableAccount(CODEARTS_PROVIDER, '')
+      if (available) {
+        await codeartsService.refreshAccountCredential(available.entry.credentialRef, pool, available.entry.id)
+      }
+    },
+    fetchRemoteModels: () => codeartsService.refreshModels(pool),
+    accountPool: pool,
+  })
 
   // ===== LobsterAI (有道龙虾) 服务 =====
 
@@ -1384,6 +1415,8 @@ const zcodeAdapter = registerZcodeLlm(ctx, {
    * 「凭据一直刷不动」在日志里完全无痕（issue !IKIRTT 的可观测性条目）。
    */
   const refreshTargets: ReadonlyArray<readonly [string, (pool: AccountPool) => Promise<void>]> = [
+    // MOD (CodeArts restore): 可续期（IAM OAuth / DPoP），逐账号按 ref 刷新。
+    [CODEARTS_PROVIDER, (p) => codeartsService.refreshAll(p)],
     ['lobsterai', (p) => lobsterai.refreshAll(p)],
     ['qoder', (p) => qoder.refreshAll(p)],
     ['qodercn', (p) => qoderCn.refreshAll(p)],
@@ -1646,6 +1679,8 @@ const zcodeAdapter = registerZcodeLlm(ctx, {
   }
   const modelAdapters: Record<string, { listAllModels(): readonly { id: string; name: string }[] }> = {
 
+    // MOD (CodeArts restore): registerCodeArtsLlm 返回适配器实例（含 listAllModels）。
+    codearts: pruned(CODEARTS_PROVIDER, codeartsAdapter),
     // 服务实例 `service` 不同名，故这里可以简写）。
     lobsterai: pruned(LOBSTERAI.id, lobsteraiAdapter),
     qoder: pruned(QODER.id, qoderAdapter),
@@ -1665,10 +1700,12 @@ const zcodeAdapter = registerZcodeLlm(ctx, {
   // 丢的却是「下一轮工具调用能不能带上签名」。
   ctx.effect(() => () => { void geminiSigStore.flush().catch(() => {}) })
 
-  registerChannelPackRpc(ctx, pool, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, {
+  registerChannelPackRpc(ctx, pool, codeartsService, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, {
     ...config,
     // ⚠️ 配额等附属查询必须复用同一出口；省略会让 gemini-credits 回落到裸 fetch。
     fetcher: network.fetch,
+    // MOD (CodeArts restore): 积分/账户查询复用 SDK-HMAC 签名出口。
+    codeartsFetcher: signedNetwork.fetch,
   })
   // 网关是旁路功能：这里传 `pool` 只为读设置页里的开关，其内部任何失败都已
   // 自行降级为日志，绝不会让插件 apply() 失败。

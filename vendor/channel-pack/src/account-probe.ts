@@ -33,6 +33,9 @@ import { ClineAdapter } from './cline-adapter.js'
 import { ZcodeAdapter } from './zcode-adapter.js'
 import { TraeAdapter } from './trae-adapter.js'
 import { isRateLimited, parseRateLimitError } from './rate-limit.js'
+// MOD (CodeArts restore): HMAC-signed adapter for CodeArts probe requests.
+import { CodeArtsAdapter } from './llm-adapter.js'
+import type { CodeArtsCredential } from './types.js'
 import { lobsteraiProductById } from './lobsterai-product.js'
 import { qoderProductById } from './qoder-product.js'
 import { clineProductById } from './cline-product.js'
@@ -327,6 +330,13 @@ async function probeWithAdapter(
       sessionLane: GEMINI_SESSION_LANE_SMOKE,
       project: GEMINI_DEFAULT_PROJECT,
       product: GEMINI,
+    })
+  } else if (entry.provider === 'codearts') {
+    // MOD (CodeArts restore): 其余渠道落 CodesArts 的 HMAC 签名适配器。
+    adapter = new CodeArtsAdapter({
+      credentialRef: ref,
+      resolveCredential: async () => credential as CodeArtsCredential,
+      refresh: async () => {},
     })
   } else {
     throw new Error(`Unsupported probe adapter: ${entry.provider}`)

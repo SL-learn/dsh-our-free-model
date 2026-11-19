@@ -266,9 +266,9 @@ var require_timers = __commonJS({
        * before the specified function or code is executed.
        * @param {*} arg
        */
-      constructor(callback, delay, arg) {
+      constructor(callback, delay2, arg) {
         this._onTimeout = callback;
-        this._idleTimeout = delay;
+        this._idleTimeout = delay2;
         this._timerArg = arg;
         this.refresh();
       }
@@ -313,8 +313,8 @@ var require_timers = __commonJS({
        * when the timer expires.
        * @returns {NodeJS.Timeout|FastTimer}
        */
-      setTimeout(callback, delay, arg) {
-        return delay <= RESOLUTION_MS ? setTimeout(callback, delay, arg) : new FastTimer(callback, delay, arg);
+      setTimeout(callback, delay2, arg) {
+        return delay2 <= RESOLUTION_MS ? setTimeout(callback, delay2, arg) : new FastTimer(callback, delay2, arg);
       },
       /**
        * The clearTimeout method cancels an instantiated Timer previously created
@@ -340,8 +340,8 @@ var require_timers = __commonJS({
        * when the timer expires.
        * @returns {FastTimer}
        */
-      setFastTimeout(callback, delay, arg) {
-        return new FastTimer(callback, delay, arg);
+      setFastTimeout(callback, delay2, arg) {
+        return new FastTimer(callback, delay2, arg);
       },
       /**
        * The clearTimeout method cancels an instantiated FastTimer previously
@@ -367,8 +367,8 @@ var require_timers = __commonJS({
        * @deprecated
        * @param {number} [delay=0] The delay in milliseconds to add to the now value.
        */
-      tick(delay = 0) {
-        fastNow += delay - RESOLUTION_MS + 1;
+      tick(delay2 = 0) {
+        fastNow += delay2 - RESOLUTION_MS + 1;
         onTick();
         onTick();
       },
@@ -400,8 +400,8 @@ var require_errors = __commonJS({
     "use strict";
     var kUndiciError = Symbol.for("undici.error.UND_ERR");
     var UndiciError = class extends Error {
-      constructor(message, options) {
-        super(message, options);
+      constructor(message2, options) {
+        super(message2, options);
         this.name = "UndiciError";
         this.code = "UND_ERR";
       }
@@ -414,10 +414,10 @@ var require_errors = __commonJS({
     };
     var kConnectTimeoutError = Symbol.for("undici.error.UND_ERR_CONNECT_TIMEOUT");
     var ConnectTimeoutError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "ConnectTimeoutError";
-        this.message = message || "Connect Timeout Error";
+        this.message = message2 || "Connect Timeout Error";
         this.code = "UND_ERR_CONNECT_TIMEOUT";
       }
       static [Symbol.hasInstance](instance) {
@@ -429,10 +429,10 @@ var require_errors = __commonJS({
     };
     var kHeadersTimeoutError = Symbol.for("undici.error.UND_ERR_HEADERS_TIMEOUT");
     var HeadersTimeoutError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "HeadersTimeoutError";
-        this.message = message || "Headers Timeout Error";
+        this.message = message2 || "Headers Timeout Error";
         this.code = "UND_ERR_HEADERS_TIMEOUT";
       }
       static [Symbol.hasInstance](instance) {
@@ -444,10 +444,10 @@ var require_errors = __commonJS({
     };
     var kHeadersOverflowError = Symbol.for("undici.error.UND_ERR_HEADERS_OVERFLOW");
     var HeadersOverflowError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "HeadersOverflowError";
-        this.message = message || "Headers Overflow Error";
+        this.message = message2 || "Headers Overflow Error";
         this.code = "UND_ERR_HEADERS_OVERFLOW";
       }
       static [Symbol.hasInstance](instance) {
@@ -459,10 +459,10 @@ var require_errors = __commonJS({
     };
     var kBodyTimeoutError = Symbol.for("undici.error.UND_ERR_BODY_TIMEOUT");
     var BodyTimeoutError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "BodyTimeoutError";
-        this.message = message || "Body Timeout Error";
+        this.message = message2 || "Body Timeout Error";
         this.code = "UND_ERR_BODY_TIMEOUT";
       }
       static [Symbol.hasInstance](instance) {
@@ -474,10 +474,10 @@ var require_errors = __commonJS({
     };
     var kInvalidArgumentError = Symbol.for("undici.error.UND_ERR_INVALID_ARG");
     var InvalidArgumentError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "InvalidArgumentError";
-        this.message = message || "Invalid Argument Error";
+        this.message = message2 || "Invalid Argument Error";
         this.code = "UND_ERR_INVALID_ARG";
       }
       static [Symbol.hasInstance](instance) {
@@ -489,10 +489,10 @@ var require_errors = __commonJS({
     };
     var kInvalidReturnValueError = Symbol.for("undici.error.UND_ERR_INVALID_RETURN_VALUE");
     var InvalidReturnValueError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "InvalidReturnValueError";
-        this.message = message || "Invalid Return Value Error";
+        this.message = message2 || "Invalid Return Value Error";
         this.code = "UND_ERR_INVALID_RETURN_VALUE";
       }
       static [Symbol.hasInstance](instance) {
@@ -504,10 +504,10 @@ var require_errors = __commonJS({
     };
     var kAbortError = Symbol.for("undici.error.UND_ERR_ABORT");
     var AbortError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "AbortError";
-        this.message = message || "The operation was aborted";
+        this.message = message2 || "The operation was aborted";
         this.code = "UND_ERR_ABORT";
       }
       static [Symbol.hasInstance](instance) {
@@ -519,10 +519,10 @@ var require_errors = __commonJS({
     };
     var kRequestAbortedError = Symbol.for("undici.error.UND_ERR_ABORTED");
     var RequestAbortedError = class extends AbortError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "AbortError";
-        this.message = message || "Request aborted";
+        this.message = message2 || "Request aborted";
         this.code = "UND_ERR_ABORTED";
       }
       static [Symbol.hasInstance](instance) {
@@ -534,10 +534,10 @@ var require_errors = __commonJS({
     };
     var kInformationalError = Symbol.for("undici.error.UND_ERR_INFO");
     var InformationalError = class extends UndiciError {
-      constructor(message, options) {
-        super(message, options);
+      constructor(message2, options) {
+        super(message2, options);
         this.name = "InformationalError";
-        this.message = message || "Request information";
+        this.message = message2 || "Request information";
         this.code = "UND_ERR_INFO";
       }
       static [Symbol.hasInstance](instance) {
@@ -549,10 +549,10 @@ var require_errors = __commonJS({
     };
     var kRequestContentLengthMismatchError = Symbol.for("undici.error.UND_ERR_REQ_CONTENT_LENGTH_MISMATCH");
     var RequestContentLengthMismatchError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "RequestContentLengthMismatchError";
-        this.message = message || "Request body length does not match content-length header";
+        this.message = message2 || "Request body length does not match content-length header";
         this.code = "UND_ERR_REQ_CONTENT_LENGTH_MISMATCH";
       }
       static [Symbol.hasInstance](instance) {
@@ -564,10 +564,10 @@ var require_errors = __commonJS({
     };
     var kResponseContentLengthMismatchError = Symbol.for("undici.error.UND_ERR_RES_CONTENT_LENGTH_MISMATCH");
     var ResponseContentLengthMismatchError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "ResponseContentLengthMismatchError";
-        this.message = message || "Response body length does not match content-length header";
+        this.message = message2 || "Response body length does not match content-length header";
         this.code = "UND_ERR_RES_CONTENT_LENGTH_MISMATCH";
       }
       static [Symbol.hasInstance](instance) {
@@ -579,10 +579,10 @@ var require_errors = __commonJS({
     };
     var kClientDestroyedError = Symbol.for("undici.error.UND_ERR_DESTROYED");
     var ClientDestroyedError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "ClientDestroyedError";
-        this.message = message || "The client is destroyed";
+        this.message = message2 || "The client is destroyed";
         this.code = "UND_ERR_DESTROYED";
       }
       static [Symbol.hasInstance](instance) {
@@ -594,10 +594,10 @@ var require_errors = __commonJS({
     };
     var kClientClosedError = Symbol.for("undici.error.UND_ERR_CLOSED");
     var ClientClosedError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "ClientClosedError";
-        this.message = message || "The client is closed";
+        this.message = message2 || "The client is closed";
         this.code = "UND_ERR_CLOSED";
       }
       static [Symbol.hasInstance](instance) {
@@ -609,10 +609,10 @@ var require_errors = __commonJS({
     };
     var kSocketError = Symbol.for("undici.error.UND_ERR_SOCKET");
     var SocketError = class extends UndiciError {
-      constructor(message, socket) {
-        super(message);
+      constructor(message2, socket) {
+        super(message2);
         this.name = "SocketError";
-        this.message = message || "Socket error";
+        this.message = message2 || "Socket error";
         this.code = "UND_ERR_SOCKET";
         this.socket = socket;
       }
@@ -625,10 +625,10 @@ var require_errors = __commonJS({
     };
     var kNotSupportedError = Symbol.for("undici.error.UND_ERR_NOT_SUPPORTED");
     var NotSupportedError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "NotSupportedError";
-        this.message = message || "Not supported error";
+        this.message = message2 || "Not supported error";
         this.code = "UND_ERR_NOT_SUPPORTED";
       }
       static [Symbol.hasInstance](instance) {
@@ -640,10 +640,10 @@ var require_errors = __commonJS({
     };
     var kBalancedPoolMissingUpstreamError = Symbol.for("undici.error.UND_ERR_BPL_MISSING_UPSTREAM");
     var BalancedPoolMissingUpstreamError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "MissingUpstreamError";
-        this.message = message || "No upstream has been added to the BalancedPool";
+        this.message = message2 || "No upstream has been added to the BalancedPool";
         this.code = "UND_ERR_BPL_MISSING_UPSTREAM";
       }
       static [Symbol.hasInstance](instance) {
@@ -655,8 +655,8 @@ var require_errors = __commonJS({
     };
     var kWebAssemblyNotSupportedError = Symbol.for("undici.error.ERR_WEBASSEMBLY_NOT_SUPPORTED");
     var WebAssemblyNotSupportedError = class extends Error {
-      constructor(message) {
-        super(message || "WebAssembly is not supported in this environment, but is required for HTTP/1 parsing");
+      constructor(message2) {
+        super(message2 || "WebAssembly is not supported in this environment, but is required for HTTP/1 parsing");
         this.code = "ERR_WEBASSEMBLY_NOT_SUPPORTED";
       }
       static [Symbol.hasInstance](instance) {
@@ -668,8 +668,8 @@ var require_errors = __commonJS({
     };
     var kHTTPParserError = Symbol.for("undici.error.UND_ERR_HTTP_PARSER");
     var HTTPParserError = class extends Error {
-      constructor(message, code, data) {
-        super(message);
+      constructor(message2, code, data) {
+        super(message2);
         this.name = "HTTPParserError";
         this.code = code ? `HPE_${code}` : void 0;
         this.data = data ? data.toString() : void 0;
@@ -683,10 +683,10 @@ var require_errors = __commonJS({
     };
     var kResponseExceededMaxSizeError = Symbol.for("undici.error.UND_ERR_RES_EXCEEDED_MAX_SIZE");
     var ResponseExceededMaxSizeError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "ResponseExceededMaxSizeError";
-        this.message = message || "Response content exceeded max size";
+        this.message = message2 || "Response content exceeded max size";
         this.code = "UND_ERR_RES_EXCEEDED_MAX_SIZE";
       }
       static [Symbol.hasInstance](instance) {
@@ -698,10 +698,10 @@ var require_errors = __commonJS({
     };
     var kRequestRetryError = Symbol.for("undici.error.UND_ERR_REQ_RETRY");
     var RequestRetryError = class extends UndiciError {
-      constructor(message, code, { headers, data }) {
-        super(message);
+      constructor(message2, code, { headers, data }) {
+        super(message2);
         this.name = "RequestRetryError";
-        this.message = message || "Request retry error";
+        this.message = message2 || "Request retry error";
         this.code = "UND_ERR_REQ_RETRY";
         this.statusCode = code;
         this.data = data;
@@ -716,10 +716,10 @@ var require_errors = __commonJS({
     };
     var kResponseError = Symbol.for("undici.error.UND_ERR_RESPONSE");
     var ResponseError = class extends UndiciError {
-      constructor(message, code, { headers, body, bodyTruncated = false }) {
-        super(message);
+      constructor(message2, code, { headers, body, bodyTruncated = false }) {
+        super(message2);
         this.name = "ResponseError";
-        this.message = message || "Response error";
+        this.message = message2 || "Response error";
         this.code = "UND_ERR_RESPONSE";
         this.statusCode = code;
         this.body = body;
@@ -735,10 +735,10 @@ var require_errors = __commonJS({
     };
     var kSecureProxyConnectionError = Symbol.for("undici.error.UND_ERR_PRX_TLS");
     var SecureProxyConnectionError = class extends UndiciError {
-      constructor(cause, message, options = {}) {
-        super(message, { cause, ...options });
+      constructor(cause, message2, options = {}) {
+        super(message2, { cause, ...options });
         this.name = "SecureProxyConnectionError";
-        this.message = message || "Secure Proxy Connection failed";
+        this.message = message2 || "Secure Proxy Connection failed";
         this.code = "UND_ERR_PRX_TLS";
         this.cause = cause;
       }
@@ -751,10 +751,10 @@ var require_errors = __commonJS({
     };
     var kProxyConnectionError = Symbol.for("undici.error.UND_ERR_PRX_CONN");
     var ProxyConnectionError = class extends UndiciError {
-      constructor(cause, message, options = {}) {
-        super(message, { cause, ...options });
+      constructor(cause, message2, options = {}) {
+        super(message2, { cause, ...options });
         this.name = "ProxyConnectionError";
-        this.message = message || "Proxy Connection failed";
+        this.message = message2 || "Proxy Connection failed";
         this.code = "UND_ERR_PRX_CONN";
         this.cause = cause;
       }
@@ -767,10 +767,10 @@ var require_errors = __commonJS({
     };
     var kMaxRedirectsError = Symbol.for("undici.error.UND_ERR_REDIRECT_MAX");
     var MaxRedirectsError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "MaxRedirectsError";
-        this.message = message || "max redirects";
+        this.message = message2 || "max redirects";
         this.code = "UND_ERR_REDIRECT_MAX";
       }
       static [Symbol.hasInstance](instance) {
@@ -782,10 +782,10 @@ var require_errors = __commonJS({
     };
     var kMaxOriginsReachedError = Symbol.for("undici.error.UND_ERR_MAX_ORIGINS_REACHED");
     var MaxOriginsReachedError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "MaxOriginsReachedError";
-        this.message = message || "Maximum allowed origins reached";
+        this.message = message2 || "Maximum allowed origins reached";
         this.code = "UND_ERR_MAX_ORIGINS_REACHED";
       }
       static [Symbol.hasInstance](instance) {
@@ -796,19 +796,19 @@ var require_errors = __commonJS({
       }
     };
     var Socks5ProxyError = class extends UndiciError {
-      constructor(message, code) {
-        super(message);
+      constructor(message2, code) {
+        super(message2);
         this.name = "Socks5ProxyError";
-        this.message = message || "SOCKS5 proxy error";
+        this.message = message2 || "SOCKS5 proxy error";
         this.code = code || "UND_ERR_SOCKS5";
       }
     };
     var kMessageSizeExceededError = Symbol.for("undici.error.UND_ERR_WS_MESSAGE_SIZE_EXCEEDED");
     var MessageSizeExceededError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "MessageSizeExceededError";
-        this.message = message || "Max decompressed message size exceeded";
+        this.message = message2 || "Max decompressed message size exceeded";
         this.code = "UND_ERR_WS_MESSAGE_SIZE_EXCEEDED";
       }
       static [Symbol.hasInstance](instance) {
@@ -1848,14 +1848,14 @@ var require_util = __commonJS({
       if (socket == null) {
         return;
       }
-      let message = "Connect Timeout Error";
+      let message2 = "Connect Timeout Error";
       if (Array.isArray(socket.autoSelectFamilyAttemptedAddresses)) {
-        message += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(", ")},`;
+        message2 += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(", ")},`;
       } else {
-        message += ` (attempted address: ${opts.hostname}:${opts.port},`;
+        message2 += ` (attempted address: ${opts.hostname}:${opts.port},`;
       }
-      message += ` timeout: ${opts.timeout}ms)`;
-      destroy(socket, new ConnectTimeoutError(message));
+      message2 += ` timeout: ${opts.timeout}ms)`;
+      destroy(socket, new ConnectTimeoutError(message2));
     }
     var lastUrlString = null;
     var lastProtocol = null;
@@ -2613,7 +2613,7 @@ var require_data_url = __commonJS({
     "use strict";
     var assert = __require("node:assert");
     var { asciiLowercase, forgivingBase64, collectASequenceOfCodePoints, collectASequenceOfCodePointsFast, isomorphicDecode, removeASCIIWhitespace, removeChars } = require_infra();
-    var encoder = new TextEncoder();
+    var encoder2 = new TextEncoder();
     var HTTP_TOKEN_CODEPOINTS = /^[-!#$%&'*+.^_`|~A-Za-z0-9]+$/u;
     var HTTP_WHITESPACE_REGEX = /[\u000A\u000D\u0009\u0020]/u;
     var HTTP_QUOTED_STRING_TOKENS = /^[\u0009\u0020-\u007E\u0080-\u00FF]+$/u;
@@ -2667,7 +2667,7 @@ var require_data_url = __commonJS({
       return serialized;
     }
     function stringPercentDecode(input) {
-      const bytes = encoder.encode(input);
+      const bytes = encoder2.encode(input);
       return percentDecode(bytes);
     }
     function isHexCharByte(byte) {
@@ -2908,15 +2908,15 @@ var require_webidl = __commonJS({
       errors: {},
       is: {}
     };
-    webidl.errors.exception = function(message) {
-      return new TypeError(`${message.header}: ${message.message}`);
+    webidl.errors.exception = function(message2) {
+      return new TypeError(`${message2.header}: ${message2.message}`);
     };
     webidl.errors.conversionFailed = function(opts) {
       const plural = opts.types.length === 1 ? "" : " one of";
-      const message = `${opts.argument} could not be converted to${plural}: ${opts.types.join(", ")}.`;
+      const message2 = `${opts.argument} could not be converted to${plural}: ${opts.types.join(", ")}.`;
       return webidl.errors.exception({
         header: opts.prefix,
-        message
+        message: message2
       });
     };
     webidl.errors.invalidArgument = function(context) {
@@ -5308,14 +5308,14 @@ var require_connect = __commonJS({
     }
     function maybeNormalizeConnectError(err, socket, opts) {
       if (err instanceof AggregateError && (err.code === "ETIMEDOUT" || err.errors.some((e) => e != null && e.code === "ETIMEDOUT"))) {
-        let message = "Connect Timeout Error";
+        let message2 = "Connect Timeout Error";
         if (Array.isArray(socket.autoSelectFamilyAttemptedAddresses)) {
-          message += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(", ")},`;
+          message2 += ` (attempted addresses: ${socket.autoSelectFamilyAttemptedAddresses.join(", ")},`;
         } else {
-          message += ` (attempted address: ${opts.hostname}:${opts.port},`;
+          message2 += ` (attempted address: ${opts.hostname}:${opts.port},`;
         }
-        message += ` timeout: ${opts.timeout}ms)`;
-        const wrapped = new ConnectTimeoutError(message);
+        message2 += ` timeout: ${opts.timeout}ms)`;
+        const wrapped = new ConnectTimeoutError(message2);
         wrapped.cause = err;
         return wrapped;
       }
@@ -7985,29 +7985,29 @@ var require_parser_h1 = __commonJS({
           this.updateBuffers();
         }
       }
-      setTimeout(delay, type) {
-        if (delay !== this.timeoutValue || type & USE_FAST_TIMER ^ this.timeoutType & USE_FAST_TIMER) {
+      setTimeout(delay2, type) {
+        if (delay2 !== this.timeoutValue || type & USE_FAST_TIMER ^ this.timeoutType & USE_FAST_TIMER) {
           if (this.timeout) {
             timers.clearTimeout(this.timeout);
             this.timeout = null;
           }
-          if (delay) {
+          if (delay2) {
             if (type & USE_FAST_TIMER) {
               this.timeout = timers.setFastTimeout(
                 onParserTimeout,
-                delay,
+                delay2,
                 this.timeoutWeakRef
               );
             } else {
               this.timeout = setTimeout(
                 onParserTimeout,
-                delay,
+                delay2,
                 this.timeoutWeakRef
               );
               this.timeout?.unref();
             }
           }
-          this.timeoutValue = delay;
+          this.timeoutValue = delay2;
         } else if (this.timeout?.refresh) {
           this.timeout.refresh();
         }
@@ -8595,8 +8595,8 @@ var require_parser_h1 = __commonJS({
           cursor += eventLen;
         }
       }
-      fail(code, message) {
-        this.milo.fail(this.parser, code, message);
+      fail(code, message2) {
+        this.milo.fail(this.parser, code, message2);
         this.errored = true;
       }
       onUpgrade(head) {
@@ -8687,7 +8687,7 @@ var require_formdata_parser = __commonJS({
     var assert = __require("node:assert");
     var { isomorphicDecode } = require_infra();
     var dd = Buffer.from("--");
-    var decoder = new TextDecoder();
+    var decoder2 = new TextDecoder();
     var decoderIgnoreBOM = new TextDecoder("utf-8", { ignoreBOM: true });
     function isAsciiString(chars) {
       for (let i = 0; i < chars.length; ++i) {
@@ -8824,7 +8824,7 @@ var require_formdata_parser = __commonJS({
         headerValue[4] !== 56) {
           throw parsingError("unknown charset, expected utf-8");
         }
-        value = decodeURIComponent(decoder.decode(headerValue.subarray(languageSeparator + 1)));
+        value = decodeURIComponent(decoder2.decode(headerValue.subarray(languageSeparator + 1)));
       } else if (input[position.position] === 34) {
         position.position++;
         const quotedValue = collectASequenceOfBytes(
@@ -8837,7 +8837,7 @@ var require_formdata_parser = __commonJS({
           throw parsingError("Closing quote not found");
         }
         position.position++;
-        value = decoder.decode(quotedValue).replace(/%0A/ig, "\n").replace(/%0D/ig, "\r").replace(/%22/g, '"');
+        value = decoder2.decode(quotedValue).replace(/%0A/ig, "\n").replace(/%0D/ig, "\r").replace(/%22/g, '"');
       } else {
         const tokenValue2 = collectASequenceOfBytes(
           (char) => isToken(char) && char !== 59,
@@ -8845,7 +8845,7 @@ var require_formdata_parser = __commonJS({
           input,
           position
         );
-        value = decoder.decode(tokenValue2);
+        value = decoder2.decode(tokenValue2);
       }
       return { name: attrNameStr, value, extended: isExtended };
     }
@@ -9263,8 +9263,8 @@ Content-Type: ${value.type || "application/octet-stream"}\r
             return emptyStream;
           }
           const stream = this_.body.stream;
-          const decoder = new TextDecoderStream("UTF-8");
-          return stream.pipeThrough(decoder);
+          const decoder2 = new TextDecoderStream("UTF-8");
+          return stream.pipeThrough(decoder2);
         }
       };
       return methods;
@@ -9542,21 +9542,21 @@ var require_client_h1 = __commonJS({
         this.connection = "";
         this.maxResponseSize = client[kMaxResponseSize];
       }
-      setTimeout(delay, type) {
-        if (delay !== this.timeoutValue || type & USE_FAST_TIMER ^ this.timeoutType & USE_FAST_TIMER) {
+      setTimeout(delay2, type) {
+        if (delay2 !== this.timeoutValue || type & USE_FAST_TIMER ^ this.timeoutType & USE_FAST_TIMER) {
           if (this.timeout) {
             timers.clearTimeout(this.timeout);
             this.timeout = null;
           }
-          if (delay) {
+          if (delay2) {
             if (type & USE_FAST_TIMER) {
-              this.timeout = timers.setFastTimeout(onParserTimeout, delay, this.timeoutWeakRef);
+              this.timeout = timers.setFastTimeout(onParserTimeout, delay2, this.timeoutWeakRef);
             } else {
-              this.timeout = setTimeout(onParserTimeout, delay, this.timeoutWeakRef);
+              this.timeout = setTimeout(onParserTimeout, delay2, this.timeoutWeakRef);
               this.timeout?.unref();
             }
           }
-          this.timeoutValue = delay;
+          this.timeoutValue = delay2;
         } else if (this.timeout) {
           if (this.timeout.refresh) {
             this.timeout.refresh();
@@ -9673,12 +9673,12 @@ var require_client_h1 = __commonJS({
           return new ResponseContentLengthMismatchError();
         }
         const ptr = llhttp.llhttp_get_error_reason(this.ptr);
-        let message = "";
+        let message2 = "";
         if (ptr) {
           const len = new Uint8Array(llhttp.memory.buffer, ptr).indexOf(0);
-          message = "Response does not match the HTTP/1.1 protocol (" + Buffer.from(llhttp.memory.buffer, ptr, len).toString() + ")";
+          message2 = "Response does not match the HTTP/1.1 protocol (" + Buffer.from(llhttp.memory.buffer, ptr, len).toString() + ")";
         }
-        return new HTTPParserError(message, constants.ERROR[ret], data);
+        return new HTTPParserError(message2, constants.ERROR[ret], data);
       }
       destroy() {
         assert(currentParser === null);
@@ -13397,7 +13397,7 @@ var require_agent = __commonJS({
     function defaultFactory(origin, opts) {
       return opts && opts.connections === 1 ? new Client(origin, opts) : new Pool2(origin, opts);
     }
-    var Agent2 = class extends DispatcherBase {
+    var Agent3 = class extends DispatcherBase {
       constructor({ factory: factory2 = defaultFactory, maxOrigins = Infinity, connect, tls, ...options } = {}) {
         if (typeof factory2 !== "function") {
           throw new InvalidArgumentError("factory must be a function.");
@@ -13514,7 +13514,7 @@ var require_agent = __commonJS({
         return allClientStats;
       }
     };
-    module.exports = Agent2;
+    module.exports = Agent3;
   }
 });
 
@@ -13761,8 +13761,8 @@ var require_socks5_utils = __commonJS({
         7: "Command not supported",
         8: "Address type not supported"
       };
-      const message = messages[replyCode] || `Unknown SOCKS5 error code: ${replyCode}`;
-      const error = new Error(message);
+      const message2 = messages[replyCode] || `Unknown SOCKS5 error code: ${replyCode}`;
+      const error = new Error(message2);
       error.code = `SOCKS5_${replyCode}`;
       return error;
     }
@@ -14043,8 +14043,8 @@ var require_socks5_client = __commonJS({
           return;
         }
         if (reply2 !== REPLY_CODES.SUCCEEDED) {
-          const errorMessage4 = this.getReplyErrorMessage(reply2);
-          throw new Socks5ProxyError(`SOCKS5 connection failed: ${errorMessage4}`, `UND_ERR_SOCKS5_REPLY_${reply2}`);
+          const errorMessage5 = this.getReplyErrorMessage(reply2);
+          throw new Socks5ProxyError(`SOCKS5 connection failed: ${errorMessage5}`, `UND_ERR_SOCKS5_REPLY_${reply2}`);
         }
         let boundAddress;
         let offset = 4;
@@ -14385,7 +14385,7 @@ var require_proxy_agent = __commonJS({
   "node_modules/undici/lib/dispatcher/proxy-agent.js"(exports, module) {
     "use strict";
     var { kProxy, kClose, kDestroy, kDispatch } = require_symbols();
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var Pool2 = require_pool();
     var DispatcherBase = require_dispatcher_base();
     var { InvalidArgumentError, RequestAbortedError, SecureProxyConnectionError, ProxyConnectionError } = require_errors();
@@ -14539,7 +14539,7 @@ var require_proxy_agent = __commonJS({
         } else {
           this[kClient] = clientFactory(url, { connect });
         }
-        this[kAgent] = new Agent2({
+        this[kAgent] = new Agent3({
           ...opts,
           factory: factory2,
           connect: async (opts2, callback) => {
@@ -14709,7 +14709,7 @@ var require_env_http_proxy_agent = __commonJS({
     var DispatcherBase = require_dispatcher_base();
     var { kClose, kDestroy, kClosed, kDestroyed, kDispatch, kNoProxyAgent, kHttpProxyAgent, kHttpsProxyAgent } = require_symbols();
     var ProxyAgent2 = require_proxy_agent();
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var DEFAULT_PORTS = {
       "http:": 80,
       "https:": 443
@@ -14722,7 +14722,7 @@ var require_env_http_proxy_agent = __commonJS({
         super(opts);
         this.#opts = opts;
         const { httpProxy, httpsProxy, noProxy, ...agentOpts } = opts;
-        this[kNoProxyAgent] = new Agent2(agentOpts);
+        this[kNoProxyAgent] = new Agent3(agentOpts);
         const HTTP_PROXY = httpProxy ?? process.env.http_proxy ?? process.env.HTTP_PROXY;
         if (HTTP_PROXY) {
           this[kHttpProxyAgent] = new ProxyAgent2({ ...agentOpts, uri: HTTP_PROXY });
@@ -15776,9 +15776,9 @@ var require_readable = __commonJS({
           consumePush(consume2, chunk);
         }
       }
-      const decoder = state.decoder;
-      if (decoder != null && decoder.lastNeed > 0) {
-        consumePush(consume2, Buffer.from(decoder.lastChar.subarray(0, decoder.lastTotal - decoder.lastNeed)));
+      const decoder2 = state.decoder;
+      if (decoder2 != null && decoder2.lastNeed > 0) {
+        consumePush(consume2, Buffer.from(decoder2.lastChar.subarray(0, decoder2.lastTotal - decoder2.lastNeed)));
       }
       if (state.endEmitted) {
         consumeEnd(consume2, state.encoding);
@@ -16753,10 +16753,10 @@ var require_mock_errors = __commonJS({
     var { UndiciError } = require_errors();
     var kMockNotMatchedError = Symbol.for("undici.error.UND_MOCK_ERR_MOCK_NOT_MATCHED");
     var MockNotMatchedError = class extends UndiciError {
-      constructor(message) {
-        super(message);
+      constructor(message2) {
+        super(message2);
         this.name = "MockNotMatchedError";
-        this.message = message || "The request does not match any registered mock dispatches";
+        this.message = message2 || "The request does not match any registered mock dispatches";
         this.code = "UND_MOCK_ERR_MOCK_NOT_MATCHED";
       }
       static [Symbol.hasInstance](instance) {
@@ -17081,7 +17081,7 @@ var require_mock_utils = __commonJS({
       return dispatchMockReply(mockDispatches, mockDispatch2, key, opts, handler);
     }
     function dispatchMockReply(mockDispatches, mockDispatch2, key, opts, handler, resolvedResponse) {
-      const { data: responseData, delay } = mockDispatch2;
+      const { data: responseData, delay: delay2 } = mockDispatch2;
       const response = resolvedResponse ?? responseData;
       if (response.error !== null) {
         deleteMockDispatch(mockDispatches, key);
@@ -17170,11 +17170,11 @@ var require_mock_utils = __commonJS({
           handleReply(dispatches, { ...responseDefaults, ...callbackResult });
           return;
         }
-        if (typeof delay === "number" && delay > 0) {
+        if (typeof delay2 === "number" && delay2 > 0) {
           timer = setTimeout(() => {
             timer = null;
             handleReply(dispatches);
-          }, delay);
+          }, delay2);
         } else {
           handleReply(dispatches);
         }
@@ -17903,7 +17903,7 @@ var require_mock_agent = __commonJS({
   "node_modules/undici/lib/mock/mock-agent.js"(exports, module) {
     "use strict";
     var { kClients } = require_symbols();
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var {
       kAgent,
       kMockAgentSet,
@@ -17941,7 +17941,7 @@ var require_mock_agent = __commonJS({
         if (opts?.agent && typeof opts.agent.dispatch !== "function") {
           throw new InvalidArgumentError("Argument opts.agent must implement Agent");
         }
-        const agent = opts?.agent ? opts.agent : new Agent2(opts);
+        const agent = opts?.agent ? opts.agent : new Agent3(opts);
         this[kAgent] = agent;
         this[kClients] = agent[kClients];
         this[kOptions] = mockOptions;
@@ -18582,7 +18582,7 @@ var require_snapshot_recorder = __commonJS({
 var require_snapshot_agent = __commonJS({
   "node_modules/undici/lib/mock/snapshot-agent.js"(exports, module) {
     "use strict";
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var MockAgent = require_mock_agent();
     var { SnapshotRecorder } = require_snapshot_recorder();
     var { InvalidArgumentError, UndiciError } = require_errors();
@@ -18635,7 +18635,7 @@ var require_snapshot_agent = __commonJS({
         });
         this[kSnapshotLoaded] = false;
         if (this[kSnapshotMode] === "record" || this[kSnapshotMode] === "update" || this[kSnapshotMode] === "playback" && opts.excludeUrls && opts.excludeUrls.length > 0) {
-          this[kRealAgent] = new Agent2(opts);
+          this[kRealAgent] = new Agent3(opts);
         }
         if ((this[kSnapshotMode] === "playback" || this[kSnapshotMode] === "update") && this[kSnapshotPath]) {
           this.loadSnapshots().catch(() => {
@@ -18884,11 +18884,11 @@ var require_global2 = __commonJS({
     var globalDispatcher = Symbol.for("undici.globalDispatcher.2");
     var legacyGlobalDispatcher = Symbol.for("undici.globalDispatcher.1");
     var { InvalidArgumentError } = require_errors();
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var Dispatcher1Wrapper2 = require_dispatcher1_wrapper();
     var fallbackDispatcher;
     if (getGlobalDispatcher() === void 0) {
-      setGlobalDispatcher(new Agent2());
+      setGlobalDispatcher(new Agent3());
     }
     function setGlobalDispatcher(agent) {
       if (!agent || typeof agent.dispatch !== "function") {
@@ -20440,12 +20440,12 @@ var require_date = __commonJS({
           return parseRfc850Date(date);
       }
     }
-    function makeDate(year, monthIdx, day, hour, minute, second, weekday) {
-      const result = new Date(Date.UTC(year, monthIdx, day, hour, minute, second));
-      if (year >= 0 && year <= 99) {
-        result.setUTCFullYear(year);
+    function makeDate(year2, monthIdx, day2, hour2, minute2, second, weekday) {
+      const result = new Date(Date.UTC(year2, monthIdx, day2, hour2, minute2, second));
+      if (year2 >= 0 && year2 <= 99) {
+        result.setUTCFullYear(year2);
       }
-      return result.getUTCFullYear() === year && result.getUTCMonth() === monthIdx && result.getUTCDate() === day && result.getUTCHours() === hour && result.getUTCMinutes() === minute && result.getUTCSeconds() === second && result.getUTCDay() === weekday ? result : void 0;
+      return result.getUTCFullYear() === year2 && result.getUTCMonth() === monthIdx && result.getUTCDate() === day2 && result.getUTCHours() === hour2 && result.getUTCMinutes() === minute2 && result.getUTCSeconds() === second && result.getUTCDay() === weekday ? result : void 0;
     }
     function parseImfDate(date) {
       if (date.length !== 29 || date[4] !== " " || date[7] !== " " || date[11] !== " " || date[16] !== " " || date[19] !== ":" || date[22] !== ":" || date[25] !== " " || date[26] !== "G" || date[27] !== "M" || date[28] !== "T") {
@@ -20469,13 +20469,13 @@ var require_date = __commonJS({
       } else {
         return void 0;
       }
-      let day = 0;
+      let day2 = 0;
       if (date[5] === "0") {
         const code = date.charCodeAt(6);
         if (code < 49 || code > 57) {
           return void 0;
         }
-        day = code - 48;
+        day2 = code - 48;
       } else {
         const code1 = date.charCodeAt(5);
         if (code1 < 49 || code1 > 51) {
@@ -20485,7 +20485,7 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        day = (code1 - 48) * 10 + (code2 - 48);
+        day2 = (code1 - 48) * 10 + (code2 - 48);
       }
       let monthIdx = -1;
       if (date[8] === "J" && date[9] === "a" && date[10] === "n") {
@@ -20549,14 +20549,14 @@ var require_date = __commonJS({
       if (yearDigit4 < 48 || yearDigit4 > 57) {
         return void 0;
       }
-      const year = (yearDigit1 - 48) * 1e3 + (yearDigit2 - 48) * 100 + (yearDigit3 - 48) * 10 + (yearDigit4 - 48);
-      let hour = 0;
+      const year2 = (yearDigit1 - 48) * 1e3 + (yearDigit2 - 48) * 100 + (yearDigit3 - 48) * 10 + (yearDigit4 - 48);
+      let hour2 = 0;
       if (date[17] === "0") {
         const code = date.charCodeAt(18);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        hour = code - 48;
+        hour2 = code - 48;
       } else {
         const code1 = date.charCodeAt(17);
         if (code1 < 48 || code1 > 50) {
@@ -20569,15 +20569,15 @@ var require_date = __commonJS({
         if (code1 === 50 && code2 > 51) {
           return void 0;
         }
-        hour = (code1 - 48) * 10 + (code2 - 48);
+        hour2 = (code1 - 48) * 10 + (code2 - 48);
       }
-      let minute = 0;
+      let minute2 = 0;
       if (date[20] === "0") {
         const code = date.charCodeAt(21);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        minute = code - 48;
+        minute2 = code - 48;
       } else {
         const code1 = date.charCodeAt(20);
         if (code1 < 48 || code1 > 53) {
@@ -20587,7 +20587,7 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        minute = (code1 - 48) * 10 + (code2 - 48);
+        minute2 = (code1 - 48) * 10 + (code2 - 48);
       }
       let second = 0;
       if (date[23] === "0") {
@@ -20607,7 +20607,7 @@ var require_date = __commonJS({
         }
         second = (code1 - 48) * 10 + (code2 - 48);
       }
-      return makeDate(year, monthIdx, day, hour, minute, second, weekday);
+      return makeDate(year2, monthIdx, day2, hour2, minute2, second, weekday);
     }
     function parseAscTimeDate(date) {
       if (date.length !== 24 || date[7] !== " " || date[10] !== " " || date[19] !== " ") {
@@ -20677,13 +20677,13 @@ var require_date = __commonJS({
       } else {
         return void 0;
       }
-      let day = 0;
+      let day2 = 0;
       if (date[8] === " ") {
         const code = date.charCodeAt(9);
         if (code < 49 || code > 57) {
           return void 0;
         }
-        day = code - 48;
+        day2 = code - 48;
       } else {
         const code1 = date.charCodeAt(8);
         if (code1 < 49 || code1 > 51) {
@@ -20693,15 +20693,15 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        day = (code1 - 48) * 10 + (code2 - 48);
+        day2 = (code1 - 48) * 10 + (code2 - 48);
       }
-      let hour = 0;
+      let hour2 = 0;
       if (date[11] === "0") {
         const code = date.charCodeAt(12);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        hour = code - 48;
+        hour2 = code - 48;
       } else {
         const code1 = date.charCodeAt(11);
         if (code1 < 48 || code1 > 50) {
@@ -20714,15 +20714,15 @@ var require_date = __commonJS({
         if (code1 === 50 && code2 > 51) {
           return void 0;
         }
-        hour = (code1 - 48) * 10 + (code2 - 48);
+        hour2 = (code1 - 48) * 10 + (code2 - 48);
       }
-      let minute = 0;
+      let minute2 = 0;
       if (date[14] === "0") {
         const code = date.charCodeAt(15);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        minute = code - 48;
+        minute2 = code - 48;
       } else {
         const code1 = date.charCodeAt(14);
         if (code1 < 48 || code1 > 53) {
@@ -20732,7 +20732,7 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        minute = (code1 - 48) * 10 + (code2 - 48);
+        minute2 = (code1 - 48) * 10 + (code2 - 48);
       }
       let second = 0;
       if (date[17] === "0") {
@@ -20768,8 +20768,8 @@ var require_date = __commonJS({
       if (yearDigit4 < 48 || yearDigit4 > 57) {
         return void 0;
       }
-      const year = (yearDigit1 - 48) * 1e3 + (yearDigit2 - 48) * 100 + (yearDigit3 - 48) * 10 + (yearDigit4 - 48);
-      return makeDate(year, monthIdx, day, hour, minute, second, weekday);
+      const year2 = (yearDigit1 - 48) * 1e3 + (yearDigit2 - 48) * 100 + (yearDigit3 - 48) * 10 + (yearDigit4 - 48);
+      return makeDate(year2, monthIdx, day2, hour2, minute2, second, weekday);
     }
     function parseRfc850Date(date) {
       let commaIndex = -1;
@@ -20805,13 +20805,13 @@ var require_date = __commonJS({
       if (date[commaIndex] !== "," || date.length - commaIndex - 1 !== 23 || date[commaIndex + 1] !== " " || date[commaIndex + 4] !== "-" || date[commaIndex + 8] !== "-" || date[commaIndex + 11] !== " " || date[commaIndex + 14] !== ":" || date[commaIndex + 17] !== ":" || date[commaIndex + 20] !== " " || date[commaIndex + 21] !== "G" || date[commaIndex + 22] !== "M" || date[commaIndex + 23] !== "T") {
         return void 0;
       }
-      let day = 0;
+      let day2 = 0;
       if (date[commaIndex + 2] === "0") {
         const code = date.charCodeAt(commaIndex + 3);
         if (code < 49 || code > 57) {
           return void 0;
         }
-        day = code - 48;
+        day2 = code - 48;
       } else {
         const code1 = date.charCodeAt(commaIndex + 2);
         if (code1 < 49 || code1 > 51) {
@@ -20821,7 +20821,7 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        day = (code1 - 48) * 10 + (code2 - 48);
+        day2 = (code1 - 48) * 10 + (code2 - 48);
       }
       let monthIdx = -1;
       if (date[commaIndex + 5] === "J" && date[commaIndex + 6] === "a" && date[commaIndex + 7] === "n") {
@@ -20859,15 +20859,15 @@ var require_date = __commonJS({
       if (yearDigit2 < 48 || yearDigit2 > 57) {
         return void 0;
       }
-      let year = (yearDigit1 - 48) * 10 + (yearDigit2 - 48);
-      year += year < 70 ? 2e3 : 1900;
-      let hour = 0;
+      let year2 = (yearDigit1 - 48) * 10 + (yearDigit2 - 48);
+      year2 += year2 < 70 ? 2e3 : 1900;
+      let hour2 = 0;
       if (date[commaIndex + 12] === "0") {
         const code = date.charCodeAt(commaIndex + 13);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        hour = code - 48;
+        hour2 = code - 48;
       } else {
         const code1 = date.charCodeAt(commaIndex + 12);
         if (code1 < 48 || code1 > 50) {
@@ -20880,15 +20880,15 @@ var require_date = __commonJS({
         if (code1 === 50 && code2 > 51) {
           return void 0;
         }
-        hour = (code1 - 48) * 10 + (code2 - 48);
+        hour2 = (code1 - 48) * 10 + (code2 - 48);
       }
-      let minute = 0;
+      let minute2 = 0;
       if (date[commaIndex + 15] === "0") {
         const code = date.charCodeAt(commaIndex + 16);
         if (code < 48 || code > 57) {
           return void 0;
         }
-        minute = code - 48;
+        minute2 = code - 48;
       } else {
         const code1 = date.charCodeAt(commaIndex + 15);
         if (code1 < 48 || code1 > 53) {
@@ -20898,7 +20898,7 @@ var require_date = __commonJS({
         if (code2 < 48 || code2 > 57) {
           return void 0;
         }
-        minute = (code1 - 48) * 10 + (code2 - 48);
+        minute2 = (code1 - 48) * 10 + (code2 - 48);
       }
       let second = 0;
       if (date[commaIndex + 18] === "0") {
@@ -20918,7 +20918,7 @@ var require_date = __commonJS({
         }
         second = (code1 - 48) * 10 + (code2 - 48);
       }
-      return makeDate(year, monthIdx, day, hour, minute, second, weekday);
+      return makeDate(year2, monthIdx, day2, hour2, minute2, second, weekday);
     }
     module.exports = {
       parseHttpDate
@@ -27052,8 +27052,8 @@ var require_cache3 = __commonJS({
        * @returns {requestResponseList}
        */
       #batchCacheOperations(operations) {
-        const cache4 = this.#relevantRequestResponseList;
-        const backupCache = [...cache4];
+        const cache5 = this.#relevantRequestResponseList;
+        const backupCache = [...cache5];
         const addedItems = [];
         const resultList = [];
         try {
@@ -27080,9 +27080,9 @@ var require_cache3 = __commonJS({
                 return [];
               }
               for (const requestResponse of requestResponses) {
-                const idx = cache4.indexOf(requestResponse);
+                const idx = cache5.indexOf(requestResponse);
                 assert(idx !== -1);
-                cache4.splice(idx, 1);
+                cache5.splice(idx, 1);
               }
             } else if (operation.type === "put") {
               if (operation.response == null) {
@@ -27112,11 +27112,11 @@ var require_cache3 = __commonJS({
               }
               requestResponses = this.#queryCache(operation.request);
               for (const requestResponse of requestResponses) {
-                const idx = cache4.indexOf(requestResponse);
+                const idx = cache5.indexOf(requestResponse);
                 assert(idx !== -1);
-                cache4.splice(idx, 1);
+                cache5.splice(idx, 1);
               }
-              cache4.push([operation.request, operation.response]);
+              cache5.push([operation.request, operation.response]);
               addedItems.push([operation.request, operation.response]);
             }
             resultList.push([operation.request, operation.response]);
@@ -27298,13 +27298,13 @@ var require_cachestorage = __commonJS({
         if (options.cacheName != null) {
           if (this.#caches.has(options.cacheName)) {
             const cacheList = this.#caches.get(options.cacheName);
-            const cache4 = new Cache(kConstruct, cacheList);
-            return await cache4.match(request, options);
+            const cache5 = new Cache(kConstruct, cacheList);
+            return await cache5.match(request, options);
           }
         } else {
           for (const cacheList of this.#caches.values()) {
-            const cache4 = new Cache(kConstruct, cacheList);
-            const response = await cache4.match(request, options);
+            const cache5 = new Cache(kConstruct, cacheList);
+            const response = await cache5.match(request, options);
             if (response !== void 0) {
               return response;
             }
@@ -27334,12 +27334,12 @@ var require_cachestorage = __commonJS({
         webidl.argumentLengthCheck(arguments, 1, prefix);
         cacheName = webidl.converters.DOMString(cacheName, prefix, "cacheName");
         if (this.#caches.has(cacheName)) {
-          const cache5 = this.#caches.get(cacheName);
-          return new Cache(kConstruct, cache5);
+          const cache6 = this.#caches.get(cacheName);
+          return new Cache(kConstruct, cache6);
         }
-        const cache4 = [];
-        this.#caches.set(cacheName, cache4);
-        return new Cache(kConstruct, cache4);
+        const cache5 = [];
+        this.#caches.set(cacheName, cache5);
+        return new Cache(kConstruct, cache5);
       }
       /**
        * @see https://w3c.github.io/ServiceWorker/#cache-storage-delete
@@ -29752,9 +29752,9 @@ var require_websocketerror = __commonJS({
     var WebSocketError = class _WebSocketError extends createInheritableDOMException() {
       #closeCode;
       #reason;
-      constructor(message = "", init = void 0) {
-        message = webidl.converters.DOMString(message, "WebSocketError", "message");
-        super(message, "WebSocketError");
+      constructor(message2 = "", init = void 0) {
+        message2 = webidl.converters.DOMString(message2, "WebSocketError", "message");
+        super(message2, "WebSocketError");
         if (init === kConstruct) {
           return;
         } else if (init !== null) {
@@ -29776,8 +29776,8 @@ var require_websocketerror = __commonJS({
         return this.#reason;
       }
       static {
-        createUnvalidatedWebSocketError = (message, code, reason) => {
-          const error = new _WebSocketError(message, kConstruct);
+        createUnvalidatedWebSocketError = (message2, code, reason) => {
+          const error = new _WebSocketError(message2, kConstruct);
           error.#closeCode = code;
           error.#reason = reason;
           return error;
@@ -30915,7 +30915,7 @@ var require_undici = __commonJS({
     var Pool2 = require_pool();
     var BalancedPool = require_balanced_pool();
     var RoundRobinPool = require_round_robin_pool();
-    var Agent2 = require_agent();
+    var Agent3 = require_agent();
     var Dispatcher1Wrapper2 = require_dispatcher1_wrapper();
     var ProxyAgent2 = require_proxy_agent();
     var Socks5ProxyAgent = require_socks5_proxy_agent();
@@ -30943,7 +30943,7 @@ var require_undici = __commonJS({
     module.exports.Pool = Pool2;
     module.exports.BalancedPool = BalancedPool;
     module.exports.RoundRobinPool = RoundRobinPool;
-    module.exports.Agent = Agent2;
+    module.exports.Agent = Agent3;
     module.exports.Dispatcher1Wrapper = Dispatcher1Wrapper2;
     module.exports.ProxyAgent = ProxyAgent2;
     module.exports.Socks5ProxyAgent = Socks5ProxyAgent;
@@ -31104,8 +31104,8 @@ ${captureLines}` : capture.stack;
 });
 
 // vendor/channel-pack/src/index.ts
-import { credentialRef as credentialRef14 } from "@deepseek-ai/dsh-credentials";
-import { LlmError as LlmError20 } from "@deepseek-ai/dsh-llm";
+import { credentialRef as credentialRef15 } from "@deepseek-ai/dsh-credentials";
+import { LlmError as LlmError21 } from "@deepseek-ai/dsh-llm";
 import Schema2 from "@deepseek-ai/schemastery";
 
 // vendor/channel-pack/src/model-queue.ts
@@ -31133,8 +31133,8 @@ var QUEUE_BUSINESS_CODE = "10605";
 var ModelQueuedError = class extends LlmError {
   queueInfo;
   retryAfterMs;
-  constructor(message, options) {
-    super(message, "QUEUE");
+  constructor(message2, options) {
+    super(message2, "QUEUE");
     this.name = "ModelQueuedError";
     this.queueInfo = options.queueInfo;
     this.retryAfterMs = options.retryAfterMs;
@@ -31214,10 +31214,10 @@ function throwIfModelQueued(body, headers) {
   const declared = queueNodes(body).find((node) => node.isQueued === true || [node.code, node.type].some((value) => typeof value === "string" && ["queued", "model_queued"].includes(value.toLowerCase())));
   if (declared === void 0) return;
   const info = parseQueueError(body) ?? parseQueueError({ ...declared, isQueued: true }) ?? { isQueued: true };
-  const delay = queueDelayMs(info) ?? retryAfterMsFromResponse(headers);
+  const delay2 = queueDelayMs(info) ?? retryAfterMsFromResponse(headers);
   throw new ModelQueuedError("\u6A21\u578B\u6392\u961F\u4E2D", {
     queueInfo: { ...info },
-    ...delay === void 0 ? {} : { retryAfterMs: Math.min(delay, QUEUE_MAX_DELAY_MS) }
+    ...delay2 === void 0 ? {} : { retryAfterMs: Math.min(delay2, QUEUE_MAX_DELAY_MS) }
   });
 }
 async function checkQueuedResponse(response) {
@@ -31225,7 +31225,7 @@ async function checkQueuedResponse(response) {
     const body = await response.clone().text().catch(() => void 0);
     if (body !== void 0) throwIfModelQueued(body, response.headers);
   } else if (response.body !== null && response.headers.get("content-type")?.includes("application/json")) {
-    const decoder = new TextDecoder();
+    const decoder2 = new TextDecoder();
     let prefix = "";
     const reader = response.body.getReader();
     let cancelling;
@@ -31244,7 +31244,7 @@ async function checkQueuedResponse(response) {
             return;
           }
           if (prefix !== void 0) {
-            prefix += decoder.decode(chunk, { stream: true });
+            prefix += decoder2.decode(chunk, { stream: true });
             if (prefix.length > 65536 || prefix.trimStart().length > 0 && !prefix.trimStart().startsWith("{")) {
               prefix = void 0;
             } else {
@@ -31584,8 +31584,8 @@ function readTokenLedgerDayMap() {
 function utc8DayKey(ts) {
   const shifted = new Date(ts + 8 * 60 * 60 * 1e3);
   const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(shifted.getUTCDate()).padStart(2, "0");
-  return `${shifted.getUTCFullYear()}-${month}-${day}`;
+  const day2 = String(shifted.getUTCDate()).padStart(2, "0");
+  return `${shifted.getUTCFullYear()}-${month}-${day2}`;
 }
 function clampCount(value) {
   const n = Number(value);
@@ -31751,11 +31751,11 @@ function dayBucketKeyOf(key) {
   return `${key.channel}|${esc(key.provider)}|${esc(key.accountId)}|${esc(key.model)}`;
 }
 function mergeDayEntry(days, entry) {
-  const day = utc8DayKey(entry.ts);
-  let buckets = days.get(day);
+  const day2 = utc8DayKey(entry.ts);
+  let buckets = days.get(day2);
   if (buckets === void 0) {
     buckets = /* @__PURE__ */ new Map();
-    days.set(day, buckets);
+    days.set(day2, buckets);
   }
   const key = dayBucketKeyOf({
     channel: entry.channel,
@@ -31814,10 +31814,10 @@ function readTokenLedgerHistory(days, options = {}) {
   const grandTotals = emptyTotals();
   const historyDays = [];
   const dayKeys = [...days.keys()].sort((a, b) => b.localeCompare(a));
-  for (const day of dayKeys) {
-    if (day > todayKey) continue;
-    if (cutoffKey !== void 0 && day < cutoffKey) continue;
-    const buckets = days.get(day);
+  for (const day2 of dayKeys) {
+    if (day2 > todayKey) continue;
+    if (cutoffKey !== void 0 && day2 < cutoffKey) continue;
+    const buckets = days.get(day2);
     if (buckets === void 0 || buckets.size === 0) continue;
     const dayTotals = emptyTotals();
     const channelMap = /* @__PURE__ */ new Map();
@@ -31870,7 +31870,7 @@ function readTokenLedgerHistory(days, options = {}) {
       return { channel, providers: providerRows, totals: finalizeAverages(channelTotals) };
     });
     accumulateBucket(grandTotals, dayTotals);
-    historyDays.push({ day, channels, totals: finalizeAverages(dayTotals) });
+    historyDays.push({ day: day2, channels, totals: finalizeAverages(dayTotals) });
   }
   return { days: historyDays, totals: finalizeAverages(grandTotals) };
 }
@@ -32230,6 +32230,8 @@ var MemoryStore = class {
   }
 };
 var REF_PREFIX_TO_PROVIDER = [
+  // MOD (CodeArts restore): 恢复华为云 CodeArts 渠道的账号池归属。
+  ["CODEARTS", "codearts"],
   ["LOBSTERAI", "lobsterai"],
   ["QODER", "qoder"],
   ["QODERCN", "qodercn"],
@@ -33049,7 +33051,7 @@ var AccountPool = class {
    */
   async findAccountIdByCredential(provider, identity) {
     if (identity.length === 0) return "";
-    const identifierKey = "access_token";
+    const identifierKey = provider === "codearts" ? "access_key_id" : "access_token";
     for (const entry of this.readAccounts()) {
       if (entry.provider !== provider || !entry.enabled) continue;
       const resolved = await this.resolveCredentialByRef(entry.credentialRef);
@@ -33553,7 +33555,7 @@ function isRateLimited(body, status) {
 var RESET_TIME_PATTERN = /(?:将在|reset at)\s+([\d-]+\s+[\d:]+)\s+(UTC[+-]\d+(?::\d+)?)/i;
 var RATE_LIMIT_FALLBACK_MS = 36e5;
 function parseRateLimitError(body, currentModel, status) {
-  const fallback = () => ({
+  const fallback2 = () => ({
     modelId: currentModel,
     resetTimeMs: Date.now() + RATE_LIMIT_FALLBACK_MS
   });
@@ -33568,11 +33570,11 @@ function parseRateLimitError(body, currentModel, status) {
       }
     }
     if (isRateLimited(body, status)) {
-      return fallback();
+      return fallback2();
     }
     return null;
   } catch {
-    return status === 429 ? fallback() : null;
+    return status === 429 ? fallback2() : null;
   }
 }
 
@@ -33654,16 +33656,16 @@ function parseLobsteraiEnvelope(body) {
   }
   const record = body;
   const code = readNumberField(record, "code") ?? -1;
-  const message = readStringField(record, "msg") || readStringField(record, "message");
+  const message2 = readStringField(record, "msg") || readStringField(record, "message");
   if (code !== 0) {
-    return { ok: false, code, message: message.length > 0 ? message : `code=${code}` };
+    return { ok: false, code, message: message2.length > 0 ? message2 : `code=${code}` };
   }
   const data = record.data;
   if (typeof data !== "object" || data === null || Array.isArray(data)) {
     return {
       ok: false,
       code,
-      message: message.length > 0 ? message : "data \u4E3A\u7A7A\uFF08accessToken \u53EF\u80FD\u5DF2\u5931\u6548\uFF09"
+      message: message2.length > 0 ? message2 : "data \u4E3A\u7A7A\uFF08accessToken \u53EF\u80FD\u5DF2\u5931\u6548\uFF09"
     };
   }
   return { ok: true, data };
@@ -33984,8 +33986,8 @@ function classifyLobsteraiError(status, body) {
   if (status >= 400) return "client";
   return "none";
 }
-function classifyLobsteraiStreamError(message) {
-  const byKeyword = classifyLobsteraiError(200, message);
+function classifyLobsteraiStreamError(message2) {
+  const byKeyword = classifyLobsteraiError(200, message2);
   return byKeyword === "none" ? "client" : byKeyword;
 }
 function shouldRotateLobsteraiAccount(kind) {
@@ -34002,49 +34004,49 @@ function isLobsteraiTerminalError(kind) {
 function isWrappedToolResult(block) {
   return typeof block === "object" && block !== null && block.type === "tool-result";
 }
-function isToolRoleMessage(message) {
-  return message.role === "tool";
+function isToolRoleMessage(message2) {
+  return message2.role === "tool";
 }
 function detectMessageShape(messages) {
   let sawLegacy = false;
-  for (const message of messages) {
-    if (isToolRoleMessage(message)) return "tool-role";
-    const content = message.content;
+  for (const message2 of messages) {
+    if (isToolRoleMessage(message2)) return "tool-role";
+    const content = message2.content;
     if (Array.isArray(content) && content.some(isWrappedToolResult)) sawLegacy = true;
   }
   return sawLegacy ? "legacy" : "none";
 }
 function normalizeHarnessMessages(messages) {
   const shape = detectMessageShape(messages);
-  const hasDeveloper = messages.some((message) => message.role === "developer");
+  const hasDeveloper = messages.some((message2) => message2.role === "developer");
   if (shape !== "tool-role" && !hasDeveloper) {
     return messages;
   }
   const normalized = [];
-  for (const message of messages) {
-    if (message.role === "developer") continue;
-    if (!isToolRoleMessage(message)) {
-      normalized.push(message);
+  for (const message2 of messages) {
+    if (message2.role === "developer") continue;
+    if (!isToolRoleMessage(message2)) {
+      normalized.push(message2);
       continue;
     }
-    const source = message["source"];
+    const source = message2["source"];
     const sourceCallId = typeof source === "object" && source !== null ? source.callId : void 0;
-    const toolCallId = message.toolCallId ?? sourceCallId;
+    const toolCallId = message2.toolCallId ?? sourceCallId;
     const block = {
       type: "tool-result",
       toolCallId,
-      content: message.content
+      content: message2.content
     };
-    if (message.isError !== void 0) block.isError = message.isError;
+    if (message2.isError !== void 0) block.isError = message2.isError;
     normalized.push({ role: "user", content: [block] });
   }
   return normalized;
 }
 function collectHarnessSystem(messages) {
   const parts = [];
-  for (const message of messages) {
-    if (message === null || typeof message !== "object" || message.role !== "system") continue;
-    const content = message.content;
+  for (const message2 of messages) {
+    if (message2 === null || typeof message2 !== "object" || message2.role !== "system") continue;
+    const content = message2.content;
     const text = typeof content === "string" ? content : Array.isArray(content) ? content.filter((block) => typeof block === "object" && block !== null && block.type === "text" && typeof block.text === "string").map((block) => block.text).join("\n") : "";
     if (text !== "") parts.push(text);
   }
@@ -34114,8 +34116,8 @@ function createBlankReasoningSuppressor() {
 function resolveToolPairing(messages) {
   const normalized = normalizeHarnessMessages(messages);
   const allResultIds = /* @__PURE__ */ new Set();
-  for (const message of normalized) {
-    const content = Array.isArray(message.content) ? message.content : [];
+  for (const message2 of normalized) {
+    const content = Array.isArray(message2.content) ? message2.content : [];
     for (const block of content) {
       if (typeof block === "object" && block !== null && block.type === "tool-result") {
         allResultIds.add(String(block.toolCallId));
@@ -34123,9 +34125,9 @@ function resolveToolPairing(messages) {
     }
   }
   const keepCallIds = /* @__PURE__ */ new Set();
-  for (const message of normalized) {
-    if (message.role !== "assistant") continue;
-    const content = Array.isArray(message.content) ? message.content : [];
+  for (const message2 of normalized) {
+    if (message2.role !== "assistant") continue;
+    const content = Array.isArray(message2.content) ? message2.content : [];
     const calls = content.filter((block) => typeof block === "object" && block !== null && block.type === "tool-call");
     if (calls.length === 0) continue;
     const usable = calls.filter((block) => hasUsableToolName(block.name));
@@ -34403,13 +34405,13 @@ var GONE_PATTERNS = [
 ];
 var GONE_TAIL = /(?:(?:does\s*not|doesn'?t)\s+(?:exist|found)|\bnot\s+(?:found|exist)|不存在|未找到|未上线|已下线|已下架)/;
 var TOKEN = String.raw`[A-Za-z0-9][A-Za-z0-9._/-]{0,63}`;
-function matchesGonePhrase(message) {
-  for (const subject of message.matchAll(new RegExp(String.raw`(?:model|模型)["'\x60]?[\s,]*`, "gi"))) {
-    const tail = message.slice((subject.index ?? 0) + subject[0].length);
+function matchesGonePhrase(message2) {
+  for (const subject of message2.matchAll(new RegExp(String.raw`(?:model|模型)["'\x60]?[\s,]*`, "gi"))) {
+    const tail = message2.slice((subject.index ?? 0) + subject[0].length);
     if (new RegExp(String.raw`^["'\x60]?[\s,]*${GONE_TAIL.source}`, "i").test(tail)) return true;
   }
-  for (const subject of message.matchAll(new RegExp(String.raw`(?:model|模型)[\s"'\x60]*(${TOKEN})`, "gi"))) {
-    const tail = message.slice((subject.index ?? 0) + subject[0].length);
+  for (const subject of message2.matchAll(new RegExp(String.raw`(?:model|模型)[\s"'\x60]*(${TOKEN})`, "gi"))) {
+    const tail = message2.slice((subject.index ?? 0) + subject[0].length);
     if (new RegExp(String.raw`^["'\x60]?[\s,]*${GONE_TAIL.source}`, "i").test(tail)) return true;
   }
   return false;
@@ -34438,11 +34440,11 @@ function isModelGoneError(error) {
   if (typeof error !== "object" || error === null) return false;
   const code = error.code;
   if (typeof code === "string" && IGNORED_CODES.has(code)) return false;
-  const message = error.message;
-  if (typeof message !== "string" || message.length === 0) return false;
-  if (NOT_GONE_PATTERNS.some((pattern) => pattern.test(message))) return false;
-  if (GONE_PATTERNS.some((pattern) => pattern.test(message))) return true;
-  return matchesGonePhrase(message);
+  const message2 = error.message;
+  if (typeof message2 !== "string" || message2.length === 0) return false;
+  if (NOT_GONE_PATTERNS.some((pattern) => pattern.test(message2))) return false;
+  if (GONE_PATTERNS.some((pattern) => pattern.test(message2))) return true;
+  return matchesGonePhrase(message2);
 }
 function ttlMs() {
   const raw = process.env.DSH_DEAD_MODEL_TTL_DAYS;
@@ -34717,9 +34719,9 @@ function isDuplicateRegistrationError(error) {
   if (typeof error !== "object" || error === null) return false;
   const code = error.code;
   if (code === DUPLICATE_DIRECTORY) return true;
-  const message = error.message;
-  if (typeof message !== "string") return false;
-  return /already declared|already registered|is already (?:a|an) adapter/.test(message);
+  const message2 = error.message;
+  if (typeof message2 !== "string") return false;
+  return /already declared|already registered|is already (?:a|an) adapter/.test(message2);
 }
 function wrapAdapterWithTokenLedger(providers, adapter) {
   const provider = providers[0] ?? "";
@@ -34984,11 +34986,11 @@ function serializeMessages(messages, imageUrls) {
     });
     pendingToolImages = [];
   };
-  for (const message of normalized) {
-    if (message.role === "assistant") {
+  for (const message2 of normalized) {
+    if (message2.role === "assistant") {
       const content2 = stripCourseLeakFromHistoryContent(
-        message.role,
-        Array.isArray(message.content) ? message.content : []
+        message2.role,
+        Array.isArray(message2.content) ? message2.content : []
       );
       const toolCalls = content2.filter((block) => typeof block === "object" && block !== null && block.type === "tool-call").filter((block) => keepCallIds.has(String(block.id))).map((block) => ({
         id: String(block.id),
@@ -35008,14 +35010,14 @@ function serializeMessages(messages, imageUrls) {
       });
       continue;
     }
-    if (message.role === "system") {
+    if (message2.role === "system") {
       flushToolImages();
-      wire.push({ role: "system", content: contentToText(message.content) });
+      wire.push({ role: "system", content: contentToText(message2.content) });
       continue;
     }
-    const content = Array.isArray(message.content) ? message.content : [];
+    const content = Array.isArray(message2.content) ? message2.content : [];
     const toolResults = content.filter((block) => typeof block === "object" && block !== null && block.type === "tool-result");
-    const text = contentToText(message.content);
+    const text = contentToText(message2.content);
     const regular = content.filter((block) => !(typeof block === "object" && block !== null && block.type === "tool-result"));
     const parts = imageUrls === void 0 ? void 0 : userContentParts(regular, imageUrls);
     if (parts !== void 0) {
@@ -35059,8 +35061,8 @@ function errorMessage(error) {
   }
 }
 var LobsteraiStreamError = class extends LlmError4 {
-  constructor(message, kind, detail, options) {
-    super(message, kind === "hard-credit" ? "QUOTA_EXCEEDED" : "SERVER", options);
+  constructor(message2, kind, detail, options) {
+    super(message2, kind === "hard-credit" ? "QUOTA_EXCEEDED" : "SERVER", options);
     this.kind = kind;
     this.detail = detail;
   }
@@ -35103,11 +35105,11 @@ function httpErrorCode(status) {
 }
 function isTransportError(error) {
   if (!(error instanceof Error)) return false;
-  const message = error.message.toLowerCase();
-  if (message.includes("terminated")) return true;
+  const message2 = error.message.toLowerCase();
+  if (message2.includes("terminated")) return true;
   if (error.name.startsWith("UND_ERR_")) return true;
-  if (message.includes("fetch failed")) return true;
-  if (message.includes("econnreset") || message.includes("epipe") || message.includes("socket hang up")) return true;
+  if (message2.includes("fetch failed")) return true;
+  if (message2.includes("econnreset") || message2.includes("epipe") || message2.includes("socket hang up")) return true;
   return false;
 }
 function resolveFirstTokenTimeoutMs() {
@@ -35297,8 +35299,8 @@ var LobsteraiAdapter = class extends LlmAdapter {
   async *stream(options) {
     await this.ensureRemoteModels();
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages(message2.content, imageRefs);
     }
     let imageUrls;
     if (imageRefs.size > 0) {
@@ -35508,7 +35510,7 @@ var LobsteraiAdapter = class extends LlmAdapter {
     let finishReason2;
     let gotAnyContent = false;
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder2 = new TextDecoder();
     let firstTokenReceived = false;
     try {
       for (; ; ) {
@@ -35528,7 +35530,7 @@ var LobsteraiAdapter = class extends LlmAdapter {
           throw error;
         }
         if (result.done) break;
-        buffer += decoder.decode(result.value, { stream: true });
+        buffer += decoder2.decode(result.value, { stream: true });
         let newline;
         while ((newline = buffer.indexOf("\n")) !== -1) {
           const line2 = buffer.slice(0, newline).trim();
@@ -35999,8 +36001,8 @@ async function createGlue() {
   let exports = {};
   let cachedHeap = null;
   let cachedView = null;
-  const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
-  const encoder = new TextEncoder();
+  const decoder2 = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
+  const encoder2 = new TextEncoder();
   const heap = () => {
     if (cachedHeap === null || cachedHeap.byteLength === 0) {
       cachedHeap = new Uint8Array(exports.memory.buffer);
@@ -36013,7 +36015,7 @@ async function createGlue() {
     }
     return cachedView;
   };
-  const readString6 = (ptr, len) => decoder.decode(heap().subarray(ptr >>> 0, (ptr >>> 0) + len));
+  const readString7 = (ptr, len) => decoder2.decode(heap().subarray(ptr >>> 0, (ptr >>> 0) + len));
   const objects = new Array(1024).fill(void 0);
   objects.push(void 0, null, true, false);
   let firstFree = objects.length;
@@ -36035,7 +36037,7 @@ async function createGlue() {
   };
   let lastLength = 0;
   const writeString = (text) => {
-    const encoded = encoder.encode(text);
+    const encoded = encoder2.encode(text);
     const ptr = exports.__wbindgen_export2(encoded.length, 1) >>> 0;
     heap().subarray(ptr, ptr + encoded.length).set(encoded);
     lastLength = encoded.length;
@@ -36052,7 +36054,7 @@ async function createGlue() {
       len = v.getInt32(stack + 4, true);
       const isError = v.getInt32(stack + 12, true);
       if (isError) throw takeObject(v.getInt32(stack + 8, true));
-      return readString6(ptr, len);
+      return readString7(ptr, len);
     } finally {
       exports.__wbindgen_add_to_stack_pointer(16);
       if (ptr) exports.__wbindgen_export4(ptr, len, 1);
@@ -36082,7 +36084,7 @@ async function createGlue() {
     __wbindgen_object_drop_ref: (a) => takeObject(a),
     __wbindgen_object_clone_ref: (a) => pushObject(heapObject(a)),
     __wbindgen_cast_0000000000000001: (a, e) => pushObject(heap().subarray(a >>> 0, (a >>> 0) + e)),
-    __wbindgen_cast_0000000000000002: (a, e) => pushObject(readString6(a, e)),
+    __wbindgen_cast_0000000000000002: (a, e) => pushObject(readString7(a, e)),
     __wbg_set_08463b1df38a7e29: (a, e, t) => pushObject(heapObject(a).set(heapObject(e), heapObject(t))),
     // ⚠️ 这两个签名**方向相反**：一个写 wasm 内存，一个调 JS 对象。
     // 写反会得到 Rust panic `unreachable`。
@@ -36120,9 +36122,9 @@ async function createGlue() {
     __wbg_static_accessor_SELF_24f78b6d23f286ea: () => globalThis.self === void 0 ? 0 : pushObject(globalThis.self),
     __wbg_static_accessor_WINDOW_59fd959c540fe405: () => globalThis.window === void 0 ? 0 : pushObject(globalThis.window),
     __wbg___wbindgen_throw_81fc77679af83bc6: (p, l) => {
-      throw new Error(readString6(p, l));
+      throw new Error(readString7(p, l));
     },
-    __wbg_Error_2e59b1b37a9a34c3: (p, l) => pushObject(new Error(readString6(p, l))),
+    __wbg_Error_2e59b1b37a9a34c3: (p, l) => pushObject(new Error(readString7(p, l))),
     __wbg___wbindgen_is_object_40c5a80572e8f9d3: (id) => {
       const v = heapObject(id);
       return typeof v === "object" && v !== null;
@@ -36137,7 +36139,7 @@ async function createGlue() {
     exports,
     heap,
     view,
-    readString: readString6,
+    readString: readString7,
     writeString,
     lastLength: () => lastLength,
     heapObject,
@@ -36292,57 +36294,57 @@ function unwrapQoderEnvelopeStream(response, label) {
   if (upstream === null) {
     throw new LlmError5(`${label}: \u54CD\u5E94\u6CA1\u6709 body`, "SERVER");
   }
-  const decoder = new TextDecoder("utf-8");
-  const encoder = new TextEncoder();
+  const decoder2 = new TextDecoder("utf-8");
+  const encoder2 = new TextEncoder();
   let buffer = "";
   const transform = new TransformStream({
     transform(chunk, controller) {
-      buffer += decoder.decode(chunk, { stream: true });
+      buffer += decoder2.decode(chunk, { stream: true });
       let newline;
       while ((newline = buffer.indexOf("\n")) !== -1) {
         const line2 = buffer.slice(0, newline).replace(/\r$/, "");
         buffer = buffer.slice(newline + 1);
         if (line2 === "") {
-          controller.enqueue(encoder.encode("\n"));
+          controller.enqueue(encoder2.encode("\n"));
           continue;
         }
         if (!line2.startsWith("data:")) {
-          controller.enqueue(encoder.encode(`${line2}
+          controller.enqueue(encoder2.encode(`${line2}
 `));
           continue;
         }
         const payload = line2.slice(5).trim();
         if (payload === "[DONE]") {
-          controller.enqueue(encoder.encode("data: [DONE]\n"));
+          controller.enqueue(encoder2.encode("data: [DONE]\n"));
           continue;
         }
         const inner = innerTextOf(payload);
         if (inner === null) {
-          controller.enqueue(encoder.encode(`data: ${payload}
+          controller.enqueue(encoder2.encode(`data: ${payload}
 `));
           continue;
         }
         if (classifyInner(inner) === "heartbeat") continue;
         if (classifyInner(inner) === "error") {
           let code;
-          let message = inner;
+          let message2 = inner;
           try {
             const parsed = JSON.parse(inner);
             if (parsed.code !== void 0) code = parsed.code;
-            if (typeof parsed.message === "string") message = parsed.message;
+            if (typeof parsed.message === "string") message2 = parsed.message;
           } catch {
           }
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({
+            encoder2.encode(`data: ${JSON.stringify({
               ...code === void 0 ? {} : { code },
-              message,
+              message: message2,
               type: "model_error"
             })}
 `)
           );
           continue;
         }
-        controller.enqueue(encoder.encode(`data: ${inner}
+        controller.enqueue(encoder2.encode(`data: ${inner}
 `));
       }
     },
@@ -36351,7 +36353,7 @@ function unwrapQoderEnvelopeStream(response, label) {
       if (rest.length > 0) {
         const inner = rest.startsWith("data:") ? innerTextOf(rest.slice(5).trim()) : null;
         if (inner !== null && classifyInner(inner) !== "heartbeat") {
-          controller.enqueue(encoder.encode(`data: ${inner}
+          controller.enqueue(encoder2.encode(`data: ${inner}
 `));
         }
       }
@@ -36798,11 +36800,11 @@ function serializeMessages2(messages, imageUrls) {
     });
     pendingToolImages = [];
   };
-  for (const message of normalized) {
-    if (message.role === "assistant") {
+  for (const message2 of normalized) {
+    if (message2.role === "assistant") {
       const content2 = stripCourseLeakFromHistoryContent(
-        message.role,
-        Array.isArray(message.content) ? message.content : []
+        message2.role,
+        Array.isArray(message2.content) ? message2.content : []
       );
       const toolCalls = content2.filter((block) => typeof block === "object" && block !== null && block.type === "tool-call").filter((block) => keepCallIds.has(String(block.id))).map((block) => ({
         id: String(block.id),
@@ -36822,14 +36824,14 @@ function serializeMessages2(messages, imageUrls) {
       });
       continue;
     }
-    if (message.role === "system") {
+    if (message2.role === "system") {
       flushToolImages();
-      wire.push({ role: "system", content: contentToText2(message.content) });
+      wire.push({ role: "system", content: contentToText2(message2.content) });
       continue;
     }
-    const content = Array.isArray(message.content) ? message.content : [];
+    const content = Array.isArray(message2.content) ? message2.content : [];
     const toolResults = content.filter((block) => typeof block === "object" && block !== null && block.type === "tool-result");
-    const text = contentToText2(message.content);
+    const text = contentToText2(message2.content);
     const regular = content.filter((block) => !(typeof block === "object" && block !== null && block.type === "tool-result"));
     const parts = imageUrls === void 0 ? void 0 : userContentParts2(regular, imageUrls);
     if (parts !== void 0) {
@@ -36896,11 +36898,11 @@ function httpErrorCode2(status) {
 }
 function isTransportError2(error) {
   if (!(error instanceof Error)) return false;
-  const message = error.message.toLowerCase();
-  if (message.includes("terminated")) return true;
+  const message2 = error.message.toLowerCase();
+  if (message2.includes("terminated")) return true;
   if (error.name.startsWith("UND_ERR_")) return true;
-  if (message.includes("fetch failed")) return true;
-  if (message.includes("econnreset") || message.includes("epipe") || message.includes("socket hang up")) return true;
+  if (message2.includes("fetch failed")) return true;
+  if (message2.includes("econnreset") || message2.includes("epipe") || message2.includes("socket hang up")) return true;
   return false;
 }
 var RAW_SNIPPET_LIMIT = 400;
@@ -36924,7 +36926,7 @@ async function* consumeOpenAiSse(response, options, config) {
   let finishReason2;
   let gotAnyContent = false;
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder2 = new TextDecoder();
   let firstTokenReceived = false;
   let sawDataFrame = false;
   let rawSnippet = "";
@@ -36947,7 +36949,7 @@ async function* consumeOpenAiSse(response, options, config) {
         throw error;
       }
       if (result.done) break;
-      const decoded = decoder.decode(result.value, { stream: true });
+      const decoded = decoder2.decode(result.value, { stream: true });
       if (!sawDataFrame && config.isQuotaError !== void 0 && rawJson.length < 65536) {
         rawJson = (rawJson + decoded).slice(0, 65536);
       }
@@ -37333,16 +37335,16 @@ function qoderContentParts(content) {
 }
 function buildQoderHistory(messages) {
   const history2 = [];
-  for (const message of messages) {
-    if (typeof message.role !== "string") continue;
-    const parts = qoderContentParts(message.content);
-    const content = parts === void 0 ? qoderContentText(message.content) : parts;
-    const toolCalls = Array.isArray(message.tool_calls) && message.tool_calls.length > 0 ? message.tool_calls : void 0;
-    const toolCallId = typeof message.tool_call_id === "string" ? message.tool_call_id : void 0;
+  for (const message2 of messages) {
+    if (typeof message2.role !== "string") continue;
+    const parts = qoderContentParts(message2.content);
+    const content = parts === void 0 ? qoderContentText(message2.content) : parts;
+    const toolCalls = Array.isArray(message2.tool_calls) && message2.tool_calls.length > 0 ? message2.tool_calls : void 0;
+    const toolCallId = typeof message2.tool_call_id === "string" ? message2.tool_call_id : void 0;
     const isEmpty = parts === void 0 ? content.length === 0 : content.length === 0;
     if (isEmpty && toolCalls === void 0 && toolCallId === void 0) continue;
     history2.push({
-      role: message.role,
+      role: message2.role,
       content,
       ...toolCalls === void 0 ? {} : { tool_calls: toolCalls },
       ...toolCallId === void 0 ? {} : { tool_call_id: toolCallId }
@@ -37473,7 +37475,7 @@ var QoderAdapter = class extends LlmAdapter2 {
     if (entry !== void 0) {
       const efforts = qoderEffortsFor(entry);
       if (efforts.length > 0) {
-        const fallback = entry.defaultEffort;
+        const fallback2 = entry.defaultEffort;
         resolved.reasoning = {
           efforts: efforts.map((id) => ({
             id: ReasoningEffortId2(id),
@@ -37482,7 +37484,7 @@ var QoderAdapter = class extends LlmAdapter2 {
           // ⚠️ `defaultEffort` 必须落在 `efforts` 内 —— DSH 会直接拿它发请求，
           // 给一个不存在的档位会抛 `UNSUPPORTED_REASONING_EFFORT`
           // （同 `trae-adapter.ts` 的教训）。
-          ...fallback !== void 0 && efforts.includes(fallback) ? { defaultEffort: ReasoningEffortId2(fallback) } : {}
+          ...fallback2 !== void 0 && efforts.includes(fallback2) ? { defaultEffort: ReasoningEffortId2(fallback2) } : {}
         };
       }
     }
@@ -37496,8 +37498,8 @@ var QoderAdapter = class extends LlmAdapter2 {
   }
   async *stream(options) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     let imageUrls;
     if (imageRefs.size > 0) {
@@ -37540,7 +37542,7 @@ var QoderAdapter = class extends LlmAdapter2 {
     const userText = typeof lastUser?.content === "string" ? lastUser.content : Array.isArray(lastUser?.content) ? lastUser.content.filter((block) => block.type === "text").map((block) => String(block.text ?? "")).join("") : "";
     const history2 = buildQoderHistory(messages);
     const tools = buildQoderTools(options.tools);
-    const fallback = this.fallbackIndex.get(options.model);
+    const fallback2 = this.fallbackIndex.get(options.model);
     const buildRequest = async (c) => {
       const client = await QoderEncryptedInfer.create({
         user: {
@@ -37555,17 +37557,17 @@ var QoderAdapter = class extends LlmAdapter2 {
         modelKey: options.model,
         userText,
         ...systemText !== void 0 ? { systemText } : {},
-        isReasoning: fallback?.supportsThinking ?? false,
+        isReasoning: fallback2?.supportsThinking ?? false,
         history: history2,
         // 工具定义：这是模型**唯一**能学到函数 schema 的通道，
         // 缺了它模型只能用正文 XML 臆造调用（真实缺陷）。
         tools,
         ...options.maxTokens !== void 0 ? { maxTokens: options.maxTokens } : {},
         ...options.reasoningEffort !== void 0 ? { reasoningEffort: options.reasoningEffort } : {},
-        ...fallback?.supportsImage !== void 0 ? { isVl: fallback.supportsImage } : {},
+        ...fallback2?.supportsImage !== void 0 ? { isVl: fallback2.supportsImage } : {},
         // 官方 `model_config` 的 display_name / max_input_tokens 必须带上。
-        ...fallback?.name !== void 0 ? { displayName: fallback.name } : {},
-        ...fallback?.contextWindow !== void 0 ? { maxInputTokens: fallback.contextWindow } : {},
+        ...fallback2?.name !== void 0 ? { displayName: fallback2.name } : {},
+        ...fallback2?.contextWindow !== void 0 ? { maxInputTokens: fallback2.contextWindow } : {},
         // ⚠️ **`business` 必填**，否则服务端把请求路由到错误的后端节点。
         //
         // 实测（2026-09-20）：不带 `business` 时 `qfmodel`（Qwen3.8-Flash）
@@ -37977,7 +37979,7 @@ var TRAE_CHANNELS = resolveChannelList(
   process.env.DSH_TRAE_CHANNELS
 );
 function resolveChannelList(raw) {
-  const fallback = [
+  const fallback2 = [
     // ── 通用通道（顺序即优先级）──
     "solo_agent",
     "solo_work_lite",
@@ -37996,9 +37998,9 @@ function resolveChannelList(raw) {
     "multimodal",
     "system_diagnosis"
   ];
-  if (raw === void 0) return fallback;
+  if (raw === void 0) return fallback2;
   const parsed = raw.split(",").map((item) => item.trim()).filter((item) => item.length > 0);
-  return parsed.length > 0 ? parsed : fallback;
+  return parsed.length > 0 ? parsed : fallback2;
 }
 function isTruthyFlag(raw) {
   if (raw === void 0) return false;
@@ -38781,12 +38783,12 @@ function strongestTraeEffort(options) {
   }
   return best ?? options[options.length - 1];
 }
-function defaultTraeEffort(config, fallback) {
+function defaultTraeEffort(config, fallback2) {
   const declared = config.defaultLevel;
   if (declared !== void 0 && declared.length > 0 && config.options.includes(declared)) {
     return declared;
   }
-  return fallback;
+  return fallback2;
 }
 function resolveFirstTokenTimeoutMs3() {
   return Number.parseInt(process.env.DSH_TRAE_SSE_FIRST_TOKEN_TIMEOUT_MS ?? "", 10) || 12e4;
@@ -38869,11 +38871,11 @@ function serializeTraeMessages(messages, imageUrls) {
     });
     pendingToolImages = [];
   };
-  for (const message of normalized) {
-    if (message.role === "assistant") {
+  for (const message2 of normalized) {
+    if (message2.role === "assistant") {
       const content2 = stripCourseLeakFromHistoryContent(
-        message.role,
-        Array.isArray(message.content) ? message.content : []
+        message2.role,
+        Array.isArray(message2.content) ? message2.content : []
       );
       const toolCalls = content2.filter((block) => typeof block === "object" && block !== null && block.type === "tool-call").filter((block) => keepCallIds.has(String(block.id))).map((block) => ({
         id: String(block.id),
@@ -38893,16 +38895,16 @@ function serializeTraeMessages(messages, imageUrls) {
       });
       continue;
     }
-    if (message.role === "system") {
+    if (message2.role === "system") {
       flushToolImages();
-      wire.push({ role: "system", content: contentToText4(message.content) });
+      wire.push({ role: "system", content: contentToText4(message2.content) });
       continue;
     }
-    const content = Array.isArray(message.content) ? message.content : [];
+    const content = Array.isArray(message2.content) ? message2.content : [];
     const toolResults = content.filter(
       (block) => typeof block === "object" && block !== null && block.type === "tool-result"
     );
-    const text = contentToText4(message.content);
+    const text = contentToText4(message2.content);
     const outerContent = content.filter(
       (block) => !(typeof block === "object" && block !== null && block.type === "tool-result")
     );
@@ -38957,18 +38959,18 @@ function httpErrorCode3(status) {
   if (status >= 500) return "SERVER";
   return `HTTP_${status}`;
 }
-function traeStreamErrorMessage(code, message, model) {
-  const base = `trae: ${message} (code=${code})`;
+function traeStreamErrorMessage(code, message2, model) {
+  const base = `trae: ${message2} (code=${code})`;
   if (code !== 4001) return base;
   return `${base} \u2014\u2014 \u6A21\u578B\u300C${model}\u300D\u4E0D\u88AB\u4E0A\u6E38\u63A5\u53D7\uFF1A\u5B83\u901A\u5E38\u662F\u300C\u4EC5\u53EF\u89C1\u4F46\u4E0D\u53EF\u8C03\u7528\u300D\u7684\u81EA\u5B9A\u4E49\u6A21\u578B\uFF08\u9700\u5148\u5728 TRAE IDE \u5185\u81EA\u884C\u914D\u7F6E\u4F9B\u5E94\u5546\uFF09\uFF0C\u8BF7\u6539\u7528\u6A21\u578B\u5217\u8868\u4E2D\u7684\u5176\u5B83\u6A21\u578B`;
 }
 function isTransportError3(error) {
   if (!(error instanceof Error)) return false;
-  const message = error.message.toLowerCase();
-  if (message.includes("terminated")) return true;
+  const message2 = error.message.toLowerCase();
+  if (message2.includes("terminated")) return true;
   if (error.name.startsWith("UND_ERR_")) return true;
-  if (message.includes("fetch failed")) return true;
-  if (message.includes("econnreset") || message.includes("epipe") || message.includes("socket hang up")) return true;
+  if (message2.includes("fetch failed")) return true;
+  if (message2.includes("econnreset") || message2.includes("epipe") || message2.includes("socket hang up")) return true;
   return false;
 }
 function traeCacheReadTokens(usage) {
@@ -39138,8 +39140,8 @@ var TraeAdapter = class extends LlmAdapter3 {
       id: ReasoningEffortId3(option),
       name: TRAE_EFFORT_NAMES[option] ?? option
     }));
-    const fallback = strongestTraeEffort(config.options);
-    const chosen = defaultTraeEffort(config, fallback);
+    const fallback2 = strongestTraeEffort(config.options);
+    const chosen = defaultTraeEffort(config, fallback2);
     return {
       efforts,
       ...chosen !== void 0 ? { defaultEffort: ReasoningEffortId3(chosen) } : {}
@@ -39248,8 +39250,8 @@ var TraeAdapter = class extends LlmAdapter3 {
       }
     }
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages3(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages3(message2.content, imageRefs);
     }
     let imageUrls;
     if (imageRefs.size > 0) {
@@ -39497,7 +39499,7 @@ var TraeAdapter = class extends LlmAdapter3 {
     let gotAnyContent = false;
     let sawAnyUpstreamEvent = false;
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder2 = new TextDecoder();
     let firstTokenReceived = false;
     try {
       for (; ; ) {
@@ -39517,7 +39519,7 @@ var TraeAdapter = class extends LlmAdapter3 {
           throw error;
         }
         if (result.done) break;
-        buffer += decoder.decode(result.value, { stream: true });
+        buffer += decoder2.decode(result.value, { stream: true });
         let newline;
         while ((newline = buffer.indexOf("\n")) !== -1) {
           const line2 = buffer.slice(0, newline);
@@ -39648,12 +39650,12 @@ var TraeAdapter = class extends LlmAdapter3 {
                   break;
                 case "error": {
                   if (ev.errorCode !== void 0 && ev.errorMessage !== void 0) {
-                    const message = traeStreamErrorMessage(ev.errorCode, ev.errorMessage, options.model);
+                    const message2 = traeStreamErrorMessage(ev.errorCode, ev.errorMessage, options.model);
                     if (isRotatableStreamError(ev.errorCode) && !gotAnyContent) {
-                      throw new LlmError8(message, TRAE_ROTATABLE_STREAM_ERROR);
+                      throw new LlmError8(message2, TRAE_ROTATABLE_STREAM_ERROR);
                     }
                     throw new LlmError8(
-                      message,
+                      message2,
                       ev.errorCode === 1005 || ev.errorCode === 4008 ? "QUOTA_EXCEEDED" : "SERVER"
                     );
                   }
@@ -39782,9 +39784,9 @@ function readClineErrorBody(body) {
     if (typeof raw === "string" && raw.length > 0) return { message: raw };
     if (typeof raw === "object" && raw !== null) {
       const nested = raw;
-      const message = typeof nested.message === "string" ? nested.message : "";
+      const message2 = typeof nested.message === "string" ? nested.message : "";
       const code = typeof nested.code === "string" && nested.code.length > 0 ? nested.code : void 0;
-      if (message.length > 0) return { message, ...code === void 0 ? {} : { code } };
+      if (message2.length > 0) return { message: message2, ...code === void 0 ? {} : { code } };
     }
     for (const key of ["message", "msg"]) {
       const value = data[key];
@@ -39810,16 +39812,16 @@ function parseClineWaitMs(text) {
   return matched ? totalMs : void 0;
 }
 function parseClineRateLimitHint(body) {
-  const { message, code } = readClineErrorBody(body);
-  const waitMatch = CLINE_WAIT_PATTERN.exec(message);
+  const { message: message2, code } = readClineErrorBody(body);
+  const waitMatch = CLINE_WAIT_PATTERN.exec(message2);
   const waitMs = waitMatch === null ? void 0 : parseClineWaitMs(waitMatch[1]);
-  const lower = message.toLowerCase();
+  const lower = message2.toLowerCase();
   const dailyFree = CLINE_DAILY_FREE_MARKERS.some((marker) => lower.includes(marker));
   return {
     ...waitMs === void 0 ? {} : { waitMs },
     dailyFree,
     ...code === void 0 ? {} : { code },
-    ...message === "" ? {} : { message }
+    ...message2 === "" ? {} : { message: message2 }
   };
 }
 function clineRateLimitResetAt(response, body, model) {
@@ -39894,9 +39896,9 @@ function clineBearerValue(accessToken, product) {
   if (token.length === 0) return "";
   return token.startsWith(product.tokenPrefix) ? token : `${product.tokenPrefix}${token}`;
 }
-function buildClineCredential(payload, product, fallback = {}) {
-  const accountId = payload.accountId ?? fallback.accountId;
-  const email = payload.email ?? fallback.email;
+function buildClineCredential(payload, product, fallback2 = {}) {
+  const accountId = payload.accountId ?? fallback2.accountId;
+  const email = payload.email ?? fallback2.email;
   const nickname = email ?? (payload.displayName !== void 0 && payload.displayName.length > 0 ? payload.displayName : accountId);
   return {
     access_token: clineBearerValue(payload.accessToken, product),
@@ -40024,11 +40026,11 @@ var CLINE_RECOMMENDED_MODELS_PATH = "/api/v1/ai/cline/recommended-models";
 var CLINE_MODELS_TIMEOUT_MS = 2e4;
 var FREE_ID_SUFFIX = ":free";
 var FREE_ID_PREFIX = "cline-free/";
-function isClineFreeModel(id, remoteFreeIds = /* @__PURE__ */ new Set(), fallback) {
+function isClineFreeModel(id, remoteFreeIds = /* @__PURE__ */ new Set(), fallback2) {
   if (remoteFreeIds.has(id)) return true;
   if (id.endsWith(FREE_ID_SUFFIX)) return true;
   if (id.startsWith(FREE_ID_PREFIX)) return true;
-  return fallback?.isFree === true;
+  return fallback2?.isFree === true;
 }
 function clineDisplayName(model) {
   return model.isFree ? `${model.name} \xB7 \u514D\u8D39` : model.name;
@@ -40082,17 +40084,17 @@ function mergeClineModels(product, remote) {
   const seen = /* @__PURE__ */ new Set();
   const out = [];
   const build = (id) => {
-    const fallback = fallbackIndex.get(id);
+    const fallback2 = fallbackIndex.get(id);
     const entry = entryIndex.get(id);
-    const name2 = fallback?.name ?? entry?.name ?? nameFromId(id);
-    const description = entry?.description ?? fallback?.description;
+    const name2 = fallback2?.name ?? entry?.name ?? nameFromId(id);
+    const description = entry?.description ?? fallback2?.description;
     return {
       id,
       name: name2,
-      isFree: isClineFreeModel(id, remoteFreeIds, fallback),
-      ...fallback?.contextWindow === void 0 ? {} : { contextWindow: fallback.contextWindow },
-      ...fallback?.maxTokens === void 0 ? {} : { maxTokens: fallback.maxTokens },
-      ...fallback?.supportsImage === void 0 ? {} : { supportsImage: fallback.supportsImage },
+      isFree: isClineFreeModel(id, remoteFreeIds, fallback2),
+      ...fallback2?.contextWindow === void 0 ? {} : { contextWindow: fallback2.contextWindow },
+      ...fallback2?.maxTokens === void 0 ? {} : { maxTokens: fallback2.maxTokens },
+      ...fallback2?.supportsImage === void 0 ? {} : { supportsImage: fallback2.supportsImage },
       ...description === void 0 ? {} : { description }
     };
   };
@@ -40323,7 +40325,7 @@ function applyModelsDevCatalog(models, dev) {
 }
 function makeClineModelsDevLoader(options = {}) {
   const fetcher = options.fetcher ?? fetch;
-  const cache4 = new TtlCache({
+  const cache5 = new TtlCache({
     ttlMs: options.ttlMs ?? CLINE_MODELS_DEV_TTL_MS,
     ...options.now === void 0 ? {} : { now: options.now },
     load: async () => {
@@ -40336,7 +40338,7 @@ function makeClineModelsDevLoader(options = {}) {
       return parseClineModelsDev(await response.json());
     }
   });
-  return async () => await cache4.get();
+  return async () => await cache5.get();
 }
 
 // vendor/channel-pack/src/cline-routing.ts
@@ -40356,12 +40358,12 @@ function parseClineRouting(frame) {
   const envelope = dig(frame, ["data"]);
   const payload = typeof envelope === "object" && envelope !== null ? envelope : frame;
   const delta = dig(payload, ["choices", "0", "delta"]);
-  const message = dig(payload, ["choices", "0", "message"]);
+  const message2 = dig(payload, ["choices", "0", "message"]);
   const providers = ["provider_metadata", "providerMetadata"];
   for (const key of providers) {
     const onDelta = asText(dig(delta, [key, "gateway", "routing", "finalProvider"]));
     if (onDelta.length > 0) return onDelta;
-    const onMessage = asText(dig(message, [key, "gateway", "routing", "finalProvider"]));
+    const onMessage = asText(dig(message2, [key, "gateway", "routing", "finalProvider"]));
     if (onMessage.length > 0) return onMessage;
     const onFrame = asText(dig(payload, [key, "gateway", "routing", "finalProvider"]));
     if (onFrame.length > 0) return onFrame;
@@ -40655,8 +40657,8 @@ var ClineAdapter = class extends LlmAdapter4 {
   }
   async *stream(options) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     let imageUrls;
     if (imageRefs.size > 0) {
@@ -40984,16 +40986,16 @@ function parseLoomyEnvelope(payload) {
   }
   const record = payload;
   const code = typeof record.code === "string" ? record.code : "";
-  const message = typeof record.desc === "string" && record.desc.length > 0 ? record.desc : typeof record.message === "string" ? record.message : "";
+  const message2 = typeof record.desc === "string" && record.desc.length > 0 ? record.desc : typeof record.message === "string" ? record.message : "";
   if (code !== LOOMY_OK_CODE) {
     return {
       ok: false,
       code,
-      message: message.length > 0 ? message : `\u4E1A\u52A1\u9519\u8BEF ${code || "(\u7F3A\u5C11 code)"}`,
+      message: message2.length > 0 ? message2 : `\u4E1A\u52A1\u9519\u8BEF ${code || "(\u7F3A\u5C11 code)"}`,
       data: void 0
     };
   }
-  return { ok: true, code, message, data: record.data };
+  return { ok: true, code, message: message2, data: record.data };
 }
 function splitLoomyRate(rawName) {
   const original = typeof rawName === "string" ? rawName.trim() : "";
@@ -41213,19 +41215,19 @@ var LoomyAdapter = class extends LlmAdapter5 {
   async resolveModel(provider, model, _signal) {
     const all = await this.loadModels();
     const entry = all.find((item) => item.id === model);
-    const fallback = this.fallbackIndex.get(model);
-    const bareName = fallback !== void 0 ? splitLoomyRate(fallback.name).name : model;
+    const fallback2 = this.fallbackIndex.get(model);
+    const bareName = fallback2 !== void 0 ? splitLoomyRate(fallback2.name).name : model;
     const resolved = {
       provider,
       id: model,
       name: entry !== void 0 ? splitLoomyRate(entry.name).name : bareName,
       inputModalities: this.inputModalitiesFor(entry)
     };
-    const contextWindow = entry?.contextWindow ?? fallback?.contextWindow;
+    const contextWindow = entry?.contextWindow ?? fallback2?.contextWindow;
     if (contextWindow !== void 0 && contextWindow > 0) {
       resolved.context = { contextWindow };
     }
-    const reasoning = this.reasoningFor(entry, fallback);
+    const reasoning = this.reasoningFor(entry, fallback2);
     if (reasoning !== void 0) resolved.reasoning = reasoning;
     return resolved;
   }
@@ -41243,8 +41245,8 @@ var LoomyAdapter = class extends LlmAdapter5 {
    *    给一个不存在的档位会抛 `UNSUPPORTED_REASONING_EFFORT`，比不给更糟；
    * 3. 远端未下发档位时不声明 `reasoning`（UI 显示「当前模型未提供推理等级」）。
    */
-  reasoningFor(entry, fallback) {
-    const efforts = entry?.efforts ?? fallback?.efforts;
+  reasoningFor(entry, fallback2) {
+    const efforts = entry?.efforts ?? fallback2?.efforts;
     if (efforts === void 0 || efforts.length === 0) return void 0;
     const defaultEffort = LOOMY_PREFERRED_DEFAULT_EFFORT;
     const hasDefault = efforts.includes(defaultEffort);
@@ -41265,8 +41267,8 @@ var LoomyAdapter = class extends LlmAdapter5 {
   }
   async *stream(options) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     const all = await this.loadModels();
     const entry = all.find((item) => item.id === options.model);
@@ -41703,19 +41705,19 @@ var RaccoonAdapter = class extends LlmAdapter6 {
   async resolveModel(provider, model, _signal) {
     const all = await this.loadModels();
     const entry = all.find((item) => item.id === model);
-    const fallback = this.fallbackIndex.get(model);
-    const bareName = fallback !== void 0 ? fallback.name.replace(/ · .*$/, "") : model;
+    const fallback2 = this.fallbackIndex.get(model);
+    const bareName = fallback2 !== void 0 ? fallback2.name.replace(/ · .*$/, "") : model;
     const resolved = {
       provider,
       id: model,
       name: entry !== void 0 ? entry.name.replace(/ · .*$/, "") : bareName,
       inputModalities: this.inputModalitiesFor(entry)
     };
-    const contextWindow = entry?.contextWindow ?? fallback?.contextWindow;
+    const contextWindow = entry?.contextWindow ?? fallback2?.contextWindow;
     if (contextWindow !== void 0 && contextWindow > 0) {
       resolved.context = { contextWindow };
     }
-    const maxTokens = positiveMaxTokens(entry?.maxTokens ?? fallback?.maxTokens);
+    const maxTokens = positiveMaxTokens(entry?.maxTokens ?? fallback2?.maxTokens);
     if (maxTokens !== void 0) resolved.defaultMaxTokens = maxTokens;
     resolved.reasoning = raccoonReasoningInfo();
     return resolved;
@@ -41733,8 +41735,8 @@ var RaccoonAdapter = class extends LlmAdapter6 {
   }
   async *stream(options) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     const all = await this.loadModels();
     const entry = all.find((item) => item.id === options.model);
@@ -41964,8 +41966,8 @@ function toLoginFlowResult(credential, loginUrl) {
   };
 }
 async function defaultOpenBrowser(url) {
-  const { openBrowser: openBrowser2 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
-  openBrowser2(url);
+  const { openBrowser: openBrowser3 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
+  openBrowser3(url);
 }
 async function startLobsteraiLoginFlow(options) {
   const fetcher = options.fetcher ?? fetch;
@@ -42055,8 +42057,8 @@ var REFRESH_LEAD_MS = 36e5;
 var REFRESH_RETRY_MS = 6e5;
 var REFRESH_ABNORMAL_NETWORK_RETRY_MS = 6e4;
 function isAbnormalNetworkError(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /fetch failed|ENOTFOUND|ECONNREFUSED|proxy|unresolved host|getaddrinfo/i.test(message);
+  const message2 = error instanceof Error ? error.message : String(error);
+  return /fetch failed|ENOTFOUND|ECONNREFUSED|proxy|unresolved host|getaddrinfo/i.test(message2);
 }
 function isRefreshTokenExpired(error) {
   if (!(error instanceof Error)) return false;
@@ -42069,8 +42071,8 @@ function computeFirstRefreshDelayMs(expiresAtMs, nowMs = Date.now()) {
   if (leadTrigger >= expiresAtMs) return 0;
   const trigger = new Date(leadTrigger);
   trigger.setSeconds(Math.floor(60 * Math.random()));
-  const delay = trigger.getTime() - nowMs;
-  return delay > 0 ? delay : 0;
+  const delay2 = trigger.getTime() - nowMs;
+  return delay2 > 0 ? delay2 : 0;
 }
 var RefreshScheduler = class {
   constructor(refresh, onError = () => {
@@ -42089,10 +42091,10 @@ var RefreshScheduler = class {
       clearTimeout(this.timer);
       this.timer = void 0;
     }
-    const delay = computeFirstRefreshDelayMs(expiresAtMs, nowMs);
+    const delay2 = computeFirstRefreshDelayMs(expiresAtMs, nowMs);
     this.timer = setTimeout(() => {
       void this.run();
-    }, delay);
+    }, delay2);
     this.timer.unref?.();
   }
   /** 取消任何待处理的刷新（并让在途 run() 失败后不再重试）。 */
@@ -42143,7 +42145,7 @@ function shouldRefreshNow(expiresAtMs, nowMs = Date.now()) {
   return expiresAtMs - nowMs <= REFRESH_LEAD_MS;
 }
 async function syncAccountExpiry(params) {
-  const { pool, provider, credential, accessors, accountId, current, tag } = params;
+  const { pool, provider, credential, accessors, accountId, current, tag: tag2 } = params;
   if (pool === void 0) return;
   try {
     let id = accountId;
@@ -42163,12 +42165,12 @@ async function syncAccountExpiry(params) {
     });
   } catch (error) {
     params.warn?.(
-      `${tag} \u51ED\u636E\u5904\u7406\u6210\u529F\u4F46\u56DE\u5199\u8D26\u53F7\u6C60\u7684\u6709\u6548\u671F\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u4F7F\u7528\uFF09\uFF1A${error instanceof Error ? error.message : String(error)}`
+      `${tag2} \u51ED\u636E\u5904\u7406\u6210\u529F\u4F46\u56DE\u5199\u8D26\u53F7\u6C60\u7684\u6709\u6548\u671F\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u4F7F\u7528\uFF09\uFF1A${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
 async function refreshAccountWithReconcile(params) {
-  const { pool, provider, tag, accountId, credential, accessors, current, refresh, save } = params;
+  const { pool, provider, tag: tag2, accountId, credential, accessors, current, refresh, save } = params;
   const expiresAt = accessors.expiresAtOf(credential);
   if (!shouldRefreshNow(expiresAt)) {
     await syncAccountExpiry({
@@ -42178,14 +42180,14 @@ async function refreshAccountWithReconcile(params) {
       accessors,
       accountId,
       current,
-      tag,
+      tag: tag2,
       warn: params.warn
     });
     return false;
   }
   const refreshed = await refresh(credential);
   if (refreshed === void 0) {
-    throw new Error(`${tag} \u7EED\u671F\u54CD\u5E94\u7F3A\u5C11\u8BBF\u95EE\u4EE4\u724C\uFF0C\u51ED\u636E\u672A\u66F4\u65B0`);
+    throw new Error(`${tag2} \u7EED\u671F\u54CD\u5E94\u7F3A\u5C11\u8BBF\u95EE\u4EE4\u724C\uFF0C\u51ED\u636E\u672A\u66F4\u65B0`);
   }
   await save(refreshed);
   await syncAccountExpiry({
@@ -42195,10 +42197,10 @@ async function refreshAccountWithReconcile(params) {
     accessors,
     accountId,
     current,
-    tag,
+    tag: tag2,
     warn: params.warn
   });
-  params.info?.(`${tag} \u8D26\u53F7 ${accountId} \u5DF2\u7EED\u671F`);
+  params.info?.(`${tag2} \u8D26\u53F7 ${accountId} \u5DF2\u7EED\u671F`);
   return true;
 }
 
@@ -42209,8 +42211,8 @@ var LOBSTERAI_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -42474,7 +42476,7 @@ var LobsteraiAuth = class extends Service {
       accessors: LOBSTERAI_EXPIRY_ACCESSORS,
       accountId,
       tag: "[lobsterai]",
-      warn: (message) => this.ctx.logger?.warn?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2)
     });
   }
   /**
@@ -42604,7 +42606,7 @@ var LobsteraiAuth = class extends Service {
           current: entry,
           refresh: (c) => this.refreshCredential(c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
       } catch (error) {
         if (error instanceof RefreshTokenExpiredError) {
@@ -42772,8 +42774,8 @@ function toLoginFlowResult2(credential, loginUrl, machineId) {
   };
 }
 async function defaultOpenBrowser2(url) {
-  const { openBrowser: openBrowser2 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
-  openBrowser2(url);
+  const { openBrowser: openBrowser3 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
+  openBrowser3(url);
 }
 async function startQoderLoginFlow(options) {
   const session = createQoderDeviceSession();
@@ -42816,8 +42818,8 @@ var QODER_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError2 = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -43016,7 +43018,7 @@ var QoderAuth = class extends Service2 {
       accessors: QODER_EXPIRY_ACCESSORS,
       accountId,
       tag: `[${this.product.id}]`,
-      warn: (message) => this.ctx.logger?.warn?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2)
     });
   }
   /**
@@ -43096,7 +43098,7 @@ var QoderAuth = class extends Service2 {
           current: entry,
           refresh: (c) => this.refreshCredential(c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
       } catch (error) {
         if (error instanceof RefreshTokenExpiredError2) {
@@ -43469,9 +43471,9 @@ async function startTraeLoginFlow(options) {
     actualPort = await listenWithFallback(server, preferredPort);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    const message = `TRAE \u56DE\u8C03\u7AEF\u53E3\u65E0\u6CD5\u76D1\u542C\uFF08${reason}\uFF09\uFF1B\u7AEF\u53E3\u53EF\u80FD\u5DF2\u88AB\u5176\u5B83\u7A0B\u5E8F\u5360\u7528\uFF0C\u8BF7\u91CA\u653E\u540E\u91CD\u8BD5\u3002`;
-    rejectResult?.(new Error(message));
-    throw new Error(message);
+    const message2 = `TRAE \u56DE\u8C03\u7AEF\u53E3\u65E0\u6CD5\u76D1\u542C\uFF08${reason}\uFF09\uFF1B\u7AEF\u53E3\u53EF\u80FD\u5DF2\u88AB\u5176\u5B83\u7A0B\u5E8F\u5360\u7528\uFF0C\u8BF7\u91CA\u653E\u540E\u91CD\u8BD5\u3002`;
+    rejectResult?.(new Error(message2));
+    throw new Error(message2);
   }
   const callbackUrl = `http://127.0.0.1:${actualPort}/authorize`;
   loginUrl = buildTraeLoginURL(options.product, machineId, deviceId, callbackUrl);
@@ -43543,8 +43545,8 @@ var TRAE_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError3 = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -43757,7 +43759,7 @@ var TraeAuth = class _TraeAuth extends Service3 {
       accessors: TRAE_EXPIRY_ACCESSORS,
       accountId,
       tag: "[trae]",
-      warn: (message) => this.ctx.logger?.warn?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2)
     });
   }
   /**
@@ -43840,7 +43842,7 @@ var TraeAuth = class _TraeAuth extends Service3 {
           current: entry,
           refresh: (c) => this.refreshCredential(c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
       } catch (error) {
         if (error instanceof RefreshTokenExpiredError3) {
@@ -44064,8 +44066,8 @@ var TraeAuth = class _TraeAuth extends Service3 {
     }
   }
   /** 记录一条警告（经 `ctx.logger`，**仅失败路径**调用）。 */
-  warn(message) {
-    this.ctx.logger?.warn?.(`[trae-auth] ${message}`);
+  warn(message2) {
+    this.ctx.logger?.warn?.(`[trae-auth] ${message2}`);
   }
 };
 
@@ -44229,8 +44231,8 @@ function toLoginFlowResult3(credential, loginUrl, userCode) {
   };
 }
 async function defaultOpenBrowser3(url) {
-  const { openBrowser: openBrowser2 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
-  openBrowser2(url);
+  const { openBrowser: openBrowser3 } = await Promise.resolve().then(() => (init_open_browser(), open_browser_exports));
+  openBrowser3(url);
 }
 async function startClineLoginFlow(options) {
   const controller = new AbortController();
@@ -44283,8 +44285,8 @@ var CLINE_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError4 = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -44494,7 +44496,7 @@ var ClineAuth = class extends Service4 {
       accessors: CLINE_EXPIRY_ACCESSORS,
       accountId,
       tag: "[cline]",
-      warn: (message) => this.ctx.logger?.warn?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2)
     });
   }
   /**
@@ -44574,7 +44576,7 @@ var ClineAuth = class extends Service4 {
           current: entry,
           refresh: (c) => this.refreshCredential(c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
       } catch (error) {
         if (error instanceof RefreshTokenExpiredError4) {
@@ -45538,8 +45540,8 @@ var LOOMY_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError5 = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -45745,7 +45747,7 @@ var LoomyAuth = class extends Service5 {
       accessors: LOOMY_EXPIRY_ACCESSORS,
       accountId,
       tag: "[loomy]",
-      warn: (message) => this.ctx.logger?.warn?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2)
     });
   }
   /**
@@ -45816,7 +45818,7 @@ var LoomyAuth = class extends Service5 {
           accountId: entry.id,
           current: entry,
           tag: "[loomy]",
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
         continue;
       }
@@ -45895,9 +45897,9 @@ var RACCOON_LOGIN_REWARD_EVENT_NAME = "\u684C\u9762\u7AEF\u767B\u5F55\u5956\u52B
 function parseEnvelope(payload, status) {
   const record = typeof payload === "object" && payload !== null && !Array.isArray(payload) ? payload : {};
   const code = typeof record.code === "number" ? record.code : status >= 400 ? status : 0;
-  const message = typeof record.message === "string" && record.message.length > 0 ? record.message : typeof record.details === "string" ? record.details : "";
+  const message2 = typeof record.message === "string" && record.message.length > 0 ? record.message : typeof record.details === "string" ? record.details : "";
   const data = typeof record.data === "object" && record.data !== null && !Array.isArray(record.data) ? record.data : void 0;
-  return { ok: code === 0, code, message, data };
+  return { ok: code === 0, code, message: message2, data };
 }
 function readNumber2(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : void 0;
@@ -46021,14 +46023,14 @@ import { randomBytes as randomBytes5 } from "node:crypto";
 function parseEnvelope2(payload, status) {
   const record = typeof payload === "object" && payload !== null && !Array.isArray(payload) ? payload : {};
   const code = typeof record.code === "number" ? record.code : status >= 400 ? status : 0;
-  const message = typeof record.message === "string" ? record.message : "";
+  const message2 = typeof record.message === "string" ? record.message : "";
   const details = typeof record.details === "string" ? record.details : "";
   const data = typeof record.data === "object" && record.data !== null && !Array.isArray(record.data) ? record.data : void 0;
-  return { code, message, details, data };
+  return { code, message: message2, details, data };
 }
-function envelopeError(envelope, fallback) {
+function envelopeError(envelope, fallback2) {
   const parts = [envelope.message, envelope.details].filter((s) => s.length > 0);
-  const text = parts.length > 0 ? parts.join(": ") : fallback;
+  const text = parts.length > 0 ? parts.join(": ") : fallback2;
   return new Error(`raccoon: ${text}`);
 }
 async function postJson(url, body, fetcher, headers = {}) {
@@ -46985,8 +46987,8 @@ var RACCOON_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token ?? ""
 };
 var RefreshTokenExpiredError6 = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -47142,9 +47144,9 @@ var RaccoonAuth = class extends Service6 {
       await this.ctx.credentials.set(credentialRef7(this.credentialRefName), JSON.stringify(next));
       this.lastRefreshError = void 0;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.lastRefreshError = message;
-      if (message.includes("\u91CD\u65B0\u767B\u5F55")) throw new RefreshTokenExpiredError6(message);
+      const message2 = error instanceof Error ? error.message : String(error);
+      this.lastRefreshError = message2;
+      if (message2.includes("\u91CD\u65B0\u767B\u5F55")) throw new RefreshTokenExpiredError6(message2);
       throw error;
     }
   }
@@ -47186,11 +47188,11 @@ var RaccoonAuth = class extends Service6 {
         accessors: RACCOON_EXPIRY_ACCESSORS,
         accountId,
         tag: "[raccoon]",
-        warn: (message) => this.ctx.logger?.warn?.(message)
+        warn: (message2) => this.ctx.logger?.warn?.(message2)
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (message.includes("\u91CD\u65B0\u767B\u5F55")) throw new RefreshTokenExpiredError6(message);
+      const message2 = error instanceof Error ? error.message : String(error);
+      if (message2.includes("\u91CD\u65B0\u767B\u5F55")) throw new RefreshTokenExpiredError6(message2);
       throw error;
     }
   }
@@ -47819,18 +47821,18 @@ var CdpConnection = class {
   constructor(ws) {
     this.ws = ws;
     ws.addEventListener("message", (event) => {
-      let message;
+      let message2;
       try {
-        message = JSON.parse(String(event.data));
+        message2 = JSON.parse(String(event.data));
       } catch {
         return;
       }
-      if (message.id === void 0) return;
-      const slot2 = this.pending.get(message.id);
+      if (message2.id === void 0) return;
+      const slot2 = this.pending.get(message2.id);
       if (slot2 === void 0) return;
-      this.pending.delete(message.id);
-      if (message.error !== void 0) slot2.reject(new Error(JSON.stringify(message.error)));
-      else slot2.resolve(message.result);
+      this.pending.delete(message2.id);
+      if (message2.error !== void 0) slot2.reject(new Error(JSON.stringify(message2.error)));
+      else slot2.resolve(message2.result);
     });
   }
   nextId = 0;
@@ -48715,7 +48717,7 @@ var ZcodeCaptchaBrowser = class {
     const attempts = [0, 100, 500, 1500];
     const tryRemove = (index) => {
       if (index >= attempts.length) return;
-      const delay = attempts[index];
+      const delay2 = attempts[index];
       const run = () => {
         try {
           rmSync(dir, { recursive: true, force: true });
@@ -48723,8 +48725,8 @@ var ZcodeCaptchaBrowser = class {
           tryRemove(index + 1);
         }
       };
-      if (delay === 0) run();
-      else setTimeout(run, delay).unref?.();
+      if (delay2 === 0) run();
+      else setTimeout(run, delay2).unref?.();
     };
     tryRemove(0);
   }
@@ -49362,8 +49364,8 @@ function buildCarrierPageHtml(config) {
 
 // vendor/channel-pack/src/serial-queue.ts
 var QueueAbortedError = class extends Error {
-  constructor(message = "\u7B49\u5F85\u961F\u5217\u671F\u95F4\u8BF7\u6C42\u5DF2\u53D6\u6D88") {
-    super(message);
+  constructor(message2 = "\u7B49\u5F85\u961F\u5217\u671F\u95F4\u8BF7\u6C42\u5DF2\u53D6\u6D88") {
+    super(message2);
     this.name = "QueueAbortedError";
   }
 };
@@ -49443,8 +49445,8 @@ var ZCODE_OAUTH_CLI_INIT_URL = `${ZCODE_ORIGIN}/api/v1/oauth/cli/init`;
 var zcodeOauthCliPollUrl = (flowId) => `${ZCODE_ORIGIN}/api/v1/oauth/cli/poll/${encodeURIComponent(flowId)}`;
 var ZCODE_LOGIN_PROVIDER = "bigmodel";
 var ZcodeLoginError = class extends Error {
-  constructor(message, kind) {
-    super(message);
+  constructor(message2, kind) {
+    super(message2);
     this.kind = kind;
     this.name = "ZcodeLoginError";
   }
@@ -49555,13 +49557,13 @@ async function pollZcodeLogin(flow, fetchImpl = fetch, appVersion = "3.14.3") {
     return { kind: "failed", message: `\u8F6E\u8BE2\u54CD\u5E94\u72B6\u6001\u65E0\u6CD5\u8BC6\u522B\uFF1A${String(status)}` };
   }
   const zcodeJwt = typeof data.token === "string" ? data.token : void 0;
-  const pickToken = (block) => {
+  const pickToken2 = (block) => {
     if (typeof block?.access_token === "string") return block.access_token;
     if (typeof block?.accessToken === "string") return block.accessToken;
     return void 0;
   };
-  const bigmodelAccessToken = pickToken(data.bigmodel);
-  const zaiAccessToken = pickToken(data.zai);
+  const bigmodelAccessToken = pickToken2(data.bigmodel);
+  const zaiAccessToken = pickToken2(data.zai);
   const userId = typeof data.user?.user_id === "string" ? data.user.user_id : typeof data.user?.id === "string" ? data.user.id : void 0;
   if (zcodeJwt === void 0 || userId === void 0) {
     return { kind: "failed", message: "\u8F6E\u8BE2\u54CD\u5E94\u7F3A\u5173\u952E\u5B57\u6BB5\uFF08token / user_id\uFF09" };
@@ -49959,7 +49961,7 @@ async function claimZcodePlan(credential, planId, captcha, fetchImpl = fetch) {
   }
   let text = "";
   let code;
-  let message;
+  let message2;
   try {
     text = await response.text();
   } catch {
@@ -49968,9 +49970,9 @@ async function claimZcodePlan(credential, planId, captcha, fetchImpl = fetch) {
   try {
     const parsed = JSON.parse(text);
     code = parseZcodeBusinessCode(parsed.code);
-    message = typeof parsed.msg === "string" ? parsed.msg : typeof parsed.message === "string" ? parsed.message : void 0;
+    message2 = typeof parsed.msg === "string" ? parsed.msg : typeof parsed.message === "string" ? parsed.message : void 0;
   } catch {
-    message = text.slice(0, 200);
+    message2 = text.slice(0, 200);
   }
   if (code === void 0 && hasZcodeUnusualActivity(text)) {
     code = 3012;
@@ -49983,7 +49985,7 @@ async function claimZcodePlan(credential, planId, captcha, fetchImpl = fetch) {
     ok,
     alreadyClaimed,
     httpStatus: response.status,
-    message: message ?? (ok ? void 0 : `HTTP ${response.status}`)
+    message: message2 ?? (ok ? void 0 : `HTTP ${response.status}`)
   };
 }
 async function fetchZcodeCaptchaConfig(credential, fetchImpl = fetch) {
@@ -50796,8 +50798,8 @@ var ZcodeAuth = class extends Service7 {
       renderPage: async () => buildCarrierPageHtml(
         await this.fetchCaptchaConfig() ?? ZCODE_CAPTCHA_FALLBACK
       ),
-      log: (message) => {
-        this.carrierLog?.(message);
+      log: (message2) => {
+        this.carrierLog?.(message2);
       }
     });
     return await this.carrierPageServer.start();
@@ -50909,8 +50911,8 @@ var ZcodeAuth = class extends Service7 {
       mint: async (options) => {
         try {
           this.captchaBrowser ??= new ZcodeCaptchaBrowser({
-            log: (message) => {
-              this.ctx.logger?.warn?.(message);
+            log: (message2) => {
+              this.ctx.logger?.warn?.(message2);
             }
           });
           const outcome = await this.captchaBrowser.mintWithOutcome(
@@ -50945,7 +50947,7 @@ var ZcodeAuth = class extends Service7 {
        * 宁可在本地丢掉重产，也不要让它变成用户可见的一次失败。
        */
       validate: (param) => validateCaptchaParam(param).ok,
-      onWarn: (message) => this.ctx.logger?.warn?.(message)
+      onWarn: (message2) => this.ctx.logger?.warn?.(message2)
     });
     return this.captchaPool;
   }
@@ -51670,9 +51672,9 @@ function buildEnvironmentSection(options) {
 }
 function isGitRepo(cwd) {
   try {
-    const { existsSync: existsSync11 } = __require("node:fs");
+    const { existsSync: existsSync12 } = __require("node:fs");
     const { join: join13 } = __require("node:path");
-    return existsSync11(join13(cwd, ".git"));
+    return existsSync12(join13(cwd, ".git"));
   } catch {
     return false;
   }
@@ -51702,7 +51704,7 @@ function startsWithSystemReminder(content) {
   return false;
 }
 function withContextPrefix(messages, now = /* @__PURE__ */ new Date()) {
-  const out = messages.map((message) => ({ ...message }));
+  const out = messages.map((message2) => ({ ...message2 }));
   const first = out[0];
   if (first === void 0 || first.role !== "user") return out;
   if (startsWithSystemReminder(first.content)) return out;
@@ -51767,23 +51769,23 @@ function toAnthropicMessages(wire) {
     }
     out.push({ role: "user", content: [block] });
   };
-  for (const message of wire) {
-    const role = message.role;
+  for (const message2 of wire) {
+    const role = message2.role;
     if (role === "tool") {
-      const toolUseId = typeof message.tool_call_id === "string" ? message.tool_call_id : "";
+      const toolUseId = typeof message2.tool_call_id === "string" ? message2.tool_call_id : "";
       if (toolUseId.length === 0) continue;
       pushToolResult({
         type: "tool_result",
         tool_use_id: toolUseId,
-        content: toText(message.content)
+        content: toText(message2.content)
       });
       continue;
     }
     if (role === "assistant") {
       const blocks2 = [];
-      const text = toText(message.content);
+      const text = toText(message2.content);
       if (text.length > 0) blocks2.push({ type: "text", text });
-      const toolCalls = message.tool_calls;
+      const toolCalls = message2.tool_calls;
       if (Array.isArray(toolCalls)) {
         for (const call of toolCalls) {
           if (typeof call !== "object" || call === null) continue;
@@ -51804,7 +51806,7 @@ function toAnthropicMessages(wire) {
       out.push({ role: "assistant", content: blocks2 });
       continue;
     }
-    const content = message.content;
+    const content = message2.content;
     if (typeof content === "string") {
       if (content.length > 0) out.push({ role: "user", content });
       continue;
@@ -51839,7 +51841,7 @@ function toAnthropicTools(tools) {
 }
 async function* iterateSseFrames(body, options = {}) {
   const reader = body.getReader();
-  const decoder = new TextDecoder();
+  const decoder2 = new TextDecoder();
   const signal = options.signal;
   const idleTimeoutMs = options.idleTimeoutMs ?? 0;
   const label = options.label ?? "zcode";
@@ -51854,7 +51856,7 @@ async function* iterateSseFrames(body, options = {}) {
       if (signal?.aborted === true) break;
       const { done, value } = idleTimeoutMs > 0 ? await readWithIdleTimeout(reader, idleTimeoutMs, label, signal) : await reader.read();
       if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder2.decode(value, { stream: true });
       for (; ; ) {
         const boundary = findFrameBoundary(buffer);
         if (boundary === void 0) break;
@@ -51946,10 +51948,10 @@ async function* consumeAnthropicSse(body, options) {
     throwIfModelQueued(payload);
     if (eventName === "error" || payload.type === "error") {
       const error = payload.error;
-      const message = typeof error === "object" && error !== null ? error.message : void 0;
+      const message2 = typeof error === "object" && error !== null ? error.message : void 0;
       const type2 = typeof error === "object" && error !== null ? error.type : void 0;
       throw new LlmError12(
-        `${options.label}: ${typeof message === "string" ? message : JSON.stringify(payload).slice(0, 300)}`,
+        `${options.label}: ${typeof message2 === "string" ? message2 : JSON.stringify(payload).slice(0, 300)}`,
         // overloaded 是暂时性的，值得重试；其余按服务端错误处理。
         type2 === "overloaded_error" ? "RATE_LIMIT" : "SERVER"
       );
@@ -52023,9 +52025,9 @@ async function* consumeAnthropicSse(body, options) {
       continue;
     }
     if (type === "message_start") {
-      const message = payload.message;
-      if (typeof message === "object" && message !== null) {
-        const usage = message.usage;
+      const message2 = payload.message;
+      if (typeof message2 === "object" && message2 !== null) {
+        const usage = message2.usage;
         collectUsage(usage);
       }
       continue;
@@ -52359,22 +52361,22 @@ var ZcodeAdapter = class extends LlmAdapter7 {
   async resolveModel(provider, model, _signal) {
     const all = await this.loadModels();
     const entry = all.find((item) => item.id === model);
-    const fallback = this.fallbackIndex.get(model);
+    const fallback2 = this.fallbackIndex.get(model);
     const resolved = {
       provider,
       id: model,
-      name: entry?.name ?? fallback?.name ?? model,
+      name: entry?.name ?? fallback2?.name ?? model,
       inputModalities: this.inputModalitiesFor(entry)
     };
-    const contextWindow = entry?.contextWindow ?? fallback?.contextWindow;
+    const contextWindow = entry?.contextWindow ?? fallback2?.contextWindow;
     if (contextWindow !== void 0 && contextWindow > 0) {
       resolved.context = { contextWindow };
     }
-    const maxTokens = positiveMaxTokens2(entry?.maxTokens ?? fallback?.maxTokens);
+    const maxTokens = positiveMaxTokens2(entry?.maxTokens ?? fallback2?.maxTokens);
     if (maxTokens !== void 0) resolved.defaultMaxTokens = maxTokens;
-    const levels = entry?.reasoningLevels ?? fallback?.reasoningLevels;
+    const levels = entry?.reasoningLevels ?? fallback2?.reasoningLevels;
     if (levels !== void 0 && levels.length > 0) {
-      const defaultLevel = entry?.defaultReasoningLevel ?? fallback?.defaultReasoningLevel;
+      const defaultLevel = entry?.defaultReasoningLevel ?? fallback2?.defaultReasoningLevel;
       resolved.reasoning = {
         /**
          * ⚠ **`id` 必须保持小写**（`low`/`high`/`max`）—— 它是要发给上游的
@@ -52497,8 +52499,8 @@ var ZcodeAdapter = class extends LlmAdapter7 {
    */
   async *streamScoped(options, controller, timeoutMs) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     let imageUrls;
     if (imageRefs.size > 0) {
@@ -52959,14 +52961,14 @@ function withToolCacheBreakpoint(tools) {
 function describeUpstreamError(status, body, diagnostic) {
   const trimmed = body.trim();
   let code;
-  let message;
+  let message2;
   try {
     const parsed = JSON.parse(trimmed);
     code = parsed.code;
-    message = parsed.msg ?? parsed.message;
+    message2 = parsed.msg ?? parsed.message;
   } catch {
   }
-  const suffix = typeof message === "string" && message.length > 0 ? message : trimmed.slice(0, 200);
+  const suffix = typeof message2 === "string" && message2.length > 0 ? message2 : trimmed.slice(0, 200);
   if (code === 3009 || trimmed.includes("3009")) {
     return `\u4E0A\u6E38\u5E76\u53D1\u9650\u6D41\uFF083009 model concurrency limit exceeded\uFF09\u2014\u2014\u5DF2\u6309\u9000\u907F\u91CD\u8BD5\u4ECD\u672A\u901A\u8FC7\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002\u539F\u59CB\u54CD\u5E94\uFF1A${suffix}`;
   }
@@ -53049,11 +53051,11 @@ function effortView(efforts, defaultEffort) {
     }
   }
   if (rows.length === 0) return void 0;
-  const fallback = effortIdOf(defaultEffort);
+  const fallback2 = effortIdOf(defaultEffort);
   return {
     efforts: rows,
     // ⚠️ 默认档必须是模型真声明过的 id，否则客户端照着它填就会 400。
-    ...fallback === void 0 || !rows.some((row) => row.id === fallback) ? {} : { default: fallback },
+    ...fallback2 === void 0 || !rows.some((row) => row.id === fallback2) ? {} : { default: fallback2 },
     openai_efforts: openaiEfforts
   };
 }
@@ -53203,6 +53205,714 @@ async function disposeGatewayRuntime() {
   }
   factory = void 0;
   lastApiKey = null;
+}
+
+// vendor/channel-pack/src/direct-fetch.ts
+var import_undici3 = __toESM(require_undici(), 1);
+
+// vendor/channel-pack/src/channel-fetch.ts
+var import_undici2 = __toESM(require_undici(), 1);
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import path from "node:path";
+
+// vendor/channel-pack/src/opencode-proxy.ts
+var import_undici = __toESM(require_undici(), 1);
+import { connect as netConnect } from "node:net";
+import { URL as URL2 } from "node:url";
+var PROXY_CACHE_LIMIT = 16;
+var cache2 = /* @__PURE__ */ new Map();
+function buildProxyDispatcher(proxy) {
+  const existing = cache2.get(proxy.url);
+  if (existing !== void 0) return existing;
+  const created = createProxyDispatcher(proxy);
+  cache2.delete(proxy.url);
+  cache2.set(proxy.url, created);
+  while (cache2.size > PROXY_CACHE_LIMIT) {
+    const oldest = cache2.keys().next();
+    if (oldest.done === true) break;
+    const victim = cache2.get(oldest.value);
+    cache2.delete(oldest.value);
+    if (victim !== void 0) {
+      void Promise.resolve(victim.close?.()).catch(() => {
+      });
+    }
+  }
+  return created;
+}
+function createProxyDispatcher(proxy) {
+  return proxy.kind === "http" ? buildHttpDispatcher(proxy.url) : buildSocksDispatcher(proxy);
+}
+async function closeAllProxyDispatchers() {
+  const all = [...cache2.values()];
+  cache2.clear();
+  await Promise.allSettled(all.map(async (d) => {
+    try {
+      await d.close();
+    } catch {
+    }
+  }));
+}
+function buildHttpDispatcher(url) {
+  return new import_undici.ProxyAgent({
+    uri: url,
+    // ⚠️ `pipelining: 0` 是必需的（见模块头）；`clientFactory` 由 undici 在
+    // 每次建连时调用，用它把默认 Pool 换成禁用复用的 Pool。
+    clientFactory: (origin, opts) => new import_undici.Pool(origin, { ...opts, pipelining: 0 })
+  });
+}
+function buildSocks5Handshake(proxy) {
+  const parsed = new URL2(proxy.url);
+  const wantsAuth = parsed.username.length > 0;
+  return wantsAuth ? new Uint8Array([5, 2, 0, 2]) : new Uint8Array([5, 1, 0]);
+}
+async function openSocks5Tunnel(proxy, host, port) {
+  const parsed = new URL2(proxy.url);
+  const socket = await new Promise((resolve2, reject) => {
+    const s = netConnect({ host: parsed.hostname, port: Number(parsed.port) });
+    s.once("connect", () => resolve2(s));
+    s.once("error", reject);
+  });
+  const fail = (error) => {
+    throw error;
+  };
+  const write = (bytes) => new Promise((resolve2, reject) => {
+    socket.write(Buffer.from(bytes), (err) => err ? reject(err) : resolve2());
+  });
+  let leftover = Buffer.alloc(0);
+  let pending;
+  const detach = () => {
+    socket.off("data", onData);
+    socket.off("error", onError);
+    socket.off("close", onClose);
+  };
+  const fulfill = () => {
+    if (pending === void 0 || leftover.length < pending.n) return;
+    const n = pending.n;
+    const target = pending;
+    pending = void 0;
+    const value = new Uint8Array(leftover.subarray(0, n));
+    leftover = leftover.subarray(n);
+    detach();
+    target.resolve(value);
+  };
+  const onData = (chunk) => {
+    leftover = leftover.length === 0 ? chunk : Buffer.concat([leftover, chunk]);
+    fulfill();
+  };
+  const onError = (error) => {
+    const target = pending;
+    pending = void 0;
+    detach();
+    target?.reject(error);
+  };
+  const onClose = () => {
+    const target = pending;
+    pending = void 0;
+    detach();
+    target?.reject(new Error("SOCKS5 \u4EE3\u7406\u5728\u63E1\u624B\u5B8C\u6210\u524D\u5173\u95ED\u4E86\u8FDE\u63A5"));
+  };
+  const read = (n) => new Promise((resolve2, reject) => {
+    if (n <= 0) {
+      resolve2(new Uint8Array(0));
+      return;
+    }
+    pending = { n, resolve: resolve2, reject };
+    socket.on("data", onData);
+    socket.once("error", onError);
+    socket.once("close", onClose);
+    fulfill();
+  });
+  try {
+    await write(buildSocks5Handshake(proxy));
+    const methodReply = await read(2);
+    const method = methodReply[1];
+    if (method === 2) {
+      const user = Buffer.from(decodeURIComponent(parsed.username), "utf8");
+      const pass = Buffer.from(decodeURIComponent(parsed.password), "utf8");
+      await write(new Uint8Array([1, user.length, ...user, pass.length, ...pass]));
+      const authReply = await read(2);
+      if (authReply[1] !== 0) fail(new Error("SOCKS5 \u7528\u6237\u540D/\u5BC6\u7801\u8BA4\u8BC1\u5931\u8D25"));
+    } else if (method !== 0) {
+      fail(new Error(`SOCKS5 \u670D\u52A1\u7AEF\u8981\u6C42\u672A\u77E5\u8BA4\u8BC1\u65B9\u5F0F 0x${(method ?? 0).toString(16)}`));
+    }
+    const target = Buffer.from(host, "utf8");
+    await write(new Uint8Array([
+      5,
+      1,
+      0,
+      3,
+      target.length,
+      ...target,
+      port >>> 8 & 255,
+      port & 255
+    ]));
+    const reply2 = await read(4);
+    if (reply2[1] !== 0) {
+      fail(new Error(`SOCKS5 CONNECT \u88AB\u62D2\u7EDD\uFF08\u5E94\u7B54\u7801 0x${(reply2[1] ?? 0).toString(16)}\uFF09`));
+    }
+    const atyp = reply2[3];
+    if (atyp === 1) await read(4 + 2);
+    else if (atyp === 4) await read(16 + 2);
+    else if (atyp === 3) await read(1).then((lenByte) => read((lenByte[0] ?? 0) + 2));
+    else fail(new Error(`SOCKS5 \u5E94\u7B54\u7684\u5730\u5740\u7C7B\u578B 0x${(atyp ?? 0).toString(16)} \u4E0D\u53D7\u652F\u6301`));
+    return socket;
+  } catch (error) {
+    socket.destroy();
+    throw error;
+  }
+}
+function buildSocksDispatcher(proxy) {
+  return new import_undici.Agent({
+    connect: ((opts, callback) => {
+      const host = String(opts.hostname ?? opts.host ?? "");
+      const port = Number(opts.port ?? 443);
+      if (host.length === 0) {
+        callback(new Error("SOCKS5 \u4EE3\u7406\uFF1A\u76EE\u6807 host \u4E3A\u7A7A"), void 0);
+        return;
+      }
+      openSocks5Tunnel(proxy, host, port).then((socket) => {
+        callback(null, socket);
+      }).catch((error) => {
+        callback(error, void 0);
+      });
+    })
+  });
+}
+
+// vendor/channel-pack/src/channel-fetch.ts
+function parseWindowsProxy(output) {
+  const value = (name2) => new RegExp(`^\\s*${name2}\\s+REG_\\w+\\s+(.+)$`, "mi").exec(output)?.[1]?.trim() ?? "";
+  if (Number(value("ProxyEnable")) !== 1 || value("ProxyServer") === "") return void 0;
+  return { server: value("ProxyServer"), bypass: value("ProxyOverride") };
+}
+async function readWindowsProxy() {
+  const executable = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe");
+  try {
+    const { stdout } = await promisify(execFile)(executable, [
+      "query",
+      "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
+    ], { windowsHide: true, timeout: 2e3, maxBuffer: 64 * 1024, encoding: "utf8" });
+    return stdout;
+  } catch {
+    return "";
+  }
+}
+function loopback(host) {
+  return host === "localhost" || host.endsWith(".localhost") || host === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(host);
+}
+function channelProxyBypassed(target, patterns, windows = false) {
+  const hostname = target.hostname.toLowerCase();
+  const port = target.port || (target.protocol === "https:" ? "443" : "80");
+  return patterns.split(/[;,\s]+/).filter(Boolean).some((raw) => {
+    let pattern = raw.toLowerCase();
+    if (pattern === "*") return true;
+    if (windows && pattern === "<local>") return !hostname.includes(".") && !hostname.includes(":");
+    const withPort = /^(.*):(\d+)$/.exec(pattern);
+    if (withPort) {
+      if (withPort[2] !== port) return false;
+      pattern = withPort[1];
+    }
+    if (pattern.includes("*")) {
+      const escaped = pattern.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+      return new RegExp(`^${escaped}$`, "i").test(hostname);
+    }
+    const domain = pattern.replace(/^\./, "");
+    return hostname === domain || !windows && hostname.endsWith(`.${domain}`);
+  });
+}
+function windowsProxyFor(target, config) {
+  if (channelProxyBypassed(target, config.bypass, true)) return void 0;
+  if (!config.server.includes("=")) return config.server;
+  const entries = new Map(config.server.split(";").map((row) => {
+    const at = row.indexOf("=");
+    return [row.slice(0, at).trim().toLowerCase(), row.slice(at + 1).trim()];
+  }));
+  const selected = entries.get(target.protocol.slice(0, -1));
+  if (selected) return selected;
+  const socks = entries.get("socks");
+  return socks ? `socks5://${socks.replace(/^socks5h?:\/\//, "")}` : void 0;
+}
+var ChannelNetworkError = class extends Error {
+  name = "ChannelNetworkError";
+  /** DSH 的重试分类。不设则记为 UNKNOWN，而 UNKNOWN 不在重试白名单里； */
+  /** 赋成白名单内的 TRANSPORT / TIMEOUT，瞬时网络抖动才会被重试。 */
+  code;
+};
+function networkFailure(error, route) {
+  if (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError")) return error;
+  const codes = /* @__PURE__ */ new Set();
+  let current = error;
+  for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
+    const record = current;
+    if (typeof record.code === "string" && /^[A-Z][A-Z0-9_]{1,80}$/.test(record.code)) codes.add(record.code);
+    current = record.cause;
+  }
+  const failure = new ChannelNetworkError(`\u6E20\u9053\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25\uFF08${route}${codes.size ? `\uFF1B${[...codes].join("\u3001")}` : ""}\uFF09\uFF1A\u8BF7\u68C0\u67E5\u4EE3\u7406\u8FDE\u901A\u6027\u540E\u91CD\u8BD5`, { cause: error });
+  failure.code = codes.has("ETIMEDOUT") ? "TIMEOUT" : "TRANSPORT";
+  return failure;
+}
+function createChannelFetch(options = {}) {
+  const dispatchers = /* @__PURE__ */ new Map();
+  let system;
+  let systemAt = 0;
+  let closed = false;
+  const fetchImpl = (input, init) => (options.fetchImpl ?? globalThis.fetch)(input, init);
+  const fetcher = async (input, init) => {
+    if (closed) throw new Error("\u6E20\u9053\u51FA\u7F51\u670D\u52A1\u5DF2\u505C\u6B62");
+    const target = new URL(input instanceof Request ? input.url : String(input));
+    const signal = init?.signal ?? (input instanceof Request ? input.signal : void 0);
+    signal?.throwIfAborted();
+    let route = "\u76F4\u8FDE";
+    try {
+      if (init?.dispatcher !== void 0) {
+        route = "\u8C03\u7528\u65B9\u6307\u5B9A\u4EE3\u7406";
+        return await fetchImpl(input, init);
+      }
+      if (loopback(target.hostname)) {
+        return await fetchImpl(input, init);
+      }
+      if (options.outlet?.active()) {
+        route = "\u63D2\u4EF6\u51FA\u53E3\u4EE3\u7406";
+        return await options.outlet.fetch(input, { ...init, redirect: "error" });
+      }
+      const env = options.environment ?? process.env;
+      const envValue = (name2) => env[name2.toLowerCase()] ?? env[name2];
+      const proxy = (target.protocol === "https:" ? envValue("HTTPS_PROXY") : envValue("HTTP_PROXY")) || envValue("ALL_PROXY");
+      let address;
+      if (proxy) {
+        route = "\u73AF\u5883\u4EE3\u7406";
+        if (!channelProxyBypassed(target, envValue("NO_PROXY") ?? "")) address = proxy;
+      } else if ((options.platform ?? process.platform) === "win32") {
+        if (!system || Date.now() - systemAt >= 3e4) {
+          systemAt = Date.now();
+          system = (options.readSystemProxy ?? readWindowsProxy)().then(parseWindowsProxy);
+        }
+        const config = await system;
+        signal?.throwIfAborted();
+        if (closed) throw new Error("\u6E20\u9053\u51FA\u7F51\u670D\u52A1\u5DF2\u505C\u6B62");
+        if (config) {
+          address = windowsProxyFor(target, config);
+          route = "Windows \u7CFB\u7EDF\u4EE3\u7406";
+        }
+      }
+      if (!address) {
+        if (route !== "\u76F4\u8FDE") route = "\u76F4\u8FDE\uFF0C\u4EE3\u7406\u4F8B\u5916\u6216\u5F53\u524D\u534F\u8BAE\u65E0\u4EE3\u7406";
+        return await fetchImpl(input, init);
+      }
+      const proxyUrl = new URL(address.includes("://") ? address : `http://${address}`);
+      const authority = `${proxyUrl.hostname}:${proxyUrl.port || (proxyUrl.protocol === "https:" ? "443" : proxyUrl.protocol.startsWith("socks") ? "1080" : "80")}`;
+      const auth = proxyUrl.username ? `${proxyUrl.username}${proxyUrl.password ? `:${proxyUrl.password}` : ""}@` : "";
+      const parsed = normalizeProxy(`${proxyUrl.protocol}//${auth}${authority}`);
+      if (!parsed.ok) throw new Error("\u4EE3\u7406\u5730\u5740\u65E0\u6548");
+      let dispatcher = dispatchers.get(parsed.proxy.url);
+      if (!dispatcher) {
+        dispatcher = options.dispatcherFor ? options.dispatcherFor(parsed.proxy) : new import_undici2.Dispatcher1Wrapper(createProxyDispatcher(parsed.proxy));
+        dispatchers.set(parsed.proxy.url, dispatcher);
+      }
+      return await fetchImpl(input, { ...init, dispatcher });
+    } catch (error) {
+      if (signal?.aborted) throw signal.reason;
+      throw networkFailure(error, route);
+    }
+  };
+  return {
+    fetch: fetcher,
+    async close() {
+      closed = true;
+      const all = [...dispatchers.values()];
+      dispatchers.clear();
+      await Promise.allSettled(all.map((dispatcher) => dispatcher.destroy()));
+    }
+  };
+}
+
+// vendor/channel-pack/src/direct-fetch.ts
+var directLane = { fetch: null };
+function createDirectFetch(options = {}) {
+  const agent = new import_undici3.Agent();
+  const lifetime = new AbortController();
+  let closing;
+  const send = async (input, init) => {
+    const injected = options.fetchImpl ?? directLane.fetch;
+    if (injected) return injected(input, init);
+    const dispatcher = init?.dispatcher ?? agent;
+    let target = input;
+    let requestInit = init;
+    if (input instanceof Request) {
+      const request = new Request(input, init);
+      target = request.url;
+      requestInit = {
+        method: request.method,
+        headers: request.headers,
+        body: request.body,
+        signal: request.signal,
+        redirect: request.redirect,
+        credentials: request.credentials,
+        cache: request.cache,
+        integrity: request.integrity,
+        keepalive: request.keepalive,
+        mode: request.mode,
+        referrer: request.referrer,
+        referrerPolicy: request.referrerPolicy,
+        ...request.body ? { duplex: "half" } : {}
+      };
+    }
+    return (0, import_undici3.fetch)(target, { ...requestInit, dispatcher });
+  };
+  const outlet = options.outlet;
+  const network = createChannelFetch({
+    ...options,
+    fetchImpl: send,
+    outlet: outlet && {
+      active: () => outlet.active(),
+      fetch: (input, init) => {
+        if (!outlet.fetchSigned) {
+          throw new Error("\u6240\u9009\u63D2\u4EF6\u51FA\u53E3\u5C1A\u672A\u63A5\u5165\u7B7E\u540D\u4F20\u8F93\uFF0C\u8BF7\u5347\u7EA7\u51FA\u53E3\u9002\u914D\uFF1B\u8BF7\u6C42\u672A\u7ED5\u8FC7\u8BE5\u51FA\u53E3");
+        }
+        return outlet.fetchSigned(input, init, send);
+      }
+    }
+  });
+  return {
+    fetch: async (input, init) => {
+      lifetime.signal.throwIfAborted();
+      const signal = init?.signal ?? (input instanceof Request ? input.signal : void 0);
+      const combined = signal ? AbortSignal.any([signal, lifetime.signal]) : lifetime.signal;
+      combined.throwIfAborted();
+      return network.fetch(input, { ...init, signal: combined });
+    },
+    close() {
+      if (!closing) {
+        lifetime.abort(new DOMException("CodeArts \u7B7E\u540D\u4F20\u8F93\u5DF2\u505C\u6B62", "AbortError"));
+        closing = Promise.allSettled([network.close(), agent.destroy()]).then(() => {
+        });
+      }
+      return closing;
+    }
+  };
+}
+var mounted = /* @__PURE__ */ new Set();
+function attachDirectFetch(fetcher) {
+  const binding = { fetch: fetcher };
+  mounted.add(binding);
+  return () => {
+    mounted.delete(binding);
+  };
+}
+var fallback;
+var directFetch = (input, init) => {
+  const injected = directLane.fetch ?? [...mounted].at(-1)?.fetch;
+  if (injected) return injected(input, init);
+  fallback ??= createDirectFetch();
+  return fallback.fetch(input, init);
+};
+
+// vendor/channel-pack/src/sign.ts
+async function sha256Hex(data) {
+  const hash = await crypto.subtle.digest("SHA-256", data.slice().buffer);
+  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function hmacSha256Hex(key, data) {
+  const cryptoKey = await crypto.subtle.importKey("raw", key.slice().buffer, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", cryptoKey, data.slice().buffer);
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function buildCanonicalRequest(method, uri, query, headers, payloadHash) {
+  const signedHeaders = [];
+  headers.forEach((_, k) => signedHeaders.push(k));
+  signedHeaders.sort();
+  const headerLines = signedHeaders.map((k) => `${k}:${headers.get(k) ?? ""}`);
+  return [method, uri, query, headerLines.join("\n"), "", signedHeaders.join(";"), payloadHash].join("\n");
+}
+async function signRequestHuawei(ak, sk, securityToken, method, urlStr, body, extraHeaders) {
+  const url = new URL(urlStr);
+  let uri = url.pathname;
+  if (!uri.endsWith("/")) uri += "/";
+  const query = url.search.slice(1);
+  const dateStamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
+  const payloadHash = await sha256Hex(body);
+  const headers = /* @__PURE__ */ new Map();
+  headers.set("host", url.host);
+  headers.set("x-sdk-date", dateStamp);
+  headers.set("x-sdk-content-sha256", payloadHash);
+  headers.set("x-security-token", securityToken);
+  if (extraHeaders !== void 0) {
+    for (const [key, value] of Object.entries(extraHeaders)) headers.set(key, value);
+  }
+  if (method.toUpperCase() !== "GET") headers.set("content-type", "application/json");
+  const signedHeaders = [];
+  headers.forEach((_, k) => signedHeaders.push(k));
+  signedHeaders.sort();
+  const canonicalRequest = buildCanonicalRequest(method, uri, query, headers, payloadHash);
+  const canonicalHash = await sha256Hex(new TextEncoder().encode(canonicalRequest));
+  const stringToSign = `SDK-HMAC-SHA256
+${dateStamp}
+${canonicalHash}`;
+  const signature = await hmacSha256Hex(new TextEncoder().encode(sk), new TextEncoder().encode(stringToSign));
+  headers.set("Authorization", `SDK-HMAC-SHA256 Access=${ak},SignedHeaders=${signedHeaders.join(";")},Signature=${signature}`);
+  return headers;
+}
+
+// vendor/channel-pack/src/codearts-credits.ts
+var CODEARTS_SNAP_ENGINE_URL = "https://snap-access.cn-north-4.myhuaweicloud.com";
+var CODEARTS_PACKAGE_INFO_PATH = "/snap-manager/v1/statistics/plugin";
+var CODEARTS_OPS_DELIVERY_PATH = "/v1/ops/delivery";
+var CODEARTS_OPS_CLAIM_PATH = "/v1/ops/claim";
+var CODEARTS_OPS_CONFIRM_PATH = "/v1/ops/confirm";
+var CODEARTS_OPS_CHANNEL = "IDE";
+var CODEARTS_DAILY_LOGIN_TYPE = "USER_LOGIN";
+var CLAIMED_STATUSES = ["CLAIMED", "CONFIRMED", "CONSUMED"];
+var REQUEST_TIMEOUT_MS = 3e4;
+var SNAP_EXTRA_HEADERS = {
+  "Agent-Type": "PromptCenter",
+  "X-Language": "zh-cn"
+};
+var CREDIT_METRIC_LABELS = {
+  usageTotalPackageCredit: "\u603B\u79EF\u5206\u5305",
+  usageBasicPackageCredit: "\u57FA\u7840\u79EF\u5206\u5305",
+  usageOnDemandPackageCredit: "\u6309\u9700\u79EF\u5206\u5305",
+  usageBonusPackageCredit: "\u8D60\u9001\u79EF\u5206\u5305"
+};
+var TOTAL_CREDIT_METRIC = "usageTotalPackageCredit";
+var UNPARSABLE_RESPONSE_MESSAGE = "\u8BF7\u6C42\u5931\u8D25\u6216\u54CD\u5E94\u65E0\u6CD5\u89E3\u6790";
+function describeHttpFailure(status, text) {
+  let detail = "";
+  try {
+    const parsed = JSON.parse(text);
+    const code = typeof parsed.error_code === "string" ? parsed.error_code : "";
+    const msg = typeof parsed.error_msg === "string" ? parsed.error_msg : "";
+    detail = [code, msg].filter((part) => part.length > 0).join(" ");
+  } catch {
+    detail = text.trim().slice(0, 200);
+  }
+  return detail.length > 0 ? `HTTP ${status}\uFF1A${detail}` : `HTTP ${status}`;
+}
+function readBool(source, key) {
+  const value = source[key];
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.trim().toLowerCase() === "true";
+  return false;
+}
+function readNumber3(source, key) {
+  const value = source[key];
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
+function readString3(source, key) {
+  const value = source[key];
+  return typeof value === "string" ? value : "";
+}
+function readIdentifier(source, key) {
+  const value = source[key];
+  if (typeof value === "string") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return "";
+}
+function readRecord(source, key) {
+  const value = source[key];
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value : {};
+}
+function unwrapSnapEnvelope(raw) {
+  const code = raw.code;
+  const hasCode = typeof code === "number";
+  if (hasCode) {
+    if (code !== 0) {
+      const message2 = readString3(raw, "message") || readString3(raw, "msg");
+      return { ok: false, code, message: message2.length > 0 ? message2 : `\u4E1A\u52A1\u7801 ${code}` };
+    }
+    const data = raw.data;
+    if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+      return { ok: true, data };
+    }
+    return { ok: false, code, message: "\u54CD\u5E94\u7F3A\u5C11 data \u5B57\u6BB5" };
+  }
+  return { ok: true, data: raw };
+}
+async function signedSnapRequest(method, url, credential, body, fetcher) {
+  const { access_key_id: ak, secret_access_key: sk, security_token: st } = credential;
+  if (!ak || !sk) {
+    return { ok: false, code: -1, message: "\u51ED\u636E\u7F3A\u5C11 AK/SK" };
+  }
+  try {
+    const payload = body === void 0 ? new Uint8Array() : new TextEncoder().encode(body);
+    const signed = await signRequestHuawei(ak, sk, st, method, url, payload);
+    const headers = new Headers();
+    signed.forEach((value, key) => {
+      if (key !== "host") headers.set(key, value);
+    });
+    for (const [key, value] of Object.entries(SNAP_EXTRA_HEADERS)) headers.set(key, value);
+    const response = await fetcher(url, {
+      method,
+      headers,
+      ...body === void 0 ? {} : { body },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
+    const text = await response.text();
+    if (!response.ok) {
+      return { ok: false, code: response.status, message: describeHttpFailure(response.status, text) };
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return { ok: false, code: -1, message: UNPARSABLE_RESPONSE_MESSAGE };
+    }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return { ok: false, code: -1, message: UNPARSABLE_RESPONSE_MESSAGE };
+    }
+    return unwrapSnapEnvelope(parsed);
+  } catch (error) {
+    return {
+      ok: false,
+      code: -1,
+      message: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+function parseCreditBalance(metrics) {
+  if (!Array.isArray(metrics)) return void 0;
+  const packages = [];
+  let totalRemain;
+  let sawAnyCreditMetric = false;
+  for (const item of metrics) {
+    if (typeof item !== "object" || item === null) continue;
+    const record = item;
+    const name2 = readString3(record, "name");
+    const label = CREDIT_METRIC_LABELS[name2];
+    if (label === void 0) continue;
+    sawAnyCreditMetric = true;
+    const amount = readNumber3(record, "package_credit_amount");
+    const used = readNumber3(record, "package_credit_used");
+    const remain = readNumber3(record, "package_credit_remain");
+    if (name2 === TOTAL_CREDIT_METRIC) totalRemain = remain;
+    if (amount <= 0 && remain <= 0) continue;
+    packages.push({
+      name: label,
+      unit: "credit",
+      remaining: remain,
+      total: amount,
+      used,
+      // 这里如实置为有效、周期留空，而不是臆造一个到期时间。
+      active: true,
+      cycleStartTime: "",
+      cycleEndTime: "",
+      expiredTime: ""
+    });
+  }
+  if (!sawAnyCreditMetric) return void 0;
+  const total = roundCredits(
+    totalRemain ?? packages.reduce((sum, pkg) => sum + pkg.remaining, 0)
+  );
+  return { total, packages, expiredTotal: 0 };
+}
+async function fetchCodeArtsAccountInfoDetailed(credential, fetcher = directFetch) {
+  const url = `${CODEARTS_SNAP_ENGINE_URL}${CODEARTS_PACKAGE_INFO_PATH}`;
+  const result = await signedSnapRequest("GET", url, credential, void 0, fetcher);
+  if (!result.ok) return { ok: false, message: result.message };
+  const data = result.data;
+  const pkg = readRecord(data, "package");
+  const packageNameCn = readString3(pkg, "package_name_cn");
+  const packageNameEn = readString3(pkg, "package_name_en");
+  return {
+    ok: true,
+    info: {
+      isCreditPackage: readBool(pkg, "is_credit_package"),
+      isTokenPackage: readBool(pkg, "is_token_package"),
+      specCode: readString3(pkg, "spec_code"),
+      packageName: packageNameCn.length > 0 ? packageNameCn : packageNameEn,
+      packageStatus: readString3(pkg, "status"),
+      credit: parseCreditBalance(data.metrics)
+    }
+  };
+}
+function parseActivity(item) {
+  return {
+    // 用 readIdentifier 而非 readString：实测 campaignId 是**数字** 1。
+    campaignId: readIdentifier(item, "campaignId"),
+    type: readString3(item, "type"),
+    title: readString3(item, "title"),
+    claimable: readBool(item, "claimable"),
+    status: readString3(item, "status"),
+    // 可领积分数：实测字段名是 `benefitAmount`（值 1000）。
+    // 保留另两个候选名作兼容回退，取不到才为 0。
+    amount: readNumber3(item, "benefitAmount") || readNumber3(item, "amount") || readNumber3(item, "creditAmount")
+  };
+}
+async function fetchCodeArtsOpsActivitiesDetailed(credential, fetcher = directFetch) {
+  const url = `${CODEARTS_SNAP_ENGINE_URL}${CODEARTS_OPS_DELIVERY_PATH}?channel=${CODEARTS_OPS_CHANNEL}`;
+  const result = await signedSnapRequest("GET", url, credential, void 0, fetcher);
+  if (!result.ok) return { ok: false, message: result.message };
+  const items = result.data.items;
+  if (!Array.isArray(items)) return { ok: false, message: "\u54CD\u5E94\u7F3A\u5C11 items \u5B57\u6BB5" };
+  return {
+    ok: true,
+    activities: items.filter((item) => typeof item === "object" && item !== null && !Array.isArray(item)).map(parseActivity)
+  };
+}
+function findDailyCheckinActivity(activities) {
+  return activities.find((activity) => activity.type === CODEARTS_DAILY_LOGIN_TYPE);
+}
+async function claimCodeArtsDailyCheckin(credential, fetcher = directFetch) {
+  const infoResult = await fetchCodeArtsAccountInfoDetailed(credential, fetcher);
+  if (!infoResult.ok) {
+    return { kind: "failed", code: -1, message: `\u8D26\u6237\u4FE1\u606F\u67E5\u8BE2\u5931\u8D25\uFF1A${infoResult.message}` };
+  }
+  const info = infoResult.info;
+  if (!info.isCreditPackage) {
+    return {
+      kind: "inactive",
+      message: info.isTokenPackage ? "Token \u8BA1\u8D39\u8D26\u6237\uFF0C\u4E0D\u5728\u79EF\u5206\u6D3B\u52A8\u8303\u56F4" : "\u975E\u79EF\u5206\u8BA1\u8D39\u8D26\u6237\uFF0C\u4E0D\u5728\u79EF\u5206\u6D3B\u52A8\u8303\u56F4"
+    };
+  }
+  const activitiesResult = await fetchCodeArtsOpsActivitiesDetailed(credential, fetcher);
+  if (!activitiesResult.ok) {
+    return { kind: "failed", code: -1, message: `\u6D3B\u52A8\u5217\u8868\u67E5\u8BE2\u5931\u8D25\uFF1A${activitiesResult.message}` };
+  }
+  const activity = findDailyCheckinActivity(activitiesResult.activities);
+  if (activity === void 0) {
+    return { kind: "inactive", message: "\u672A\u627E\u5230\u6BCF\u65E5\u7B7E\u5230\u6D3B\u52A8" };
+  }
+  if (!activity.claimable) {
+    return CLAIMED_STATUSES.includes(activity.status) ? { kind: "already-claimed", message: "\u4ECA\u5929\u5DF2\u9886\u53D6" } : { kind: "inactive", message: `\u5F53\u524D\u4E0D\u53EF\u9886\u53D6\uFF08status=${activity.status}\uFF09` };
+  }
+  if (activity.campaignId.length === 0) {
+    return { kind: "failed", code: -1, message: "\u6D3B\u52A8\u7F3A\u5C11 campaignId\uFF0C\u65E0\u6CD5\u9886\u53D6" };
+  }
+  const claimResult = await signedSnapRequest(
+    "POST",
+    `${CODEARTS_SNAP_ENGINE_URL}${CODEARTS_OPS_CLAIM_PATH}`,
+    credential,
+    JSON.stringify({ campaignId: activity.campaignId, channel: CODEARTS_OPS_CHANNEL }),
+    fetcher
+  );
+  if (!claimResult.ok) {
+    return { kind: "failed", code: claimResult.code, message: claimResult.message };
+  }
+  const benefitId = claimResult.data.id;
+  if (benefitId !== null && benefitId !== void 0) {
+    await signedSnapRequest(
+      "POST",
+      `${CODEARTS_SNAP_ENGINE_URL}${CODEARTS_OPS_CONFIRM_PATH}`,
+      credential,
+      JSON.stringify({ campaignId: activity.campaignId }),
+      fetcher
+    );
+  }
+  const claimCredit = readNumber3(claimResult.data, "benefitAmount") || readNumber3(claimResult.data, "credit") || readNumber3(claimResult.data, "credits") || readNumber3(claimResult.data, "creditAmount") || readNumber3(claimResult.data, "amount");
+  return {
+    kind: "claimed",
+    credit: claimCredit > 0 ? claimCredit : activity.amount,
+    streakDays: 0,
+    isStreakDay: false
+  };
+}
+function roundCredits(value) {
+  return Math.round(value * 100) / 100;
 }
 
 // vendor/channel-pack/src/credit-expiry-window.ts
@@ -53402,7 +54112,7 @@ function minimaxFallbackEntries(product = MINIMAX) {
 }
 
 // vendor/channel-pack/src/credits.ts
-function roundCredits(value) {
+function roundCredits2(value) {
   return Math.round(value * 100) / 100;
 }
 function normalizeCreditUnit(unit) {
@@ -53492,33 +54202,33 @@ function parseMinimaxSigninPanel(data) {
   let today = 0;
   for (const raw of rawDays) {
     if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return void 0;
-    const day = raw;
-    const dayNo = finiteNumber(day.day_no);
-    const points = finiteNumber(day.points);
-    const status = finiteNumber(day.status);
-    const bonusRaw = day.bonus_points;
+    const day2 = raw;
+    const dayNo = finiteNumber(day2.day_no);
+    const points = finiteNumber(day2.points);
+    const status = finiteNumber(day2.status);
+    const bonusRaw = day2.bonus_points;
     const bonusPoints = bonusRaw === void 0 ? 0 : finiteNumber(bonusRaw);
     if (dayNo === void 0 || !Number.isInteger(dayNo) || dayNo < 1 || dayNo > 7) return void 0;
     if (seen.has(dayNo)) return void 0;
     if (points === void 0 || points < 0) return void 0;
     if (bonusPoints === void 0 || bonusPoints < 0) return void 0;
-    if (typeof day.is_today !== "boolean") return void 0;
+    if (typeof day2.is_today !== "boolean") return void 0;
     if (status === void 0 || !MINIMAX_SIGNIN_STATUS_VALUES.includes(status)) {
       return void 0;
     }
     seen.add(dayNo);
     if (status === MINIMAX_SIGNIN_STATUS.Claimable) claimable++;
-    if (day.is_today) today++;
-    days.push({ dayNo, points, bonusPoints, status, isToday: day.is_today });
+    if (day2.is_today) today++;
+    days.push({ dayNo, points, bonusPoints, status, isToday: day2.is_today });
   }
   if (claimable > 1 || today > 1) return void 0;
   return { scene, days };
 }
 function minimaxPanelToCheckinStatus(panel) {
-  const today = panel.days.find((day) => day.isToday);
+  const today = panel.days.find((day2) => day2.isToday);
   const claimedToday = today !== void 0 && today.status === MINIMAX_SIGNIN_STATUS.Claimed;
   const sorted = [...panel.days].sort((a, b) => a.dayNo - b.dayNo);
-  const todayIndex = sorted.findIndex((day) => day.isToday);
+  const todayIndex = sorted.findIndex((day2) => day2.isToday);
   let streakDays = 0;
   if (todayIndex >= 0) {
     let index = sorted[todayIndex]?.status === MINIMAX_SIGNIN_STATUS.Claimed ? todayIndex : sorted[todayIndex]?.status === MINIMAX_SIGNIN_STATUS.Claimable ? todayIndex - 1 : -1;
@@ -53527,7 +54237,7 @@ function minimaxPanelToCheckinStatus(panel) {
       streakDays += 1;
     }
   }
-  const claimable = panel.days.find((day) => day.status === MINIMAX_SIGNIN_STATUS.Claimable);
+  const claimable = panel.days.find((day2) => day2.status === MINIMAX_SIGNIN_STATUS.Claimable);
   const target = today ?? claimable;
   return {
     active: true,
@@ -53663,7 +54373,7 @@ async function fetchMinimaxCreditBalance(credential, fetcher = fetch, product = 
     const remaining = looseAmount(entry.remaining_amount);
     if (remaining !== void 0) total += remaining;
   }
-  return { total: roundCredits(total), packages: [], expiredTotal: 0 };
+  return { total: roundCredits2(total), packages: [], expiredTotal: 0 };
 }
 
 // vendor/channel-pack/src/gemini.ts
@@ -53965,7 +54675,7 @@ function parseGeminiAccountTier(payload) {
   if (tier === void 0) return void 0;
   return { id: tier.id, name: tier.name, label: tierLabel(tier.id, tier.name) };
 }
-var cache2 = /* @__PURE__ */ new Map();
+var cache3 = /* @__PURE__ */ new Map();
 function parseGeminiQuotaWindow(raw) {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return void 0;
   const record = raw;
@@ -54025,7 +54735,7 @@ function toGeminiCreditBalance(fiveHour, weekly) {
   if (packages.length === 0) return { total: 0, packages: [], expiredTotal: 0 };
   const sum = packages.reduce((acc, item) => acc + item.remaining, 0);
   return {
-    total: roundCredits(sum / packages.length),
+    total: roundCredits2(sum / packages.length),
     packages,
     expiredTotal: 0
   };
@@ -54035,11 +54745,11 @@ async function fetchGeminiCreditBalance(credential, _product = GEMINI, options =
   if (token === "") return { balance: null, error: GEMINI_UNAUTHORIZED_MESSAGE };
   const now = options.now?.() ?? Date.now();
   if (options.force !== true) {
-    const cached2 = cache2.get(token);
+    const cached2 = cache3.get(token);
     if (cached2 !== void 0 && now - cached2.at < GEMINI_QUOTA_CACHE_TTL_MS) return cached2.result;
   }
   const result = await requestQuota(credential, options.fetcher ?? fetch);
-  cache2.set(token, { at: now, result });
+  cache3.set(token, { at: now, result });
   return result;
 }
 async function requestQuota(credential, fetcher) {
@@ -54115,9 +54825,9 @@ function quotaRejectionHint(text) {
         const record = error;
         const details = Array.isArray(record.details) ? record.details : [];
         const reason = details.map((item) => typeof item === "object" && item !== null ? item.reason : void 0).find((value) => typeof value === "string" && value !== "");
-        const message = typeof record.message === "string" ? record.message : "";
-        if (reason !== void 0) return `\uFF08${reason}\uFF09\uFF1A${message.slice(0, 160)}`;
-        if (message !== "") return `\uFF1A${message.slice(0, 160)}`;
+        const message2 = typeof record.message === "string" ? record.message : "";
+        if (reason !== void 0) return `\uFF08${reason}\uFF09\uFF1A${message2.slice(0, 160)}`;
+        if (message2 !== "") return `\uFF1A${message2.slice(0, 160)}`;
       }
     }
   } catch {
@@ -54331,7 +55041,7 @@ async function creditsHeaders(credential, product) {
     "User-Agent": "Qoder"
   });
 }
-function readNumber3(source, key) {
+function readNumber4(source, key) {
   if (typeof source !== "object" || source === null) return void 0;
   const value = source[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -54341,16 +55051,16 @@ function readNumber3(source, key) {
   }
   return void 0;
 }
-function readString3(source, key) {
+function readString4(source, key) {
   if (typeof source !== "object" || source === null) return void 0;
   const value = source[key];
   return typeof value === "string" && value.length > 0 ? value : void 0;
 }
 var QODER_PLAN_PACKAGE = "\u5957\u9910\u989D\u5EA6";
 function toPackage(name2, quota, options = {}) {
-  const total = readNumber3(quota, "total");
-  const used = readNumber3(quota, "used");
-  const remainingRaw = readNumber3(quota, "remaining");
+  const total = readNumber4(quota, "total");
+  const used = readNumber4(quota, "used");
+  const remainingRaw = readNumber4(quota, "remaining");
   if (total === void 0 && used === void 0 && remainingRaw === void 0) return void 0;
   const totalValue = Math.max(0, total ?? 0);
   const usedValue = Math.max(0, used ?? 0);
@@ -54358,7 +55068,7 @@ function toPackage(name2, quota, options = {}) {
   const expMs = options.expiredTime && options.expiredTime.length > 0 ? Date.parse(options.expiredTime.replace(" ", "T")) : Number.NaN;
   return {
     name: name2,
-    unit: readString3(quota, "unit") ?? "credits",
+    unit: readString4(quota, "unit") ?? "credits",
     remaining,
     total: totalValue,
     used: usedValue,
@@ -54401,15 +55111,15 @@ async function fetchQoderCreditBalance(credential, product, fetcher = fetch) {
   if (Array.isArray(dedicated)) {
     for (const item of dedicated) {
       const pkg = toPackage(
-        readString3(item, "name") ?? readString3(item, "id") ?? "\u4E13\u7528\u8D44\u6E90\u5305",
+        readString4(item, "name") ?? readString4(item, "id") ?? "\u4E13\u7528\u8D44\u6E90\u5305",
         item,
-        { expiredTime: readString3(item, "expiresAt") ?? readString3(item, "expires_at") ?? "" }
+        { expiredTime: readString4(item, "expiresAt") ?? readString4(item, "expires_at") ?? "" }
       );
       if (pkg !== void 0) packages.push(pkg);
     }
   }
   if (packages.length === 0) return null;
-  const total = roundCredits(packages.reduce((sum, pkg) => sum + pkg.remaining, 0));
+  const total = roundCredits2(packages.reduce((sum, pkg) => sum + pkg.remaining, 0));
   return { total, packages, expiredTotal: 0 };
 }
 function parseQoderCampaigns(body) {
@@ -54419,13 +55129,13 @@ function parseQoderCampaigns(body) {
   const campaigns = [];
   if (Array.isArray(raw)) {
     for (const item of raw) {
-      const id = readString3(item, "campaignId");
+      const id = readString4(item, "campaignId");
       if (id === void 0) continue;
       campaigns.push({
         campaignId: id,
-        ...readString3(item, "campaignKey") !== void 0 ? { campaignKey: readString3(item, "campaignKey") } : {},
-        ...readString3(item, "actionType") !== void 0 ? { actionType: readString3(item, "actionType") } : {},
-        ...readString3(item, "claimStatus") !== void 0 ? { claimStatus: readString3(item, "claimStatus") } : {},
+        ...readString4(item, "campaignKey") !== void 0 ? { campaignKey: readString4(item, "campaignKey") } : {},
+        ...readString4(item, "actionType") !== void 0 ? { actionType: readString4(item, "actionType") } : {},
+        ...readString4(item, "claimStatus") !== void 0 ? { claimStatus: readString4(item, "claimStatus") } : {},
         ...benefitAmount(item) !== void 0 ? { amount: benefitAmount(item) } : {}
       });
     }
@@ -54438,7 +55148,7 @@ function parseQoderCampaigns(body) {
 }
 function benefitAmount(item) {
   if (typeof item !== "object" || item === null) return void 0;
-  return readNumber3(item.benefit, "amount");
+  return readNumber4(item.benefit, "amount");
 }
 async function loadCampaigns(credential, product, fetcher) {
   let response;
@@ -54469,7 +55179,7 @@ function parseClaimResult(body) {
   if (typeof body !== "object" || body === null || Array.isArray(body)) return {};
   const root = body;
   return {
-    ...readString3(root, "status") !== void 0 ? { status: readString3(root, "status") } : {},
+    ...readString4(root, "status") !== void 0 ? { status: readString4(root, "status") } : {},
     ...typeof root.replayed === "boolean" ? { replayed: root.replayed } : {},
     ...benefitAmount(root) !== void 0 ? { amount: benefitAmount(root) } : {}
   };
@@ -54548,7 +55258,7 @@ async function claimQoderDailyCheckin(credential, product, fetcher = fetch, nowM
 // vendor/channel-pack/src/cline-credits.ts
 var CLINE_CREDITS_TIMEOUT_MS = 3e4;
 var CLINE_BALANCE_SCALE = 1e5;
-function readNumber4(source, key) {
+function readNumber5(source, key) {
   const value = source[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim().length > 0) {
@@ -54558,7 +55268,7 @@ function readNumber4(source, key) {
   return void 0;
 }
 function toClineCreditBalance(rawBalance) {
-  const total = roundCredits(rawBalance / CLINE_BALANCE_SCALE);
+  const total = roundCredits2(rawBalance / CLINE_BALANCE_SCALE);
   const pkg = {
     name: "Cline \u8D26\u6237\u4F59\u989D",
     unit: "USD",
@@ -54583,7 +55293,7 @@ function parseClineBalanceResponse(value) {
   }
   const data = typeof record.data === "object" && record.data !== null && !Array.isArray(record.data) ? record.data : void 0;
   if (data === void 0) return { error: "\u54CD\u5E94\u7F3A\u5C11 data \u5B57\u6BB5" };
-  const rawBalance = readNumber4(data, "balance");
+  const rawBalance = readNumber5(data, "balance");
   if (rawBalance === void 0) return { error: "\u54CD\u5E94\u7F3A\u5C11 balance \u5B57\u6BB5" };
   return { rawBalance };
 }
@@ -54629,7 +55339,7 @@ async function fetchClineCreditBalance(credential, product, fetcher = fetch, opt
 // vendor/channel-pack/src/cline-quota.ts
 var CLINE_QUOTA_TIMEOUT_MS = 3e4;
 var CLINE_USAGE_LIMITS_PATH = "/api/v1/users/me/plan/usage-limits";
-function readNumber5(source, key) {
+function readNumber6(source, key) {
   const value = source[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim().length > 0) {
@@ -54638,7 +55348,7 @@ function readNumber5(source, key) {
   }
   return void 0;
 }
-function readString4(source, key) {
+function readString5(source, key) {
   const value = source[key];
   if (typeof value !== "string") return void 0;
   const trimmed = value.trim();
@@ -54682,15 +55392,15 @@ function parseClineUsageLimits(value) {
   for (const item of raw) {
     if (typeof item !== "object" || item === null || Array.isArray(item)) continue;
     const entry = item;
-    const type = readString4(entry, "type");
+    const type = readString5(entry, "type");
     if (type === void 0) continue;
     windows.push({
       type,
-      percentUsed: readNumber5(entry, "percentUsed") ?? 0,
+      percentUsed: readNumber6(entry, "percentUsed") ?? 0,
       // ⚠️ `resetsAt` 是 ISO 字符串。若网关某天回数字时间戳，也不要在这里
       // 猜单位（秒/毫秒），原样转成字符串交由展示层判定 —— 猜错会显示
       // 1970 年或 5 万年后的时间，比不显示更难排查。
-      resetsAt: readString4(entry, "resetsAt") ?? ""
+      resetsAt: readString5(entry, "resetsAt") ?? ""
     });
   }
   return { windows, error: serverError === "" ? void 0 : serverError };
@@ -54747,7 +55457,7 @@ var LOBSTERAI_PROFILE_SUMMARY_PATH = "/api/user/profile-summary";
 var LOBSTERAI_SLOT_PLACEMENT = "desktop_sidebar";
 var LOBSTERAI_SLOT_CONTAINER_API_VERSION = "2";
 var LOBSTERAI_SLOT_PLATFORM = "win32";
-var UNPARSABLE_RESPONSE_MESSAGE = "\u8BF7\u6C42\u5931\u8D25\u6216\u54CD\u5E94\u65E0\u6CD5\u89E3\u6790";
+var UNPARSABLE_RESPONSE_MESSAGE2 = "\u8BF7\u6C42\u5931\u8D25\u6216\u54CD\u5E94\u65E0\u6CD5\u89E3\u6790";
 async function requestJson2(url, credential, product, fetcher, init = { method: "GET" }) {
   try {
     const response = await fetcher(url, {
@@ -54764,7 +55474,7 @@ async function requestJson2(url, credential, product, fetcher, init = { method: 
       return { ok: false, message: describeNonJsonResponse(response.status, text) };
     }
     if (typeof parsed !== "object" || parsed === null) {
-      return { ok: false, message: UNPARSABLE_RESPONSE_MESSAGE };
+      return { ok: false, message: UNPARSABLE_RESPONSE_MESSAGE2 };
     }
     return { ok: true, body: parsed };
   } catch (error) {
@@ -54778,10 +55488,10 @@ function describeNonJsonResponse(status, text) {
   const snippet = text.trim().slice(0, 80).replace(/\s+/g, " ");
   return `\u670D\u52A1\u7AEF\u8FD4\u56DE\u4E86\u975E JSON \u54CD\u5E94\uFF08HTTP ${status}\uFF09\uFF1A${snippet}`;
 }
-function readBool(source, key) {
+function readBool2(source, key) {
   return source[key] === true;
 }
-function readNumber6(source, key) {
+function readNumber7(source, key) {
   const value = source[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && /^-?\d+(\.\d+)?$/.test(value.trim())) return Number(value);
@@ -54813,7 +55523,7 @@ async function fetchLobsteraiActivitySlot(credential, product, clientVersion, fe
   return {
     slotState: typeof envelope.data.slotState === "string" ? envelope.data.slotState : "",
     activityCode,
-    configRevision: readNumber6(activity, "configRevision")
+    configRevision: readNumber7(activity, "configRevision")
   };
 }
 async function fetchLobsteraiActivityContext(credential, product, slot2, fetcher = fetch) {
@@ -54825,7 +55535,7 @@ async function fetchLobsteraiActivityContext(credential, product, slot2, fetcher
   if (!envelope.ok) return null;
   const state = typeof envelope.data.state === "object" && envelope.data.state !== null ? envelope.data.state : {};
   return {
-    claimedToday: readBool(state, "claimedToday"),
+    claimedToday: readBool2(state, "claimedToday"),
     actions: readActions(envelope.data, "actions")
   };
 }
@@ -54866,13 +55576,13 @@ async function claimLobsteraiDailyCheckin(credential, product, clientVersion, fe
   }
   const bodyResult = typeof envelope.data.result === "object" && envelope.data.result !== null ? envelope.data.result : {};
   const credit = ["creditsGranted", "rewardCredits", "credits"].map((key) => bodyResult[key]).find((value) => typeof value === "number" && Number.isFinite(value)) ?? 0;
-  const message = typeof bodyResult.message === "string" ? bodyResult.message : "";
+  const message2 = typeof bodyResult.message === "string" ? bodyResult.message : "";
   return {
     kind: "claimed",
     credit,
     streakDays: 0,
     isStreakDay: false,
-    ...message.length > 0 ? { delayedMessage: message } : {}
+    ...message2.length > 0 ? { delayedMessage: message2 } : {}
   };
 }
 async function fetchLobsteraiCreditBalance(credential, product, fetcher = fetch) {
@@ -54891,7 +55601,7 @@ async function fetchLobsteraiCreditBalance(credential, product, fetcher = fetch)
     for (const item of items) {
       if (typeof item !== "object" || item === null) continue;
       const record = item;
-      const remaining = readNumber6(record, "creditsRemaining");
+      const remaining = readNumber7(record, "creditsRemaining");
       const type = typeof record.type === "string" ? record.type : "";
       const label = typeof record.label === "string" ? record.label : "";
       const expiresAt = typeof record.expiresAt === "string" ? record.expiresAt : "";
@@ -54927,18 +55637,18 @@ async function fetchLobsteraiCreditBalance(credential, product, fetcher = fetch)
   for (const pkg of packages) {
     const face = faceValueByGroup.get(pkg.name);
     if (face !== void 0 && face > 0) {
-      pkg.total = roundCredits2(face);
-      if (pkg.used <= 0) pkg.used = roundCredits2(Math.max(0, face - pkg.remaining));
+      pkg.total = roundCredits3(face);
+      if (pkg.used <= 0) pkg.used = roundCredits3(Math.max(0, face - pkg.remaining));
     }
   }
-  const total = roundCredits2(Math.max(0, readNumber6(envelope.data, "totalCreditsRemaining")));
+  const total = roundCredits3(Math.max(0, readNumber7(envelope.data, "totalCreditsRemaining")));
   if (total === 0 && packages.length === 0) return null;
-  const expiredTotal = roundCredits2(
+  const expiredTotal = roundCredits3(
     packages.reduce((sum, pkg) => sum + (pkg.active ? 0 : Math.max(0, pkg.remaining)), 0)
   );
   return { total, packages, expiredTotal };
 }
-function roundCredits2(value) {
+function roundCredits3(value) {
   return Math.round(value * 100) / 100;
 }
 
@@ -54967,11 +55677,11 @@ function classifyTraeCheckinError(httpStatus, code) {
   }
   return { type: "Unknown", cooldownSecs: 0 };
 }
-function readNumber7(source, key) {
+function readNumber8(source, key) {
   const value = source[key];
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
-function readString5(source, key) {
+function readString6(source, key) {
   const value = source[key];
   return typeof value === "string" ? value : "";
 }
@@ -55022,11 +55732,11 @@ async function fetchTraeCheckinStatus(credential, _product, fetcher = fetch) {
   return {
     active: body.enable === true,
     todayCheckedIn: body.checked_in === true,
-    streakDays: readNumber7(body, "streak_days") || 0,
-    dailyCredit: readNumber7(body, "credits") || 0,
+    streakDays: readNumber8(body, "streak_days") || 0,
+    dailyCredit: readNumber8(body, "credits") || 0,
     todayCredit: 0,
     isStreakDay: false,
-    totalCredits: readNumber7(body, "total_credits") || 0,
+    totalCredits: readNumber8(body, "total_credits") || 0,
     checkinDates: [],
     activityName: "",
     themeName: "",
@@ -55063,12 +55773,12 @@ async function claimTraeDailyCheckin(credential, product, fetcher = fetch, gener
     return {
       kind: "failed",
       code: 9074,
-      message: readString5(body, "message") || readString5(body, "msg") || "\u7B7E\u5230\u4EBA\u6570\u8FC7\u591A\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5",
+      message: readString6(body, "message") || readString6(body, "msg") || "\u7B7E\u5230\u4EBA\u6570\u8FC7\u591A\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5",
       errorType: "BusinessError",
       cooldownSecs: 300
     };
   }
-  const msg = readString5(body, "message") || readString5(body, "msg") || "";
+  const msg = readString6(body, "message") || readString6(body, "msg") || "";
   if (code === 0) {
     const status = await fetchTraeCheckinStatus(credential, product, fetcher);
     return {
@@ -55109,16 +55819,16 @@ async function fetchTraeCreditBalance(credential, _product, fetcher = fetch) {
     if (typeof base !== "object" || base === null) continue;
     const quota = base.quota;
     if (typeof quota !== "object" || quota === null) continue;
-    const creditsLimit = readNumber7(quota, "credits_limit");
+    const creditsLimit = readNumber8(quota, "credits_limit");
     if (creditsLimit <= 0) continue;
     const usage = entry.usage;
-    const used = typeof usage === "object" && usage !== null ? readNumber7(usage, "credits_amount") : 0;
-    const expireSec = readNumber7(entry, "expire_time");
+    const used = typeof usage === "object" && usage !== null ? readNumber8(usage, "credits_amount") : 0;
+    const expireSec = readNumber8(entry, "expire_time");
     const deductionEndMs = expireSec > 0 ? expireSec * 1e3 : void 0;
     const pkg = {
       // ⚠️ 包名用 `display_desc`（实测"每月登录赠送"/"签到奖励"/"免费"），
       // 不是 `base.name` —— 后者实测为 undefined，旧代码全部回退成了"资源包"。
-      name: readString5(base, "display_desc") || readString5(entry, "display_desc") || "\u8D44\u6E90\u5305",
+      name: readString6(base, "display_desc") || readString6(entry, "display_desc") || "\u8D44\u6E90\u5305",
       unit: "credits",
       remaining: creditsLimit - used,
       total: creditsLimit,
@@ -55137,19 +55847,1318 @@ async function fetchTraeCreditBalance(credential, _product, fetcher = fetch) {
 
 // vendor/channel-pack/src/account-probe.ts
 import { credentialRef as credentialRef8 } from "@deepseek-ai/dsh-credentials";
-import { createUserMessage, LlmError as LlmError16 } from "@deepseek-ai/dsh-llm";
+import { createUserMessage, LlmError as LlmError17 } from "@deepseek-ai/dsh-llm";
+
+// vendor/channel-pack/src/llm-adapter.ts
+import {
+  attributionHeaders,
+  CONTEXT_WINDOW_EXCEEDED_CODE,
+  isContextWindowExceededError,
+  isQuotaExceededError as isQuotaExceededError2,
+  LlmAdapter as LlmAdapter8,
+  LlmError as LlmError15,
+  QUOTA_EXCEEDED_CODE
+} from "@deepseek-ai/dsh-llm";
+import { ReasoningEffortId as ReasoningEffortId9, ToolCallId as ToolCallId5 } from "@deepseek-ai/dsh-llm";
+
+// vendor/channel-pack/src/models.ts
+import { existsSync as existsSync6, mkdirSync as mkdirSync4, readFileSync as readFileSync6, renameSync as renameSync4, writeFileSync as writeFileSync5 } from "node:fs";
+var OPENGW_GATEWAY_CONFIG_URL = "https://opengw.developer.huaweicloud.com/api/v1/gateway/config";
+var SNAP_MODEL_BUILTIN_URL = "https://snap-access.cn-north-4.myhuaweicloud.com/v1/model/builtin";
+var CODEARTS_MODELS_CACHE_FILENAME = "codearts_models.json";
+var CODEARTS_BENEFIT_CACHE_FILENAME = "codearts_benefit_models.json";
+var CODEARTS_BENEFIT_FALLBACK = ["glm-5.3-flash", "deepseek-v4.1-flash"];
+var FETCH_TIMEOUT_MS = 1e4;
+var MODEL_REFRESH_INTERVAL_MS = 2 * 36e5;
+var memoryCache;
+var benefitMemoryCache;
+function normalizeModelId(id) {
+  if (id.length > 5) {
+    const suffix = id.slice(-5);
+    if (suffix.startsWith("-") && /^\d{4}$/.test(suffix.slice(1))) {
+      return id.slice(0, -5);
+    }
+  }
+  return id;
+}
+function parseModelInfo(m, seen) {
+  const rawId = m["model_id"];
+  if (typeof rawId !== "string" || rawId.length === 0) return void 0;
+  const id = normalizeModelId(rawId);
+  if (id.includes("-VL-") || id.endsWith("-VL")) return void 0;
+  const rawName = m["model_name"];
+  const name2 = typeof rawName === "string" && rawName.length > 0 ? normalizeModelId(rawName) : id;
+  if (seen.has(id)) return void 0;
+  seen.add(id);
+  return { id, name: name2 };
+}
+function extractJsonArray(text, path2) {
+  try {
+    let value = JSON.parse(text);
+    for (const key of path2) {
+      if (typeof value !== "object" || value === null) return void 0;
+      value = value[key];
+    }
+    return Array.isArray(value) ? value : void 0;
+  } catch {
+    return void 0;
+  }
+}
+async function fetchSignedGet(fetcher, url, ak, sk, st, extraUnsignedHeaders) {
+  const signed = await signRequestHuawei(ak, sk, st, "GET", url, new Uint8Array());
+  const headers = new Headers();
+  signed.forEach((v, k) => {
+    if (k !== "host") headers.set(k, v);
+  });
+  if (extraUnsignedHeaders !== void 0) {
+    for (const [k, v] of Object.entries(extraUnsignedHeaders)) headers.set(k, v);
+  }
+  try {
+    const response = await fetcher(url, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    });
+    if (!response.ok) return void 0;
+    return await response.text();
+  } catch {
+    return void 0;
+  }
+}
+async function fetchCodeArtsRemoteModels(credential, fetcher = directFetch) {
+  const { access_key_id: ak, secret_access_key: sk, security_token: st } = credential;
+  if (!ak || !sk) return [];
+  const models = [];
+  const seen = /* @__PURE__ */ new Set();
+  const benefitIds = [];
+  const gatewayText = await fetchSignedGet(fetcher, OPENGW_GATEWAY_CONFIG_URL, ak, sk, st);
+  if (gatewayText !== void 0) {
+    const arr = extractJsonArray(gatewayText, ["result", "models"]);
+    if (arr !== void 0) {
+      for (const item of arr) {
+        if (typeof item === "object" && item !== null) {
+          const entry = item;
+          const rawId = typeof entry["model_id"] === "string" ? entry["model_id"] : "";
+          const mi = parseModelInfo(entry, seen);
+          if (mi) {
+            if (rawId.length > 0 && normalizeModelId(rawId) === rawId) benefitIds.push(mi.id);
+            models.push(mi);
+          }
+        }
+      }
+    }
+  }
+  const snapText = await fetchSignedGet(fetcher, SNAP_MODEL_BUILTIN_URL, ak, sk, st, {
+    "Content-Type": "application/json",
+    "Agent-Type": "PromptCenter",
+    "X-Language": "zh-cn"
+  });
+  if (snapText !== void 0) {
+    const arr = extractJsonArray(snapText, ["builtinModels"]);
+    if (arr !== void 0) {
+      for (const item of arr) {
+        if (typeof item === "object" && item !== null) {
+          const mi = parseModelInfo(item, seen);
+          if (mi) models.push(mi);
+        }
+      }
+    }
+  }
+  if (benefitIds.length > 0) {
+    setBenefitMemoryCache(benefitIds);
+    saveBenefitCache(benefitIds);
+  }
+  return models;
+}
+function cacheDir() {
+  const override = process.env.DSH_CODEARTS_CACHE_DIR;
+  if (override !== void 0 && override.length > 0) return override;
+  const home = process.env.USERPROFILE ?? process.env.HOME;
+  if (!home) return void 0;
+  return `${home}/.cache/deveco`;
+}
+function modelsCachePath() {
+  const dir = cacheDir();
+  return dir === void 0 ? void 0 : `${dir}/${CODEARTS_MODELS_CACHE_FILENAME}`;
+}
+function benefitCachePath() {
+  const dir = cacheDir();
+  return dir === void 0 ? void 0 : `${dir}/${CODEARTS_BENEFIT_CACHE_FILENAME}`;
+}
+function saveModelsCache(models) {
+  const path2 = modelsCachePath();
+  if (!path2) return;
+  const dir = path2.slice(0, path2.lastIndexOf("/"));
+  try {
+    mkdirSync4(dir, { recursive: true });
+    const tmp = path2 + ".tmp";
+    writeFileSync5(tmp, JSON.stringify(models), "utf-8");
+    renameSync4(tmp, path2);
+  } catch {
+  }
+}
+function setMemoryCache(models) {
+  memoryCache = models;
+}
+function saveBenefitCache(ids) {
+  const path2 = benefitCachePath();
+  if (!path2) return;
+  const dir = path2.slice(0, path2.lastIndexOf("/"));
+  try {
+    mkdirSync4(dir, { recursive: true });
+    const tmp = path2 + ".tmp";
+    writeFileSync5(tmp, JSON.stringify(ids), "utf-8");
+    renameSync4(tmp, path2);
+  } catch {
+  }
+}
+function loadBenefitCache() {
+  const path2 = benefitCachePath();
+  if (!path2) return void 0;
+  try {
+    if (!existsSync6(path2)) return void 0;
+    const text = readFileSync6(path2, "utf-8");
+    const ids = JSON.parse(text);
+    if (!Array.isArray(ids) || ids.length === 0) return void 0;
+    return ids.filter((id) => typeof id === "string");
+  } catch {
+    return void 0;
+  }
+}
+function setBenefitMemoryCache(ids) {
+  benefitMemoryCache = ids;
+}
+function isCodeArtsBenefitModel(model) {
+  if (benefitMemoryCache === void 0) benefitMemoryCache = loadBenefitCache();
+  if (benefitMemoryCache !== void 0 && benefitMemoryCache.includes(model)) return true;
+  return CODEARTS_BENEFIT_FALLBACK.includes(model);
+}
+
+// vendor/channel-pack/src/llm-adapter.ts
+var CHAT_API_BASE = "https://snap-access.cn-north-4.myhuaweicloud.com/api/v2";
+var PROVIDER = "codearts";
+var BENEFIT_NOT_FOUND_CODE = "BENEFIT_NOT_FOUND";
+var CODEARTS_BENEFIT_NOT_FOUND_ERROR_CODE = "InferHub.4004.200";
+var DEFAULT_MODELS = [
+  "GLM-5.2",
+  "GLM-5.1",
+  "GLM-5",
+  "glm-5.3-flash",
+  "openpangu-2.0-flash",
+  "openpangu-2.0-pro",
+  "deepseek-v4-flash",
+  "deepseek-v4-pro",
+  "deepseek-v4.1-flash"
+];
+var CONTEXT_WINDOWS = /* @__PURE__ */ new Map([
+  ["GLM-5.2", 202752],
+  ["glm-5.3-flash", 1048576],
+  ["deepseek-v4-flash", 1048576],
+  ["deepseek-v4-pro", 1048576],
+  ["deepseek-v4.1-flash", 1e6]
+]);
+function contentToText5(content) {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content.filter((block) => typeof block === "object" && block !== null && block.type === "text").map((block) => String(block.text)).join("");
+}
+function serializeMessages3(messages) {
+  const normalized = normalizeHarnessMessages(messages);
+  const wire = [];
+  const { keepCallIds, keepResultIds } = resolveToolPairing(normalized);
+  for (const message2 of normalized) {
+    if (message2.role === "assistant") {
+      const content2 = stripCourseLeakFromHistoryContent(
+        message2.role,
+        Array.isArray(message2.content) ? message2.content : []
+      );
+      const toolCalls = content2.filter((block) => typeof block === "object" && block !== null && block.type === "tool-call").filter((block) => keepCallIds.has(String(block.id))).map((block) => ({
+        id: String(block.id),
+        type: "function",
+        function: { name: String(block.name), arguments: normalizeToolArguments(String(block.arguments)) }
+      }));
+      const reasoning = content2.filter((block) => typeof block === "object" && block !== null && block.type === "reasoning").map((block) => String(block.text)).join("");
+      const text2 = contentToText5(content2);
+      if (text2.trim().length === 0 && toolCalls.length === 0) continue;
+      wire.push({
+        role: "assistant",
+        content: text2,
+        // 后端（deepseek-v4-flash/pro）校验要求 assistant 消息必须包含
+        // reasoning_content 字段：历史里的推理块在上一轮被持久化，回传时
+        // 若缺失该字段会直接 400（"Missing `reasoning_content` field"）。
+        // 始终携带该字段（无推理时为空串），确保字段存在。
+        reasoning_content: reasoning,
+        ...toolCalls.length > 0 ? { tool_calls: toolCalls } : {}
+      });
+      continue;
+    }
+    if (message2.role === "system") {
+      wire.push({ role: "system", content: contentToText5(message2.content) });
+      continue;
+    }
+    const content = Array.isArray(message2.content) ? message2.content : [];
+    const toolResults = content.filter((block) => typeof block === "object" && block !== null && block.type === "tool-result");
+    const text = contentToText5(message2.content);
+    if (text.trim().length > 0) wire.push({ role: "user", content: text });
+    for (const result of toolResults) {
+      if (!keepResultIds.has(String(result.toolCallId))) continue;
+      wire.push({
+        role: "tool",
+        tool_call_id: String(result.toolCallId),
+        content: contentToText5(result.content) || "(no output)"
+      });
+    }
+  }
+  return wire;
+}
+function isDeepseekV4Model(model) {
+  return /^deepseek-v4-(flash|pro)$/.test(model);
+}
+function needsDsmlToolMode(model, _toolNames) {
+  return isDeepseekV4Model(model);
+}
+function buildDsmlSystemPrompt(tools) {
+  const toolJson = JSON.stringify(tools.map((tool) => ({
+    name: tool.function.name,
+    description: tool.function.description,
+    parameters: tool.function.parameters
+  })), null, 2);
+  return [
+    "\u4EE5\u4E0B\u662F\u4F60\u53EF\u7528\u7684\u5DE5\u5177\u53CA\u5176 JSON Schema\u3002\u5F53\u9700\u8981\u8C03\u7528\u5DE5\u5177\u5B8C\u6210\u4EFB\u52A1\u65F6\uFF0C",
+    "\u5FC5\u987B\u4F7F\u7528\u539F\u751F DSML \u5DE5\u5177\u8C03\u7528\u8BED\u6CD5\u8F93\u51FA\uFF0C\u683C\u5F0F\u5982\u4E0B\uFF1A",
+    '<\uFF5CDSML\uFF5Ctool_calls><\uFF5CDSML\uFF5Cinvoke name="\u5DE5\u5177\u540D"><\uFF5CDSML\uFF5Cparameter name="\u53C2\u6570\u540D" string="true">\u53C2\u6570\u503C</\uFF5CDSML\uFF5Cparameter></\uFF5CDSML\uFF5Cinvoke></\uFF5CDSML\uFF5Ctool_calls>',
+    "",
+    "\u89C4\u5219\uFF1A",
+    "- \u5DE5\u5177\u540D\u5FC5\u987B\u662F\u4E0B\u9762\u5217\u8868\u4E2D\u7684 name\u3002",
+    "- \u6BCF\u4E2A\u53C2\u6570\u7528\u4E00\u4E2A <\uFF5CDSML\uFF5Cparameter> \u6807\u7B7E\u5305\u88F9\uFF0C\u53C2\u6570\u503C\u653E\u5728\u6807\u7B7E\u4E4B\u95F4\u3002",
+    '- \u5B57\u7B26\u4E32\u53C2\u6570\u52A0 string="true" \u5C5E\u6027\uFF1B\u5BF9\u8C61/\u6570\u7EC4/\u6570\u5B57/\u5E03\u5C14\u53C2\u6570\u4E0D\u8981\u52A0\u8BE5\u5C5E\u6027\u3002',
+    "- \u4E00\u6B21\u53EF\u4EE5\u8F93\u51FA\u591A\u4E2A <\uFF5CDSML\uFF5Cinvoke> \u8C03\u7528\uFF08\u5DE5\u5177\u53EF\u4EE5\u5E76\u884C\uFF09\u3002",
+    "- \u6587\u4EF6\u5185\u5BB9\u8BF7\u4E00\u6B21\u6027\u5B8C\u6574\u5199\u5165\u5355\u4E2A write \u8C03\u7528\u7684 content \u53C2\u6570\uFF0C\u4E0D\u8981\u62C6\u5206\u6216\u7701\u7565\u3002",
+    "",
+    "\u5DE5\u5177\u5217\u8868\uFF08JSON Schema\uFF09\uFF1A",
+    toolJson
+  ].join("\n");
+}
+var QUEUE_STATUS_BASE = "https://snap-access.cn-north-4.myhuaweicloud.com/api/v1/queue/status";
+var QUEUE_RETRY_DELAY_MS = 1e4;
+var QUEUE_MAX_ATTEMPTS2 = 180;
+function resolveFirstTokenTimeoutMs7() {
+  return Number.parseInt(process.env.DSH_CODEARTS_SSE_FIRST_TOKEN_TIMEOUT_MS ?? "", 10) || 3e5;
+}
+function resolveChunkTimeoutMs7() {
+  return Number.parseInt(process.env.DSH_CODEARTS_SSE_CHUNK_TIMEOUT_MS ?? "", 10) || 6e5;
+}
+function isTransportError4(error) {
+  if (!(error instanceof Error)) return false;
+  const message2 = error.message.toLowerCase();
+  if (message2.includes("terminated")) return true;
+  if (error.name.startsWith("UND_ERR_")) return true;
+  if (message2.includes("fetch failed")) return true;
+  if (message2.includes("econnreset") || message2.includes("epipe") || message2.includes("socket hang up")) return true;
+  return false;
+}
+var SseQueueRetryError = class extends Error {
+  code;
+  constructor(code, message2) {
+    super(message2);
+    this.name = "SseQueueRetryError";
+    this.code = code;
+  }
+};
+var SseQuotaExhaustedError = class extends Error {
+  code;
+  constructor(code, message2) {
+    super(message2);
+    this.name = "SseQuotaExhaustedError";
+    this.code = code;
+  }
+};
+function formatResetIn2(resetAtMs, nowMs = Date.now()) {
+  const diff = resetAtMs - nowMs;
+  if (diff <= 0) return "\u5373\u5C06\u91CD\u7F6E";
+  if (diff < 6e4) return "\u4E0D\u5230 1 \u5206\u949F";
+  if (diff < 36e5) return `${Math.round(diff / 6e4)} \u5206\u949F`;
+  return `${Math.round(diff / 36e4) / 10} \u5C0F\u65F6`;
+}
+function codeartsQuotaExhaustedMessage(model, resetAtMs, nowMs = Date.now()) {
+  const when = formatResetIn2(resetAtMs, nowMs);
+  return `codearts: \u6A21\u578B ${model} \u7684\u514D\u8D39\u989D\u5EA6\uFF08benefit\uFF09\u5DF2\u7528\u5C3D\uFF0C\u9884\u8BA1 ${when}\u540E\u91CD\u7F6E\uFF08\u6309 UTC+8 \u81EA\u7136\u65E5\u7ED3\u7B97\uFF0C\u9884\u8BA1 ${new Date(resetAtMs).toISOString()}\uFF09\u3002\u53EF\u6539\u7528\u5176\u5B83\u6A21\u578B\uFF0C\u6216\u5728 Channel Pack \u7684 CodeArts \u9762\u677F\u5207\u6362/\u6DFB\u52A0\u8D26\u53F7\u3002`;
+}
+function isQueueError(status, body) {
+  return status === 400 && (body.includes("TM.00001041") || /peak\s+usage|try\s+again\s+after|peak\s+hours/i.test(body) || /high\s+demand|too\s+many\s+requests/i.test(body));
+}
+function isAuthError(status, body) {
+  if (status === 401 || status === 403) return true;
+  return body.includes("APIG.0602") || /invalid\s+token|token\s+expired|token\s+is\s+invalid/i.test(body);
+}
+function isSseQueueErrorCode(code) {
+  return code === "TM.00001041" || /81111|TPM|(^|[^0-9])429([^0-9]|$)|rate.?limit|too many requests|排队|限流/i.test(code);
+}
+function isSseQuotaExhaustedErrorCode(code, message2) {
+  return code.includes("4291") || /insufficient[\s_-]+quota/i.test(message2);
+}
+function errorDetail4(body) {
+  try {
+    const data = JSON.parse(body);
+    const error = typeof data.error === "object" && data.error !== null ? data.error : void 0;
+    const parts = [
+      typeof error?.code === "string" ? error.code : void 0,
+      typeof error?.type === "string" ? error.type : void 0,
+      typeof error?.message === "string" ? error.message : void 0,
+      typeof data.error_code === "string" ? data.error_code : void 0,
+      typeof data.error_msg === "string" ? data.error_msg : void 0,
+      typeof data.message === "string" ? data.message : void 0
+    ].filter((value) => value !== void 0);
+    if (parts.length > 0) return parts.join(" ");
+  } catch {
+  }
+  return body;
+}
+function httpErrorCode4(status, body) {
+  if (status === 401 || status === 403) return "AUTH";
+  const detail = errorDetail4(body);
+  if (isQuotaExceededError2(detail)) return QUOTA_EXCEEDED_CODE;
+  if (status === 429) return "RATE_LIMIT";
+  if (status === 400) {
+    if (isContextWindowExceededError(detail)) return CONTEXT_WINDOW_EXCEEDED_CODE;
+    return "INVALID_REQUEST";
+  }
+  if (status >= 500) return "SERVER";
+  return `HTTP_${status}`;
+}
+function delay(ms, signal) {
+  return new Promise((resolve2) => {
+    if (signal?.aborted) return resolve2();
+    const onAbort = () => {
+      clearTimeout(timer);
+      resolve2();
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve2();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+function errorMessage4(error) {
+  if (error instanceof Error) return error.message;
+  try {
+    return String(error);
+  } catch {
+    return "unknown error";
+  }
+}
+function readCodeArtsChunk(reader, timeoutMs, signal, phase = "chunk") {
+  return readWithIdleTimeout(reader, timeoutMs, "codearts", signal, phase);
+}
+var DSML_TOOL_CALLS_OPEN = "<\uFF5CDSML\uFF5Ctool_calls>";
+var DSML_TOOL_CALLS_CLOSE = "</\uFF5CDSML\uFF5Ctool_calls>";
+var DSML_INVOKE_OPEN_PREFIX = "<\uFF5CDSML\uFF5Cinvoke";
+var DSML_INVOKE_CLOSE = "</\uFF5CDSML\uFF5Cinvoke>";
+var DSML_PARAM_OPEN_PREFIX = "<\uFF5CDSML\uFF5Cparameter";
+var DSML_PARAM_CLOSE = "</\uFF5CDSML\uFF5Cparameter>";
+var THOUGHT_OPEN = "<thought>";
+var THOUGHT_CLOSE = "</thought>";
+function tryParseScalar(value) {
+  if (value === "") return "";
+  const trimmed = value.trim();
+  if (trimmed === "") return value;
+  if (trimmed === "null") return null;
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      const decoded = JSON.parse(trimmed);
+      if (typeof decoded === "string") return tryParseScalar(decoded);
+      return decoded;
+    } catch {
+    }
+  }
+  if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+  if (/^-?\d+\.\d+$/.test(trimmed)) return Number(trimmed);
+  if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+    }
+  }
+  return value;
+}
+function parseDsmlInvoke(block) {
+  const nameMatch = /name\s*=\s*"([^"]*)"/.exec(block);
+  if (nameMatch === null) return void 0;
+  const name2 = nameMatch[1];
+  const params = {};
+  let cursor = 0;
+  for (; ; ) {
+    const openStart = block.indexOf(DSML_PARAM_OPEN_PREFIX, cursor);
+    if (openStart === -1) break;
+    const openEnd = block.indexOf(">", openStart);
+    if (openEnd === -1) break;
+    const openTag = block.slice(openStart, openEnd + 1);
+    const paramNameMatch = /name\s*=\s*"([^"]*)"/.exec(openTag);
+    if (paramNameMatch === null) {
+      cursor = openEnd + 1;
+      continue;
+    }
+    const paramName = paramNameMatch[1];
+    const closeStart = block.indexOf(DSML_PARAM_CLOSE, openEnd + 1);
+    if (closeStart === -1) break;
+    const value = block.slice(openEnd + 1, closeStart);
+    const isString = /string\s*=\s*"true"/.test(openTag);
+    if (isString) {
+      const parsed = tryParseScalar(value);
+      params[paramName] = parsed;
+    } else {
+      try {
+        const parsed = JSON.parse(value);
+        params[paramName] = typeof parsed === "string" ? tryParseScalar(parsed) : parsed;
+      } catch {
+        params[paramName] = value;
+      }
+    }
+    cursor = closeStart + DSML_PARAM_CLOSE.length;
+  }
+  return { name: name2, arguments: JSON.stringify(params) };
+}
+function parseDsmlToolCalls(block) {
+  let inner = block;
+  if (inner.startsWith(DSML_TOOL_CALLS_OPEN)) inner = inner.slice(DSML_TOOL_CALLS_OPEN.length);
+  if (inner.endsWith(DSML_TOOL_CALLS_CLOSE)) inner = inner.slice(0, inner.length - DSML_TOOL_CALLS_CLOSE.length);
+  const calls = [];
+  let cursor = 0;
+  for (; ; ) {
+    const openStart = inner.indexOf(DSML_INVOKE_OPEN_PREFIX, cursor);
+    if (openStart === -1) break;
+    const openEnd = inner.indexOf(">", openStart);
+    if (openEnd === -1) break;
+    const closeStart = inner.indexOf(DSML_INVOKE_CLOSE, openEnd + 1);
+    if (closeStart === -1) break;
+    const invokeBlock = inner.slice(openStart, closeStart + DSML_INVOKE_CLOSE.length);
+    const parsed = parseDsmlInvoke(invokeBlock);
+    if (parsed === void 0) return void 0;
+    calls.push(parsed);
+    cursor = closeStart + DSML_INVOKE_CLOSE.length;
+  }
+  return calls;
+}
+function longestOpenPrefixTail(buffer, prefixes) {
+  let keepLen = 0;
+  const maxCheck = Math.min(buffer.length, Math.max(...prefixes.map((p) => p.length)));
+  for (let i = 1; i <= maxCheck; i++) {
+    const tail = buffer.slice(buffer.length - i);
+    if (prefixes.some((p) => p.startsWith(tail))) keepLen = i;
+  }
+  return keepLen;
+}
+var DsmlContentExtractor = class {
+  buffer = "";
+  state = "normal";
+  feed(chunk) {
+    let text = "";
+    let reasoning = "";
+    const toolCalls = [];
+    this.buffer += chunk;
+    for (; ; ) {
+      if (this.state === "normal") {
+        const thoughtIdx = this.buffer.indexOf(THOUGHT_OPEN);
+        const dsmlIdx = this.buffer.indexOf(DSML_TOOL_CALLS_OPEN);
+        let openIdx = -1;
+        let nextState = "in-thought";
+        if (thoughtIdx !== -1 && (dsmlIdx === -1 || thoughtIdx < dsmlIdx)) {
+          openIdx = thoughtIdx;
+          nextState = "in-thought";
+        } else if (dsmlIdx !== -1) {
+          openIdx = dsmlIdx;
+          nextState = "in-dsml";
+        }
+        if (openIdx === -1) {
+          const keepLen = longestOpenPrefixTail(this.buffer, [THOUGHT_OPEN, DSML_TOOL_CALLS_OPEN]);
+          if (keepLen === 0) {
+            text += this.buffer;
+            this.buffer = "";
+          } else if (this.buffer.length > keepLen) {
+            text += this.buffer.slice(0, this.buffer.length - keepLen);
+            this.buffer = this.buffer.slice(this.buffer.length - keepLen);
+          }
+          break;
+        }
+        if (openIdx > 0) text += this.buffer.slice(0, openIdx);
+        this.buffer = this.buffer.slice(openIdx);
+        const openLen = nextState === "in-thought" ? THOUGHT_OPEN.length : DSML_TOOL_CALLS_OPEN.length;
+        this.buffer = this.buffer.slice(openLen);
+        this.state = nextState;
+        continue;
+      }
+      if (this.state === "in-thought") {
+        const closeIdx2 = this.buffer.indexOf(THOUGHT_CLOSE);
+        if (closeIdx2 === -1) {
+          const keepLen = longestOpenPrefixTail(this.buffer, [THOUGHT_CLOSE]);
+          if (keepLen === 0) {
+            reasoning += this.buffer;
+            this.buffer = "";
+          } else if (this.buffer.length > keepLen) {
+            reasoning += this.buffer.slice(0, this.buffer.length - keepLen);
+            this.buffer = this.buffer.slice(this.buffer.length - keepLen);
+          }
+          break;
+        }
+        if (closeIdx2 > 0) reasoning += this.buffer.slice(0, closeIdx2);
+        this.buffer = this.buffer.slice(closeIdx2 + THOUGHT_CLOSE.length);
+        this.state = "normal";
+        continue;
+      }
+      const closeIdx = this.buffer.indexOf(DSML_TOOL_CALLS_CLOSE);
+      if (closeIdx === -1) {
+        break;
+      }
+      const block = this.buffer.slice(0, closeIdx + DSML_TOOL_CALLS_CLOSE.length);
+      const parsed = parseDsmlToolCalls(block);
+      if (parsed === void 0) {
+        text += block;
+      } else {
+        toolCalls.push(...parsed);
+      }
+      this.buffer = this.buffer.slice(closeIdx + DSML_TOOL_CALLS_CLOSE.length);
+      this.state = "normal";
+      continue;
+    }
+    return { text, reasoning, toolCalls };
+  }
+  flush() {
+    const remaining = this.buffer;
+    this.buffer = "";
+    if (this.state === "in-thought") {
+      this.state = "normal";
+      return { text: "", reasoning: remaining };
+    }
+    if (this.state === "in-dsml") {
+      this.state = "normal";
+      return { text: DSML_TOOL_CALLS_OPEN + remaining, reasoning: "" };
+    }
+    this.state = "normal";
+    return { text: remaining, reasoning: "" };
+  }
+};
+var CodeArtsAdapter = class extends LlmAdapter8 {
+  constructor(options) {
+    super();
+    this.options = options;
+    this.fetchImpl = options.fetchImpl ?? directFetch;
+    this.chatId = options.chatId ?? crypto.randomUUID().replace(/-/g, "");
+    this.sessionId = options.sessionId ?? crypto.randomUUID().replace(/-/g, "");
+  }
+  fetchImpl;
+  chatId;
+  sessionId;
+  /**
+   * 描述本适配器拥有的 provider 路由。
+   */
+  providerInfo(provider) {
+    const id = typeof provider === "string" && provider.length > 0 ? provider : PROVIDER;
+    return { id, name: "CodeArts Agent" };
+  }
+  /** 动态模型缓存（首次 listModels 成功后填充）。 */
+  remoteModels;
+  /**
+   * 目录加载闸门：并发去重 + 失败冷却。
+   *
+   * ⚠ **不能省**：DSH 的 `buildModelCatalog` 对每个 provider `await listModels()`
+   * 后再对每个模型 `await resolveModelInfo()`，两处都会走到这里。原实现失败
+   * 直接返回（不落缓存）⇒ 一次网络故障被放大成「每模型重试一次」，每次顶着
+   * 10s 超时（`src/models.ts:55 FETCH_TIMEOUT_MS`），首屏因此长时间空转。
+   */
+  catalogGate = new RemoteCatalogGate();
+  /**
+   * 懒加载远端模型目录。resolveModel 可能先于 listModels 被调用
+   * （如直接进入会话），此时同样触发远端拉取。
+   */
+  async ensureRemoteModels() {
+    const fetchRemote = this.options.fetchRemoteModels;
+    if (this.remoteModels !== void 0 || fetchRemote === void 0) return;
+    await this.catalogGate.run(async () => {
+      const models = await fetchRemote();
+      if (models.length === 0) return false;
+      this.remoteModels = models;
+      return true;
+    });
+  }
+  /**
+   * 完整模型目录（**不应用用户黑名单**）。
+   *
+   * 设置页必须渲染被关闭的模型（否则用户无法重新打开），而 `listModels` 会按
+   * 黑名单过滤掉它们 —— RPC 层只能凭裸 id 补回，展示名随之丢失
+   * （用户报障：「关闭的就没有显示倍率」）。CodeArts 目录虽无倍率，但同样
+   * 需要正确的 `name`（否则关闭项显示 `deepseek-v4-flash` 这类裸 id）。
+   */
+  listAllModels() {
+    const source = this.remoteModels ?? DEFAULT_MODELS.map((id) => ({ id, name: id }));
+    return source.filter((m) => !/-VL-/i.test(m.id) && !/-VL$/i.test(m.id)).map((m) => ({ id: m.id, name: m.name }));
+  }
+  async listModels(_provider) {
+    if (!await providerCatalogVisible(this.options.accountPool, PROVIDER)) return [];
+    await this.ensureRemoteModels();
+    const visible = this.listAllModels();
+    const disabled = this.options.accountPool?.disabledModelsFor(PROVIDER);
+    const listed = disabled === void 0 || disabled.size === 0 ? visible : visible.filter((m) => !disabled.has(m.id));
+    return listed.map((m) => ({ provider: PROVIDER, id: m.id, name: m.name, inputModalities: ["text"] }));
+  }
+  async resolveModel(provider, model, _signal) {
+    await this.ensureRemoteModels();
+    const remoteModel = this.remoteModels?.find((m) => m.id === model);
+    const name2 = remoteModel?.name ?? model;
+    const contextWindow = CONTEXT_WINDOWS.get(model);
+    const resolved = { provider, id: model, name: name2 };
+    if (contextWindow !== void 0) resolved.context = { contextWindow };
+    resolved.reasoning = {
+      efforts: [
+        { id: ReasoningEffortId9("on"), name: "\u5F00\u542F" },
+        { id: ReasoningEffortId9("off"), name: "\u5173\u95ED" }
+      ],
+      defaultEffort: ReasoningEffortId9("on")
+    };
+    return resolved;
+  }
+  async prepareCall(provider, model, signal) {
+    return {
+      model: { ...await this.resolveModel(provider, model, signal), inputModalities: ["text"] },
+      stream: (options) => this.stream(options)
+    };
+  }
+  async *stream(options) {
+    let credential = await this.options.resolveCredential();
+    if (credential === void 0 || Date.parse(credential.expires_at) <= Date.now()) {
+      await this.options.refresh();
+      credential = await this.options.resolveCredential();
+    }
+    if (credential === void 0 || !credential.access_key_id || !credential.secret_access_key || !credential.security_token) {
+      throw new LlmError15("codearts: no usable credential; log in first", "MISSING_CREDENTIAL");
+    }
+    let currentAccountId = "";
+    if (this.options.accountPool && credential?.access_key_id) {
+      try {
+        currentAccountId = await this.options.accountPool.findAccountIdByCredential(
+          "codearts",
+          credential.access_key_id
+        );
+      } catch (error) {
+        console.warn("[codearts] \u8D26\u53F7\u5339\u914D\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u672C\u6B21\u8BF7\u6C42\uFF09:", error);
+      }
+      if (currentAccountId) reportLedgerAccount(PROVIDER, currentAccountId);
+    }
+    const messages = serializeMessages3(options.messages);
+    if (options.system !== void 0 && options.system.length > 0) {
+      messages.unshift({ role: "system", content: options.system });
+    }
+    const tools = options.tools?.map((tool) => ({
+      type: "function",
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters
+      }
+    }));
+    let wireTools = tools;
+    if (wireTools !== void 0 && needsDsmlToolMode(options.model, wireTools.map((tool) => tool.function.name))) {
+      messages.splice(messages.findIndex((m) => m.role === "system") + 1, 0, { role: "system", content: buildDsmlSystemPrompt(wireTools) });
+      wireTools = void 0;
+    }
+    const body = JSON.stringify({
+      model: options.model,
+      messages,
+      stream: true,
+      // prompt_cache_key 让服务端启用前缀缓存并在 usage 中返回 cached_tokens，
+      // 缺少该字段时缓存命中恒为 0（实测 2026-08-24）。
+      prompt_cache_key: this.sessionId,
+      // include/reasoning_summary 对齐 Rust 端 CodeArtsExtraFields，
+      // 让服务端返回加密 reasoning 内容与摘要。
+      include: ["reasoning.encrypted_content"],
+      reasoning_summary: "auto",
+      // 思考开关（实测，2026-09-29）：档位「关闭」翻成本网关真正认的字段。
+      // ⚠️ 是**顶层** `thinking`，不是 raccoon 那种 `extra_body.thinking` 方言
+      // （两者是不同网关的方言，混用会静默无效）。
+      // 实测判据：`disabled` → reasoning_tokens 3/3 全为 0、正文仍正确；
+      // `enabled` 与不传等价（服务端默认就开着），故「开启」档**不发**该字段。
+      ...options.reasoningEffort === "off" ? { thinking: { type: "disabled" } } : {},
+      // 对齐 CodeArts Agent IDE 请求体（deveco-code 内核日志实证）：
+      // tool_stream=true 让后端将超大工具调用参数（如大文件 file_write）
+      // 分段流式传输，避免单次 SSE 事件过大导致连接被掐断
+      // （error decoding response body）。deepseek-v4 的 DSML 路径不受此
+      // 影响，保留该字段与 IDE 对齐。
+      tool_stream: true,
+      // 输出上限（对齐 deveco-code-rust 参考实现 codearts.rs 的 max_tokens 配置）：
+      // 大文件 write 工具参数（如 1000-2000+ 行文档）需要数万 token 的生成空间，
+      // 若沿用后端默认输出上限，参数 JSON 会在中途被截断成非法 JSON，harness
+      // 工具校验报 `invalid arguments: "arguments" must be an object`。
+      // 参考实现 e2e 实测：65536 可用，131072 反而触发空流被后端拒绝；
+      // 显式传入的 options.maxTokens 优先，未设置时默认 65536。
+      max_tokens: options.maxTokens ?? 65536,
+      ...wireTools !== void 0 && wireTools.length > 0 ? { tools: wireTools } : {}
+    });
+    const url = `${CHAT_API_BASE}/chat/completions`;
+    let response;
+    let queueAttempts = 0;
+    let authRefreshed = false;
+    let benefitHeaderDropped = false;
+    const rateLimitTried = /* @__PURE__ */ new Set();
+    if (currentAccountId) rateLimitTried.add(currentAccountId);
+    const isBenefitModel = isCodeArtsBenefitModel(options.model);
+    for (; ; ) {
+      const extraSignedHeaders = isBenefitModel && !benefitHeaderDropped ? { maas_type: "benefit" } : void 0;
+      const signed = await signRequestHuawei(
+        credential.access_key_id,
+        credential.secret_access_key,
+        credential.security_token,
+        "POST",
+        url,
+        new TextEncoder().encode(body),
+        extraSignedHeaders
+      );
+      const headers = new Headers(attributionHeaders());
+      signed.forEach((value, key) => {
+        if (key !== "content-type") headers.set(key, value);
+      });
+      headers.set("Content-Type", "application/json");
+      headers.set("Chat-Id", this.chatId);
+      headers.set("Session-Id", this.sessionId);
+      headers.set("lang", "en");
+      response = await this.fetchImpl(url, {
+        method: "POST",
+        headers,
+        body,
+        signal: options.signal
+      });
+      if (response.ok) {
+        try {
+          yield* this.consumeSse(response, options);
+          break;
+        } catch (error) {
+          if (error instanceof SseQuotaExhaustedError) {
+            const message2 = codeartsQuotaExhaustedMessage(options.model, nextUtc8DayStartMs());
+            if (this.options.accountPool && currentAccountId) {
+              await this.options.accountPool.updateModelRateLimit(
+                currentAccountId,
+                options.model,
+                nextUtc8DayStartMs()
+              );
+              rateLimitTried.add(currentAccountId);
+            }
+            if (this.options.accountPool) {
+              const next = await this.options.accountPool.getAvailableAccount(
+                "codearts",
+                options.model,
+                rateLimitTried
+              );
+              if (next && !rateLimitTried.has(next.entry.id)) {
+                rateLimitTried.add(next.entry.id);
+                credential = next.credential;
+                currentAccountId = next.entry.id;
+                authRefreshed = false;
+                continue;
+              }
+            }
+            throw new LlmError15(message2, QUOTA_EXCEEDED_CODE, { status: 200 });
+          }
+          if (error instanceof SseQueueRetryError) {
+          } else if (error instanceof LlmError15 && error.code === BENEFIT_NOT_FOUND_CODE && isBenefitModel && !benefitHeaderDropped) {
+            benefitHeaderDropped = true;
+            continue;
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        const errorText = await response.text().catch(() => "");
+        if (isAuthError(response.status, errorText) && !authRefreshed) {
+          authRefreshed = true;
+          await this.options.refresh();
+          credential = await this.options.resolveCredential();
+          if (credential === void 0 || !credential.access_key_id || !credential.secret_access_key || !credential.security_token) {
+            throw new LlmError15("codearts: credential missing after refresh; log in again", "MISSING_CREDENTIAL");
+          }
+          continue;
+        }
+        if (isSseQuotaExhaustedErrorCode(errorDetail4(errorText), errorText)) {
+          const message2 = codeartsQuotaExhaustedMessage(options.model, nextUtc8DayStartMs());
+          if (this.options.accountPool) {
+            if (currentAccountId) {
+              await this.options.accountPool.updateModelRateLimit(
+                currentAccountId,
+                options.model,
+                nextUtc8DayStartMs()
+              );
+              rateLimitTried.add(currentAccountId);
+            }
+            const next = await this.options.accountPool.getAvailableAccount(
+              "codearts",
+              options.model,
+              rateLimitTried
+            );
+            if (next && !rateLimitTried.has(next.entry.id)) {
+              rateLimitTried.add(next.entry.id);
+              credential = next.credential;
+              currentAccountId = next.entry.id;
+              authRefreshed = false;
+              continue;
+            }
+          }
+          throw new LlmError15(message2, QUOTA_EXCEEDED_CODE, { status: response.status });
+        }
+        if (this.options.accountPool && isRateLimited2(errorText, response.status)) {
+          const parsed = parseRateLimitError2(errorText, options.model, response.status);
+          if (parsed) {
+            if (currentAccountId) {
+              await this.options.accountPool.updateModelRateLimit(
+                currentAccountId,
+                parsed.modelId,
+                parsed.resetTimeMs
+              );
+            }
+            const next = await this.options.accountPool.getAvailableAccount("codearts", options.model);
+            if (next && !rateLimitTried.has(next.entry.id)) {
+              rateLimitTried.add(next.entry.id);
+              credential = next.credential;
+              currentAccountId = next.entry.id;
+              authRefreshed = false;
+              continue;
+            }
+            throw new LlmError15(
+              `codearts: \u6A21\u578B ${options.model} \u6240\u6709\u8D26\u53F7\u5747\u53D7\u9650\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5`,
+              "QUOTA_EXCEEDED"
+            );
+          }
+        }
+        if (!isQueueError(response.status, errorText)) {
+          const probe = await this.queryQueueStatus(credential, options.model, options.signal);
+          if (probe === void 0 || probe.status === "working") {
+            const code = httpErrorCode4(response.status, errorText);
+            throw new LlmError15(`codearts: model request failed with HTTP ${response.status}`, code, { status: response.status });
+          }
+        }
+      }
+      queueAttempts += 1;
+      if (queueAttempts > QUEUE_MAX_ATTEMPTS2) {
+        throw new LlmError15("codearts: queue wait timed out after 30 minutes", "QUEUE");
+      }
+      if (options.signal?.aborted) throw new LlmError15("codearts: request aborted while waiting in queue", "QUEUE");
+      const status = await this.queryQueueStatus(credential, options.model, options.signal);
+      if (status?.status === "error" || status?.status === "queue_full") {
+        throw new LlmError15(`codearts: ${status.message || `queue status: ${status.status}`}`, "QUEUE");
+      }
+      await delay(QUEUE_RETRY_DELAY_MS, options.signal);
+    }
+  }
+  /**
+   * 消费一个 HTTP 200 的 SSE chat 响应并产出 StreamChunk。
+   *
+   * CodeArts 后端有时以 HTTP 200 + SSE 内嵌错误事件的形式返回排队/限流
+   * （如 `InferHub.ModelArts.81111.429` TPM 超限，事件形如
+   * `{"text":"[DONE]","error_code":"...","error_msg":"..."}`），而不是
+   * 4xx——这类错误若直接当成流结束会被静默吞掉（表现为"思考后无输出"）。
+   * 本方法解析每个 SSE 事件的 `error_code`/`error_msg`：可重试的排队/限流
+   * 错误抛 {@link SseQueueRetryError} 让外层重试循环按 TM.00001041 同等
+   * 处理（10s 间隔重试整个 chat 请求）；不可重试错误抛普通 LlmError。
+   */
+  async *consumeSse(response, options) {
+    if (!response.body) throw new LlmError15("codearts: empty model response body", "EMPTY_RESPONSE");
+    const blocks = [];
+    let nextIndex = 0;
+    const toolCalls = /* @__PURE__ */ new Map();
+    const toolOrder = [];
+    const toolIds = /* @__PURE__ */ new Map();
+    let buffer = "";
+    let streamEnded = false;
+    let finishReason2;
+    const loopGuard = isReasoningLoopGuardEnabled() ? createReasoningLoopDetector() : void 0;
+    let loopDetected = false;
+    const proseLoopGuard = isReasoningLoopGuardEnabled() ? createReasoningLoopDetector() : void 0;
+    let proseLoopDetected = false;
+    const suppressor = createBlankReasoningSuppressor();
+    const proseSuppressor = createBlankReasoningSuppressor();
+    const dsmlContentExtractor = new DsmlContentExtractor();
+    const dsmlReasoningExtractor = new DsmlContentExtractor();
+    async function* emitDsmlFeed(text, reasoning, dsmlCalls) {
+      const textDelta = text.length > 0 ? proseSuppressor.feed(text) : void 0;
+      if (textDelta !== void 0) {
+        let block = blocks.find((candidate) => candidate.kind === "text");
+        if (block === void 0) {
+          block = { index: nextIndex++, kind: "text", text: "" };
+          blocks.push(block);
+          yield { type: "block-start", index: block.index, blockType: "text" };
+        }
+        if (proseLoopGuard !== void 0) {
+          if (proseLoopGuard.observe(textDelta)) proseLoopDetected = true;
+        }
+        if (!proseLoopDetected) {
+          block.text += textDelta;
+          yield { type: "text-delta", index: block.index, text: textDelta };
+        }
+      }
+      if (reasoning.length > 0) {
+        if (loopGuard !== void 0) {
+          if (loopGuard.observe(reasoning)) loopDetected = true;
+        }
+        if (!loopDetected) {
+          const emit = suppressor.feed(reasoning);
+          if (emit !== void 0) {
+            let block = blocks.find((candidate) => candidate.kind === "reasoning");
+            if (block === void 0) {
+              block = { index: nextIndex++, kind: "reasoning", text: "" };
+              blocks.push(block);
+              yield { type: "block-start", index: block.index, blockType: "reasoning" };
+            }
+            block.text = suppressor.text();
+            yield { type: "reasoning-delta", index: block.index, text: emit };
+          }
+        }
+      }
+      for (const call of dsmlCalls) {
+        if (!hasUsableToolName(call.name)) continue;
+        const wireIndex = toolCalls.size;
+        const block = {
+          index: nextIndex++,
+          text: call.arguments,
+          name: call.name,
+          callId: ToolCallId5(`dsml-${crypto.randomUUID().replace(/-/g, "")}`),
+          announced: true
+        };
+        toolCalls.set(wireIndex, block);
+        toolOrder.push(block.index);
+        yield { type: "block-start", index: block.index, blockType: "tool-call" };
+        yield {
+          type: "tool-call-delta",
+          index: block.index,
+          id: block.callId,
+          name: block.name,
+          argumentsDelta: call.arguments
+        };
+      }
+    }
+    const reader = response.body.getReader();
+    const decoder2 = new TextDecoder();
+    let firstTokenReceived = false;
+    try {
+      for (; ; ) {
+        if (streamEnded) break;
+        let done;
+        let value;
+        try {
+          const timeoutMs = firstTokenReceived ? resolveChunkTimeoutMs7() : resolveFirstTokenTimeoutMs7();
+          const phase = firstTokenReceived ? "chunk" : "first-token";
+          const result = await readCodeArtsChunk(reader, timeoutMs, options.signal, phase);
+          done = result.done;
+          value = result.value;
+          if (!done) firstTokenReceived = true;
+        } catch (error) {
+          if (options.signal?.aborted) throw error;
+          if (error instanceof LlmError15) throw error;
+          if (isTransportError4(error)) {
+            throw new LlmError15(`codearts: sse transport error: ${errorMessage4(error)}`, "TRANSPORT", { cause: error });
+          }
+          throw error;
+        }
+        if (done) break;
+        buffer += decoder2.decode(value, { stream: true });
+        let newline;
+        while ((newline = buffer.indexOf("\n")) !== -1) {
+          const line2 = buffer.slice(0, newline).trim();
+          buffer = buffer.slice(newline + 1);
+          if (!line2.startsWith("data:")) continue;
+          const payload = line2.slice(5).trim();
+          if (payload === "[DONE]") {
+            streamEnded = true;
+            break;
+          }
+          let data;
+          try {
+            data = JSON.parse(payload);
+          } catch {
+            continue;
+          }
+          if (typeof data.error_code === "string" && data.error_code.length > 0 || data.error_code === 4004) {
+            const errorCode = String(data.error_code);
+            const message2 = typeof data.error_msg === "string" && data.error_msg.length > 0 ? data.error_msg : errorCode;
+            if (isSseQuotaExhaustedErrorCode(errorCode, message2)) {
+              throw new SseQuotaExhaustedError(errorCode, message2);
+            }
+            if (isSseQueueErrorCode(errorCode)) {
+              throw new SseQueueRetryError(errorCode, message2);
+            }
+            if (errorCode === CODEARTS_BENEFIT_NOT_FOUND_ERROR_CODE || errorCode === "4004") {
+              throw new LlmError15(`codearts: ${message2}`, BENEFIT_NOT_FOUND_CODE, { status: 200 });
+            }
+            throw new LlmError15(`codearts: ${message2}`, "INVALID_REQUEST", { status: 200 });
+          }
+          const choice = data.choices?.[0];
+          const delta = choice?.delta;
+          if (typeof choice?.finish_reason === "string") {
+            finishReason2 = choice.finish_reason;
+          }
+          if (delta?.content) {
+            const { text, reasoning, toolCalls: dsmlCalls } = dsmlContentExtractor.feed(delta.content);
+            yield* emitDsmlFeed(text, reasoning, dsmlCalls);
+          }
+          if (delta?.reasoning_content) {
+            const { text, reasoning, toolCalls: reasoningDsmlCalls } = dsmlReasoningExtractor.feed(delta.reasoning_content);
+            const thinking = text + reasoning;
+            if (thinking.length > 0) {
+              if (loopGuard !== void 0) {
+                if (loopGuard.observe(thinking)) loopDetected = true;
+              }
+              if (!loopDetected) {
+                const emit = suppressor.feed(thinking);
+                if (emit !== void 0) {
+                  let block = blocks.find((candidate) => candidate.kind === "reasoning");
+                  if (block === void 0) {
+                    block = { index: nextIndex++, kind: "reasoning", text: "" };
+                    blocks.push(block);
+                    yield { type: "block-start", index: block.index, blockType: "reasoning" };
+                  }
+                  block.text = suppressor.text();
+                  yield { type: "reasoning-delta", index: block.index, text: emit };
+                }
+              }
+            }
+            for (const call of reasoningDsmlCalls) {
+              if (!hasUsableToolName(call.name)) continue;
+              const wireIndex = toolCalls.size;
+              const block = {
+                index: nextIndex++,
+                text: call.arguments,
+                name: call.name,
+                callId: ToolCallId5(`dsml-${crypto.randomUUID().replace(/-/g, "")}`),
+                announced: true
+              };
+              toolCalls.set(wireIndex, block);
+              toolOrder.push(block.index);
+              yield { type: "block-start", index: block.index, blockType: "tool-call" };
+              yield {
+                type: "tool-call-delta",
+                index: block.index,
+                id: block.callId,
+                name: block.name,
+                argumentsDelta: call.arguments
+              };
+            }
+          }
+          for (const call of delta?.tool_calls ?? []) {
+            const wireIndex = call.index ?? 0;
+            if (typeof call.id === "string" && call.id.length > 0) toolIds.set(wireIndex, call.id);
+            const callId = toolIds.get(wireIndex) ?? `call_${wireIndex}`;
+            let block = toolCalls.get(wireIndex);
+            if (block === void 0) {
+              block = { index: nextIndex++, text: "", announced: false };
+              toolCalls.set(wireIndex, block);
+            }
+            block.callId = callId;
+            if (typeof call.function?.name === "string" && call.function.name.length > 0) {
+              block.name = call.function.name;
+            }
+            const fragment = call.function?.arguments ?? "";
+            block.text += fragment;
+            if (!block.announced) {
+              if (!hasUsableToolName(block.name)) continue;
+              block.announced = true;
+              toolOrder.push(block.index);
+              yield { type: "block-start", index: block.index, blockType: "tool-call" };
+              yield {
+                type: "tool-call-delta",
+                index: block.index,
+                id: ToolCallId5(callId),
+                name: block.name,
+                argumentsDelta: block.text
+              };
+              continue;
+            }
+            yield {
+              type: "tool-call-delta",
+              index: block.index,
+              id: ToolCallId5(callId),
+              ...block.name !== void 0 ? { name: block.name } : {},
+              argumentsDelta: fragment
+            };
+          }
+          if (data.usage) {
+            const promptTokens = data.usage.prompt_tokens ?? 0;
+            const cachedTokens = data.usage.prompt_tokens_details?.cached_tokens ?? data.usage.prompt_cache_hit_tokens ?? 0;
+            const cacheWriteTokens = data.usage.prompt_tokens_details?.cache_write_tokens;
+            const reasoningTokens = data.usage.completion_tokens_details?.reasoning_tokens;
+            yield {
+              type: "usage",
+              usage: {
+                inputTokens: cachedTokens > 0 ? promptTokens - cachedTokens : promptTokens,
+                outputTokens: data.usage.completion_tokens ?? 0,
+                ...cachedTokens > 0 ? { cacheReadTokens: cachedTokens } : {},
+                ...cacheWriteTokens !== void 0 && cacheWriteTokens > 0 ? { cacheWriteTokens } : {},
+                ...reasoningTokens !== void 0 && reasoningTokens > 0 ? { reasoningTokens } : {}
+              }
+            };
+          }
+        }
+        if (loopDetected) {
+          await reader.cancel().catch(() => {
+          });
+          break;
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    {
+      const f = dsmlContentExtractor.flush();
+      if (f.text.length > 0 || f.reasoning.length > 0) yield* emitDsmlFeed(f.text, f.reasoning, []);
+    }
+    {
+      const f = dsmlReasoningExtractor.flush();
+      if (f.text.length > 0 || f.reasoning.length > 0) yield* emitDsmlFeed(f.text, f.reasoning, []);
+    }
+    const textBlock = blocks.find((block) => block.kind === "text");
+    const reasoningBlock = blocks.find((block) => block.kind === "reasoning");
+    const reasoningText = stripCourseLeakIfEnabled(
+      loopDetected && loopGuard?.cutAt !== void 0 ? suppressor.text().slice(0, loopGuard.cutAt) : suppressor.text()
+    );
+    const reasoningHasDsml = reasoningText.includes("\uFF5CDSML\uFF5C");
+    const truncatedText = proseLoopDetected && proseLoopGuard?.cutAt !== void 0 ? (textBlock?.text ?? "").slice(0, proseLoopGuard.cutAt) : void 0;
+    const visible = truncatedText !== void 0 ? stripCourseLeakIfEnabled(truncatedText) : textBlock !== void 0 && textBlock.text !== "" ? stripCourseLeakIfEnabled(textBlock.text) : reasoningBlock !== void 0 && toolOrder.length === 0 && !reasoningHasDsml && !loopDetected ? reasoningText : "";
+    let blockCount = 0;
+    for (const index of toolOrder) {
+      const block = [...toolCalls.values()].find((candidate) => candidate.index === index);
+      if (!hasUsableToolName(block.name)) continue;
+      blockCount += 1;
+      yield {
+        type: "block-end",
+        index,
+        block: {
+          type: "tool-call",
+          // ⚠️ 判据用 `||`（同时兜 undefined 与空串），**不可**退回成
+          // `block.callId ?? ''`：空串 id 会被格式 v4 校验拒绝（它判
+          // `length === 0`），落库即等于报废整条会话（见上方 `toolIds` 注释）。
+          // 正常路径下 `block.callId` 已在建块时填好，此处仅为最后一道防线。
+          id: ToolCallId5(block.callId || `call_${index}`),
+          name: block.name,
+          // 同上：空分片补 {}，残缺参数保持原样交由截断判定处理。
+          arguments: isTruncatedArguments(block.text) ? block.text : normalizeToolArguments(block.text)
+        }
+      };
+    }
+    if (visible.trim() !== "") {
+      blockCount += 1;
+      const index = textBlock?.index ?? nextIndex++;
+      if (textBlock === void 0) yield { type: "block-start", index, blockType: "text" };
+      yield { type: "block-end", index, block: { type: "text", text: visible } };
+    } else if (textBlock !== void 0) {
+      yield { type: "block-end", index: textBlock.index, block: { type: "text", text: "" } };
+    }
+    if (reasoningBlock !== void 0 && reasoningBlock.text.trim() !== "") {
+      if (reasoningText !== "") {
+        blockCount += 1;
+        yield { type: "block-end", index: reasoningBlock.index, block: { type: "reasoning", text: reasoningText } };
+      }
+    }
+    const droppedUnnamedCalls = [...toolCalls.values()].some((block) => !block.announced);
+    const reasoningLoopIsSoleOutput = loopDetected && visible === "" && toolOrder.length === 0;
+    const reason = reasoningLoopIsSoleOutput ? { kind: "error", failure: reasoningLoopFailure(
+      loopGuard?.diagnostics,
+      options.maxTokens,
+      "reasoning"
+    ) } : loopDetected ? { kind: "max-tokens" } : finishReason2 === "length" || droppedUnnamedCalls && toolOrder.length === 0 ? { kind: "max-tokens" } : finishReason2 === "tool_calls" || toolOrder.length > 0 ? { kind: "tool-calls" } : { kind: "stop" };
+    yield { type: "finish", reason: resolveEmptyResponseReason(reason, blockCount) };
+  }
+  /**
+   * 查询某个会话的 CodeArts 并发队列状态。该端点
+   * 与 chat API 一样使用 AK/SK 签名；GET 不携带请求体，因此无 content-type。
+   * @param credential - 用于签名请求的 AK/SK/SecurityToken。
+   * @param model - 模型 id，作为 `model` 查询参数回传。
+   * @param signal - 状态请求的取消信号。
+   * @returns 解析后的排队状态，或当端点不可达
+   *   或返回无法识别的载荷时返回 `undefined`。
+   */
+  async queryQueueStatus(credential, model, signal) {
+    const url = `${QUEUE_STATUS_BASE}?model=${encodeURIComponent(model)}&task_id=${encodeURIComponent(this.sessionId)}`;
+    const signed = await signRequestHuawei(
+      credential.access_key_id,
+      credential.secret_access_key,
+      credential.security_token,
+      "GET",
+      url,
+      new Uint8Array()
+    );
+    const headers = new Headers();
+    signed.forEach((value, key) => {
+      if (key !== "content-type") headers.set(key, value);
+    });
+    headers.set("x-snap-traceid", crypto.randomUUID());
+    headers.set("Agent-Type", "INFERHUB_AGENT");
+    headers.set("X-Language", "en");
+    let response;
+    try {
+      response = await this.fetchImpl(url, { method: "GET", headers, signal });
+    } catch {
+      return void 0;
+    }
+    if (response.status !== 200) return void 0;
+    let body;
+    try {
+      body = await response.json();
+    } catch {
+      return void 0;
+    }
+    const status = body.status;
+    if (status !== "waiting" && status !== "working" && status !== "error" && status !== "queue_full") return void 0;
+    return {
+      status,
+      queuePosition: Number(body.queue_position ?? -1),
+      message: typeof body.message === "string" ? body.message : ""
+    };
+  }
+};
+function registerCodeArtsLlm(ctx, options) {
+  const adapter = new CodeArtsAdapter(options);
+  registerAdapterIdempotent(ctx.llm, [PROVIDER], adapter);
+  return adapter;
+}
+var RATE_LIMIT_PATTERN2 = /频率限制|频率超出|使用量已超出|重置|rate.?limit|frequency limit|usage exceeds|too many requests/i;
+function isRateLimited2(body, status) {
+  if (status === 429) return true;
+  return RATE_LIMIT_PATTERN2.test(body);
+}
+var RESET_TIME_PATTERN2 = /(?:将在|reset at)\s+([\d-]+\s+[\d:]+)\s+(UTC[+-]\d+(?::\d+)?)/i;
+var RATE_LIMIT_FALLBACK_MS2 = 36e5;
+function parseRateLimitError2(body, currentModel, status) {
+  const fallback2 = () => ({
+    modelId: currentModel,
+    resetTimeMs: Date.now() + RATE_LIMIT_FALLBACK_MS2
+  });
+  try {
+    const data = JSON.parse(body);
+    const msg = typeof data.msg === "string" ? data.msg : "";
+    const resetMatch = RESET_TIME_PATTERN2.exec(msg);
+    if (resetMatch) {
+      const resetMs = Date.parse(`${resetMatch[1]} ${resetMatch[2]}`);
+      if (!Number.isNaN(resetMs)) {
+        return { modelId: currentModel, resetTimeMs: resetMs };
+      }
+    }
+    if (isRateLimited2(body, status)) {
+      return fallback2();
+    }
+    return null;
+  } catch {
+    return status === 429 ? fallback2() : null;
+  }
+}
 
 // vendor/channel-pack/src/gemini-adapter.ts
 import {
-  CONTEXT_WINDOW_EXCEEDED_CODE,
-  isContextWindowExceededError,
-  LlmAdapter as LlmAdapter8,
-  LlmError as LlmError15,
-  ReasoningEffortId as ReasoningEffortId9
+  CONTEXT_WINDOW_EXCEEDED_CODE as CONTEXT_WINDOW_EXCEEDED_CODE2,
+  isContextWindowExceededError as isContextWindowExceededError2,
+  LlmAdapter as LlmAdapter9,
+  LlmError as LlmError16,
+  ReasoningEffortId as ReasoningEffortId10
 } from "@deepseek-ai/dsh-llm";
 
 // vendor/channel-pack/src/gemini-messages.ts
-import { ToolCallId as ToolCallId5 } from "@deepseek-ai/dsh-llm";
+import { ToolCallId as ToolCallId6 } from "@deepseek-ai/dsh-llm";
 function canonicalArgs(args) {
   if (args === void 0 || args === null) return "{}";
   if (typeof args !== "object" || Array.isArray(args)) return sortedStringify(args);
@@ -55170,17 +57179,17 @@ function translateGeminiRequest(options) {
   );
   const { keepCallIds, keepResultIds } = resolveToolPairing(normalized);
   const toolNames = /* @__PURE__ */ new Map();
-  for (const message of normalized) {
-    for (const block of message.content) {
+  for (const message2 of normalized) {
+    for (const block of message2.content) {
       if (block.type === "tool-call") toolNames.set(String(block.id), block.name);
     }
   }
   const contents = [];
-  for (const message of normalized) {
-    if (message.role === "system") continue;
-    const role = message.role === "assistant" ? "model" : "user";
+  for (const message2 of normalized) {
+    if (message2.role === "system") continue;
+    const role = message2.role === "assistant" ? "model" : "user";
     const parts = [];
-    for (const block of message.content) {
+    for (const block of message2.content) {
       if (block.type === "tool-call") {
         if (!keepCallIds.has(String(block.id))) continue;
         const args = parseToolArguments2(block.arguments);
@@ -55364,7 +57373,7 @@ function newToolCallId(index) {
 }
 async function* consumeGeminiSse(options) {
   const reader = options.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder2 = new TextDecoder();
   const idleTimeoutMs = options.idleTimeoutMs ?? GEMINI_IDLE_TIMEOUT_MS;
   const firstTokenTimeoutMs = options.firstTokenTimeoutMs ?? idleTimeoutMs;
   let buffer = "";
@@ -55385,7 +57394,7 @@ async function* consumeGeminiSse(options) {
     } else {
       content = {
         type: "tool-call",
-        id: ToolCallId5(block.toolId ?? ""),
+        id: ToolCallId6(block.toolId ?? ""),
         name: block.toolName ?? "",
         arguments: block.text
       };
@@ -55442,7 +57451,7 @@ async function* consumeGeminiSse(options) {
           yield {
             type: "tool-call-delta",
             index: block.index,
-            id: ToolCallId5(block.toolId ?? ""),
+            id: ToolCallId6(block.toolId ?? ""),
             name: part.functionCall.name,
             argumentsDelta: argsJson
           };
@@ -55485,7 +57494,7 @@ async function* consumeGeminiSse(options) {
         sawAnyChunk ? "chunk" : "first-token"
       );
       if (done) {
-        buffer += decoder.decode();
+        buffer += decoder2.decode();
         if (buffer !== "") {
           const tail = buffer.split("\n");
           buffer = "";
@@ -55496,7 +57505,7 @@ async function* consumeGeminiSse(options) {
         }
         break;
       }
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder2.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
       for (const rawLine of lines) {
@@ -55542,13 +57551,13 @@ function parseGeminiProject(payload) {
   return "";
 }
 async function resolveGeminiProject(options) {
-  const cache4 = options.cache;
+  const cache5 = options.cache;
   const identity = geminiCredentialIdentity(options.credential);
-  const cached2 = cache4?.get(identity);
+  const cached2 = cache5?.get(identity);
   if (cached2 !== void 0 && cached2 !== "") return { project: cached2 };
   const fromCredential = options.credential.cloudaicompanionProject;
   if (fromCredential !== void 0 && fromCredential !== "") {
-    cache4?.set(identity, fromCredential);
+    cache5?.set(identity, fromCredential);
     return { project: fromCredential };
   }
   const fetcher = options.fetcher ?? fetch;
@@ -55576,7 +57585,7 @@ async function resolveGeminiProject(options) {
       }
       const project = parseGeminiProject(JSON.parse(text));
       if (project !== "") {
-        cache4?.set(identity, project);
+        cache5?.set(identity, project);
         return { project, probed: true };
       }
       return { project: GEMINI_DEFAULT_PROJECT, probed: true };
@@ -55622,9 +57631,9 @@ function isGeminiSessionOverflow(text) {
 var GEMINI_MAX_SESSION_BUMPS = 1;
 var GEMINI_TOKEN_COUNT_OVERFLOW = /\btoken\s+count\b[\s\S]{0,60}?\bexceeds?\s+the\s+maximum\b/i;
 function isGeminiContextOverflow(text) {
-  return isContextWindowExceededError(text) || GEMINI_TOKEN_COUNT_OVERFLOW.test(text);
+  return isContextWindowExceededError2(text) || GEMINI_TOKEN_COUNT_OVERFLOW.test(text);
 }
-var GeminiAdapter = class extends LlmAdapter8 {
+var GeminiAdapter = class extends LlmAdapter9 {
   constructor(options) {
     super();
     this.options = options;
@@ -55709,12 +57718,12 @@ var GeminiAdapter = class extends LlmAdapter8 {
    */
   async collectInlineImages(messages, entry, model) {
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     if (imageRefs.size === 0) return void 0;
     if (entry?.supportsImage !== true) {
-      throw new LlmError15(
+      throw new LlmError16(
         `gemini: \u6A21\u578B "${model}" \u4E0D\u652F\u6301\u56FE\u7247\u8F93\u5165`,
         "UNSUPPORTED_CONTENT"
       );
@@ -55726,7 +57735,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
       if (inline === void 0) {
         const readImage = this.options.readImage;
         if (readImage === void 0) {
-          throw new LlmError15(
+          throw new LlmError16(
             "gemini: \u56FE\u7247\u8F93\u5165\u9700\u8981\u9644\u4EF6\u670D\u52A1\uFF08readImage / readImageRequest \u5747\u672A\u63D0\u4F9B\uFF09",
             "UNSUPPORTED_CONTENT"
           );
@@ -55734,7 +57743,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
         try {
           inline = await readImage(ref);
         } catch (error) {
-          throw new LlmError15(
+          throw new LlmError16(
             "gemini: \u56FE\u7247\u9644\u4EF6\u8BFB\u53D6\u5931\u8D25\uFF1B\u9644\u4EF6\u670D\u52A1\u53EF\u80FD\u672A\u5C31\u7EEA\uFF0C\u6216\u8BE5\u5BF9\u8C61\u5DF2\u4E0D\u5B58\u5728\u3002",
             "UNSUPPORTED_CONTENT",
             { cause: error }
@@ -55742,20 +57751,20 @@ var GeminiAdapter = class extends LlmAdapter8 {
         }
       }
       if (inline === void 0) {
-        throw new LlmError15(
+        throw new LlmError16(
           "gemini: \u56FE\u7247\u9644\u4EF6\u8BFB\u53D6\u4E0D\u5230\u5185\u5BB9\uFF1B\u9644\u4EF6\u670D\u52A1\u53EF\u80FD\u672A\u5C31\u7EEA\uFF0C\u6216\u8BE5\u5BF9\u8C61\u5DF2\u4E0D\u5B58\u5728\u3002",
           "UNSUPPORTED_CONTENT"
         );
       }
       if (inline.data.byteLength > GEMINI_MAX_IMAGE_BYTES_INLINE) {
-        throw new LlmError15(
+        throw new LlmError16(
           `gemini: \u56FE\u7247\u4F53\u79EF ${inline.data.byteLength} \u5B57\u8282\u8D85\u8FC7\u4E0A\u6E38\u5185\u8054\u4E0A\u9650 ${GEMINI_MAX_IMAGE_BYTES_INLINE} \u5B57\u8282`,
           "UNSUPPORTED_CONTENT"
         );
       }
       const data = normalizeBase64(Buffer.from(inline.data).toString("base64"));
       if (data === void 0) {
-        throw new LlmError15("gemini: \u56FE\u7247\u7F16\u7801\u4E0D\u662F\u5408\u6CD5 base64", "UNSUPPORTED_CONTENT");
+        throw new LlmError16("gemini: \u56FE\u7247\u7F16\u7801\u4E0D\u662F\u5408\u6CD5 base64", "UNSUPPORTED_CONTENT");
       }
       images.set(id, { mediaType: inline.mediaType === "" ? "image/png" : inline.mediaType, data });
     }
@@ -55775,7 +57784,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
   async *stream(options) {
     const entry = this.loadModels().find((item) => item.id === geminiCanonicalModelId(options.model));
     if (entry === void 0) {
-      throw new LlmError15(
+      throw new LlmError16(
         `gemini: \u6A21\u578B "${options.model}" \u4E0D\u5728\u672C provider \u76EE\u5F55\u4E2D\uFF08\u4EC5\u652F\u6301 ${GEMINI_UPSTREAM_FLASH}\uFF09`,
         "INVALID_REQUEST",
         // 模型名写错是确定性失败：带上 404，网关才不会把它当 502 让客户端白重试。
@@ -55788,7 +57797,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
       credential = await this.options.resolveCredential(options.model);
     }
     if (credential === void 0 || credential.access_token === "") {
-      throw new LlmError15("gemini: no usable credential; log in first", "MISSING_CREDENTIAL");
+      throw new LlmError16("gemini: no usable credential; log in first", "MISSING_CREDENTIAL");
     }
     const requested = options.reasoningEffort === void 0 ? void 0 : String(options.reasoningEffort);
     const declared = entry === void 0 ? void 0 : geminiReasoningInfo(entry);
@@ -55830,7 +57839,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
             ...options.signal === void 0 ? {} : { signal: options.signal }
           });
           if (probe.error !== void 0) {
-            throw new LlmError15(
+            throw new LlmError16(
               `gemini: \u9879\u76EE\u53F7\u63A2\u6D4B\u5931\u8D25\uFF0C\u672A\u53D1\u63A8\u7406\uFF08\u4E0E\u539F\u7248\u4E00\u81F4\uFF09\u2014 ${probe.error}`,
               "SERVER"
             );
@@ -55869,9 +57878,9 @@ var GeminiAdapter = class extends LlmAdapter8 {
         const wire = marshalAlphabetical(envelope);
         const wireBytes = Buffer.byteLength(wire, "utf8");
         if (wireBytes > GEMINI_MAX_REQUEST_BODY_BYTES) {
-          throw new LlmError15(
+          throw new LlmError16(
             `gemini: \u8BF7\u6C42\u4F53 ${wireBytes} \u5B57\u8282\u8D85\u8FC7\u4E0A\u9650 ${GEMINI_MAX_REQUEST_BODY_BYTES} \u5B57\u8282`,
-            CONTEXT_WINDOW_EXCEEDED_CODE
+            CONTEXT_WINDOW_EXCEEDED_CODE2
           );
         }
         let response;
@@ -55884,8 +57893,8 @@ var GeminiAdapter = class extends LlmAdapter8 {
             signal: options.signal
           });
         } catch (error) {
-          if (error instanceof LlmError15) throw error;
-          throw new LlmError15(
+          if (error instanceof LlmError16) throw error;
+          throw new LlmError16(
             `gemini: \u8BF7\u6C42\u53D1\u9001\u5931\u8D25 \u2014 ${error instanceof Error ? error.message : String(error)}`,
             "TRANSPORT",
             { cause: error }
@@ -55894,7 +57903,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
         response = await checkQueuedResponse(response);
         if (response.ok) {
           if (response.body === null) {
-            throw new LlmError15("gemini: \u54CD\u5E94\u7F3A\u5C11 body", "EMPTY_RESPONSE");
+            throw new LlmError16("gemini: \u54CD\u5E94\u7F3A\u5C11 body", "EMPTY_RESPONSE");
           }
           const body = response.body;
           try {
@@ -55965,7 +57974,7 @@ var GeminiAdapter = class extends LlmAdapter8 {
               continue;
             }
           }
-          throw new LlmError15(
+          throw new LlmError16(
             `gemini: \u6A21\u578B ${options.model} \u7684\u6240\u6709\u8D26\u53F7\u5747\u4E0D\u53EF\u7528\uFF08\u9650\u6D41\u6216\u989D\u5EA6\u8017\u5C3D\uFF09\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5`,
             "QUOTA_EXCEEDED",
             { status }
@@ -55988,17 +57997,17 @@ var GeminiAdapter = class extends LlmAdapter8 {
    */
   classifyFailure(status, text) {
     const detail = text === "" ? "" : ` \u2014 ${text.slice(0, 500)}`;
-    const message = `gemini: HTTP ${status}${detail}`;
+    const message2 = `gemini: HTTP ${status}${detail}`;
     if (status === 400 && isGeminiContextOverflow(text)) {
-      return new LlmError15(message, CONTEXT_WINDOW_EXCEEDED_CODE, { status });
+      return new LlmError16(message2, CONTEXT_WINDOW_EXCEEDED_CODE2, { status });
     }
     if (status === 400 && isGeminiQuotaText(text)) {
-      return new LlmError15(message, "QUOTA_EXCEEDED", { status });
+      return new LlmError16(message2, "QUOTA_EXCEEDED", { status });
     }
-    if (status === 429) return new LlmError15(message, "RATE_LIMIT", { status });
-    if (status === 403 || status === 404) return new LlmError15(message, "SERVER", { status });
-    if (status === 401) return new LlmError15(message, "AUTH", { status });
-    return new LlmError15(message, httpErrorCode2(status), { status });
+    if (status === 429) return new LlmError16(message2, "RATE_LIMIT", { status });
+    if (status === 403 || status === 404) return new LlmError16(message2, "SERVER", { status });
+    if (status === 401) return new LlmError16(message2, "AUTH", { status });
+    return new LlmError16(message2, httpErrorCode2(status), { status });
   }
 };
 function registerGeminiLlm(ctx, options) {
@@ -56017,11 +58026,11 @@ var PROBE_CANDIDATES_MAX = 4;
 var PROBE_ATTEMPT_TIMEOUT_MS = 2e4;
 var PROBE_TOTAL_BUDGET_MS = 8e4;
 function isRateLimitFailure(error) {
-  if (error instanceof LlmError16) {
+  if (error instanceof LlmError17) {
     if (error.code === "RATE_LIMIT" || error.code === "QUOTA_EXCEEDED" || error.code === "QUOTA") return true;
   }
-  const message = error instanceof Error ? error.message : String(error);
-  return isRateLimited(message);
+  const message2 = error instanceof Error ? error.message : String(error);
+  return isRateLimited(message2);
 }
 async function probeWithAdapter(entry, credential, modelId, timeoutMs) {
   if (!isSupportedProvider(entry.provider)) throw new Error("provider-unsupported: \u4E0D\u652F\u6301\u6B64\u6E20\u9053");
@@ -56090,6 +58099,13 @@ async function probeWithAdapter(entry, credential, modelId, timeoutMs) {
       project: GEMINI_DEFAULT_PROJECT,
       product: GEMINI
     });
+  } else if (entry.provider === "codearts") {
+    adapter = new CodeArtsAdapter({
+      credentialRef: ref,
+      resolveCredential: async () => credential,
+      refresh: async () => {
+      }
+    });
   } else {
     throw new Error(`Unsupported probe adapter: ${entry.provider}`);
   }
@@ -56109,18 +58125,18 @@ async function probeWithAdapter(entry, credential, modelId, timeoutMs) {
     }
     return { modelId, ok: true, ms: Date.now() - startedAt };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message2 = error instanceof Error ? error.message : String(error);
     if (isRateLimitFailure(error)) {
-      const parsed = parseRateLimitError(message, modelId);
+      const parsed = parseRateLimitError(message2, modelId);
       return {
         modelId,
         ok: false,
-        message: `\u4ECD\u53D7\u9650\uFF1A${message}`,
+        message: `\u4ECD\u53D7\u9650\uFF1A${message2}`,
         ...parsed !== null ? { resetTimeMs: parsed.resetTimeMs } : {},
         ms: Date.now() - startedAt
       };
     }
-    return { modelId, ok: false, message: `\u65E0\u6CD5\u786E\u8BA4\uFF1A${message}`, ms: Date.now() - startedAt };
+    return { modelId, ok: false, message: `\u65E0\u6CD5\u786E\u8BA4\uFF1A${message2}`, ms: Date.now() - startedAt };
   }
 }
 function makeDefaultProbe(pool, timeoutMs) {
@@ -56365,172 +58381,6 @@ async function importBackup(credentials, pool, raw) {
 // vendor/channel-pack/src/opencode-rpc.ts
 import { credentialRef as credentialRef10 } from "@deepseek-ai/dsh-credentials";
 import { randomBytes as randomBytes8 } from "node:crypto";
-
-// vendor/channel-pack/src/opencode-proxy.ts
-var import_undici = __toESM(require_undici(), 1);
-import { connect as netConnect } from "node:net";
-import { URL as URL2 } from "node:url";
-var PROXY_CACHE_LIMIT = 16;
-var cache3 = /* @__PURE__ */ new Map();
-function buildProxyDispatcher(proxy) {
-  const existing = cache3.get(proxy.url);
-  if (existing !== void 0) return existing;
-  const created = createProxyDispatcher(proxy);
-  cache3.delete(proxy.url);
-  cache3.set(proxy.url, created);
-  while (cache3.size > PROXY_CACHE_LIMIT) {
-    const oldest = cache3.keys().next();
-    if (oldest.done === true) break;
-    const victim = cache3.get(oldest.value);
-    cache3.delete(oldest.value);
-    if (victim !== void 0) {
-      void Promise.resolve(victim.close?.()).catch(() => {
-      });
-    }
-  }
-  return created;
-}
-function createProxyDispatcher(proxy) {
-  return proxy.kind === "http" ? buildHttpDispatcher(proxy.url) : buildSocksDispatcher(proxy);
-}
-async function closeAllProxyDispatchers() {
-  const all = [...cache3.values()];
-  cache3.clear();
-  await Promise.allSettled(all.map(async (d) => {
-    try {
-      await d.close();
-    } catch {
-    }
-  }));
-}
-function buildHttpDispatcher(url) {
-  return new import_undici.ProxyAgent({
-    uri: url,
-    // ⚠️ `pipelining: 0` 是必需的（见模块头）；`clientFactory` 由 undici 在
-    // 每次建连时调用，用它把默认 Pool 换成禁用复用的 Pool。
-    clientFactory: (origin, opts) => new import_undici.Pool(origin, { ...opts, pipelining: 0 })
-  });
-}
-function buildSocks5Handshake(proxy) {
-  const parsed = new URL2(proxy.url);
-  const wantsAuth = parsed.username.length > 0;
-  return wantsAuth ? new Uint8Array([5, 2, 0, 2]) : new Uint8Array([5, 1, 0]);
-}
-async function openSocks5Tunnel(proxy, host, port) {
-  const parsed = new URL2(proxy.url);
-  const socket = await new Promise((resolve2, reject) => {
-    const s = netConnect({ host: parsed.hostname, port: Number(parsed.port) });
-    s.once("connect", () => resolve2(s));
-    s.once("error", reject);
-  });
-  const fail = (error) => {
-    throw error;
-  };
-  const write = (bytes) => new Promise((resolve2, reject) => {
-    socket.write(Buffer.from(bytes), (err) => err ? reject(err) : resolve2());
-  });
-  let leftover = Buffer.alloc(0);
-  let pending;
-  const detach = () => {
-    socket.off("data", onData);
-    socket.off("error", onError);
-    socket.off("close", onClose);
-  };
-  const fulfill = () => {
-    if (pending === void 0 || leftover.length < pending.n) return;
-    const n = pending.n;
-    const target = pending;
-    pending = void 0;
-    const value = new Uint8Array(leftover.subarray(0, n));
-    leftover = leftover.subarray(n);
-    detach();
-    target.resolve(value);
-  };
-  const onData = (chunk) => {
-    leftover = leftover.length === 0 ? chunk : Buffer.concat([leftover, chunk]);
-    fulfill();
-  };
-  const onError = (error) => {
-    const target = pending;
-    pending = void 0;
-    detach();
-    target?.reject(error);
-  };
-  const onClose = () => {
-    const target = pending;
-    pending = void 0;
-    detach();
-    target?.reject(new Error("SOCKS5 \u4EE3\u7406\u5728\u63E1\u624B\u5B8C\u6210\u524D\u5173\u95ED\u4E86\u8FDE\u63A5"));
-  };
-  const read = (n) => new Promise((resolve2, reject) => {
-    if (n <= 0) {
-      resolve2(new Uint8Array(0));
-      return;
-    }
-    pending = { n, resolve: resolve2, reject };
-    socket.on("data", onData);
-    socket.once("error", onError);
-    socket.once("close", onClose);
-    fulfill();
-  });
-  try {
-    await write(buildSocks5Handshake(proxy));
-    const methodReply = await read(2);
-    const method = methodReply[1];
-    if (method === 2) {
-      const user = Buffer.from(decodeURIComponent(parsed.username), "utf8");
-      const pass = Buffer.from(decodeURIComponent(parsed.password), "utf8");
-      await write(new Uint8Array([1, user.length, ...user, pass.length, ...pass]));
-      const authReply = await read(2);
-      if (authReply[1] !== 0) fail(new Error("SOCKS5 \u7528\u6237\u540D/\u5BC6\u7801\u8BA4\u8BC1\u5931\u8D25"));
-    } else if (method !== 0) {
-      fail(new Error(`SOCKS5 \u670D\u52A1\u7AEF\u8981\u6C42\u672A\u77E5\u8BA4\u8BC1\u65B9\u5F0F 0x${(method ?? 0).toString(16)}`));
-    }
-    const target = Buffer.from(host, "utf8");
-    await write(new Uint8Array([
-      5,
-      1,
-      0,
-      3,
-      target.length,
-      ...target,
-      port >>> 8 & 255,
-      port & 255
-    ]));
-    const reply2 = await read(4);
-    if (reply2[1] !== 0) {
-      fail(new Error(`SOCKS5 CONNECT \u88AB\u62D2\u7EDD\uFF08\u5E94\u7B54\u7801 0x${(reply2[1] ?? 0).toString(16)}\uFF09`));
-    }
-    const atyp = reply2[3];
-    if (atyp === 1) await read(4 + 2);
-    else if (atyp === 4) await read(16 + 2);
-    else if (atyp === 3) await read(1).then((lenByte) => read((lenByte[0] ?? 0) + 2));
-    else fail(new Error(`SOCKS5 \u5E94\u7B54\u7684\u5730\u5740\u7C7B\u578B 0x${(atyp ?? 0).toString(16)} \u4E0D\u53D7\u652F\u6301`));
-    return socket;
-  } catch (error) {
-    socket.destroy();
-    throw error;
-  }
-}
-function buildSocksDispatcher(proxy) {
-  return new import_undici.Agent({
-    connect: ((opts, callback) => {
-      const host = String(opts.hostname ?? opts.host ?? "");
-      const port = Number(opts.port ?? 443);
-      if (host.length === 0) {
-        callback(new Error("SOCKS5 \u4EE3\u7406\uFF1A\u76EE\u6807 host \u4E3A\u7A7A"), void 0);
-        return;
-      }
-      openSocks5Tunnel(proxy, host, port).then((socket) => {
-        callback(null, socket);
-      }).catch((error) => {
-        callback(error, void 0);
-      });
-    })
-  });
-}
-
-// vendor/channel-pack/src/opencode-rpc.ts
 var KEY_PATTERN = /^sk-[A-Za-z0-9_-]{20,}$/;
 var EXIT_IP_URL = "http://ip-api.com/json/?fields=status,query,country";
 var TEST_TIMEOUT_MS = 1e4;
@@ -56539,7 +58389,7 @@ function slotNamesOf(apiKey) {
   return { id: `${OPENCODE.id}-${tail.toLowerCase()}`, refName: `OPENCODE_ACCOUNT_${tail.toUpperCase()}` };
 }
 async function handleOpencodeRpc(ctx, pool, method, payload) {
-  const fail = (message) => ({ ok: false, error: { code: "bad-request", message } });
+  const fail = (message2) => ({ ok: false, error: { code: "bad-request", message: message2 } });
   const done = (value) => ({ ok: true, value });
   const call = { method, payload };
   try {
@@ -56633,8 +58483,8 @@ async function handleOpencodeRpc(ctx, pool, method, payload) {
             latencyMs: Date.now() - startedAt
           });
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          return fail(`\u6D4B\u8BD5\u5931\u8D25\uFF1A${controller.signal.aborted ? "\u8FDE\u63A5\u8D85\u65F6" : message}`);
+          const message2 = error instanceof Error ? error.message : String(error);
+          return fail(`\u6D4B\u8BD5\u5931\u8D25\uFF1A${controller.signal.aborted ? "\u8FDE\u63A5\u8D85\u65F6" : message2}`);
         } finally {
           clearTimeout(timer);
         }
@@ -56658,7 +58508,7 @@ async function handleOpencodeRpc(ctx, pool, method, payload) {
 }
 
 // vendor/channel-pack/src/badge-preferences.ts
-import { existsSync as existsSync6, mkdirSync as mkdirSync4, readFileSync as readFileSync6, renameSync as renameSync4, writeFileSync as writeFileSync5 } from "node:fs";
+import { existsSync as existsSync7, mkdirSync as mkdirSync5, readFileSync as readFileSync7, renameSync as renameSync5, writeFileSync as writeFileSync6 } from "node:fs";
 import { join as join6 } from "node:path";
 var BADGE_PREFERENCES_FILE = "ui-preferences.json";
 var BADGE_PREFERENCES = ["auto", "subscription", "credits"];
@@ -56684,8 +58534,8 @@ var FilePreferenceStore = class {
   kind = "file";
   load() {
     try {
-      if (!existsSync6(this.path)) return DEFAULT_BADGE_PREFERENCE;
-      const parsed = JSON.parse(readFileSync6(this.path, "utf-8"));
+      if (!existsSync7(this.path)) return DEFAULT_BADGE_PREFERENCE;
+      const parsed = JSON.parse(readFileSync7(this.path, "utf-8"));
       return sanitizeBadgePreference(preferenceFieldOf(parsed));
     } catch (error) {
       this.logger?.warn(`[channel-pack] \u8BFB\u53D6 ${this.path} \u5931\u8D25\uFF0C\u7528\u91CF\u5FBD\u6807\u504F\u597D\u6309\u9ED8\u8BA4\u503C\u5904\u7406: ${String(error)}`);
@@ -56693,10 +58543,10 @@ var FilePreferenceStore = class {
     }
   }
   async save(preference) {
-    mkdirSync4(join6(this.path, ".."), { recursive: true });
+    mkdirSync5(join6(this.path, ".."), { recursive: true });
     const tmp = `${this.path}.tmp`;
-    writeFileSync5(tmp, JSON.stringify({ schema: SCHEMA3, badgePreference: preference }, null, 2), "utf-8");
-    renameSync4(tmp, this.path);
+    writeFileSync6(tmp, JSON.stringify({ schema: SCHEMA3, badgePreference: preference }, null, 2), "utf-8");
+    renameSync5(tmp, this.path);
   }
 };
 var SCHEMA3 = "channel-pack/ui-preferences/v1";
@@ -56770,10 +58620,10 @@ function badgeTtlMs(env = process.env) {
 function badgeFailureTtlMs(env = process.env) {
   return nonNegativeMs(env[DSH_CHANNEL_PACK_BADGE_TTL_MS], BADGE_FAILURE_TTL_MS);
 }
-function nonNegativeMs(raw, fallback) {
-  if (typeof raw !== "string" || raw.trim().length === 0) return fallback;
+function nonNegativeMs(raw, fallback2) {
+  if (typeof raw !== "string" || raw.trim().length === 0) return fallback2;
   const parsed = Number(raw.trim());
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback2;
 }
 var BadgeRpcFailure = class extends Error {
   constructor(detail) {
@@ -56846,12 +58696,12 @@ function createUsageBadge(deps) {
   }
   return {
     async read(provider, options = {}) {
-      const cache4 = cacheFor(provider);
+      const cache5 = cacheFor(provider);
       const force = options.force === true;
-      const hit = force ? void 0 : cache4.peek();
+      const hit = force ? void 0 : cache5.peek();
       let snapshot;
       try {
-        snapshot = await cache4.get(force ? { force: true } : {});
+        snapshot = await cache5.get(force ? { force: true } : {});
       } catch (error) {
         if (error instanceof BadgeRpcFailure) return { ok: false, error: error.detail };
         throw error;
@@ -56875,7 +58725,7 @@ function createUsageBadge(deps) {
       };
     },
     clear() {
-      for (const cache4 of caches.values()) cache4.clear();
+      for (const cache5 of caches.values()) cache5.clear();
       caches.clear();
     }
   };
@@ -56885,7 +58735,7 @@ function isAllFailed(snapshot) {
 }
 
 // vendor/channel-pack/src/auto-checkin.ts
-import { existsSync as existsSync7, mkdirSync as mkdirSync5, readFileSync as readFileSync7, renameSync as renameSync5, writeFileSync as writeFileSync6 } from "node:fs";
+import { existsSync as existsSync8, mkdirSync as mkdirSync6, readFileSync as readFileSync8, renameSync as renameSync6, writeFileSync as writeFileSync7 } from "node:fs";
 import { join as join7 } from "node:path";
 var AUTO_CHECKIN_FILE = "auto-checkin.json";
 var SCHEMA4 = "channel-pack/auto-checkin/v1";
@@ -56960,17 +58810,17 @@ var FileAutoCheckinStore = class {
   kind = "file";
   load() {
     try {
-      if (!existsSync7(this.path)) return { ...DEFAULT_AUTO_CHECKIN };
-      return sanitizeAutoCheckin(JSON.parse(readFileSync7(this.path, "utf-8")));
+      if (!existsSync8(this.path)) return { ...DEFAULT_AUTO_CHECKIN };
+      return sanitizeAutoCheckin(JSON.parse(readFileSync8(this.path, "utf-8")));
     } catch (error) {
       this.logger?.warn(`[channel-pack] \u8BFB\u53D6 ${this.path} \u5931\u8D25\uFF0C\u81EA\u52A8\u7B7E\u5230\u6309\u9ED8\u8BA4\u8BBE\u7F6E\uFF08\u5F00\u542F\uFF09\u5904\u7406: ${String(error)}`);
       return { ...DEFAULT_AUTO_CHECKIN };
     }
   }
   async save(doc) {
-    mkdirSync5(join7(this.path, ".."), { recursive: true });
+    mkdirSync6(join7(this.path, ".."), { recursive: true });
     const tmp = `${this.path}.tmp`;
-    writeFileSync6(tmp, JSON.stringify({
+    writeFileSync7(tmp, JSON.stringify({
       schema: SCHEMA4,
       enabled: doc.enabled,
       lastDate: doc.lastDate,
@@ -56979,7 +58829,7 @@ var FileAutoCheckinStore = class {
       channels: doc.channels,
       dismissedRunAt: doc.dismissedRunAt
     }, null, 2), "utf-8");
-    renameSync5(tmp, this.path);
+    renameSync6(tmp, this.path);
   }
 };
 function createAutoCheckinStore(ctx) {
@@ -56993,8 +58843,8 @@ function createAutoCheckinStore(ctx) {
 function emptyTotals2() {
   return { providers: 0, claimed: 0, totalCredit: 0, totalByUnit: { token: 0, credit: 0 }, alreadyClaimed: 0, inactive: 0, failed: 0, coversToday: 0, skipped: 0, errors: 0 };
 }
-function isUnsupportedCheckin(message) {
-  return message.includes("\u4E0D\u652F\u6301\u6BCF\u65E5\u7B7E\u5230") || message.includes("unsupported provider");
+function isUnsupportedCheckin(message2) {
+  return message2.includes("\u4E0D\u652F\u6301\u6BCF\u65E5\u7B7E\u5230") || message2.includes("unsupported provider");
 }
 function isAutoCheckinExcluded(provider) {
   return provider === ZCODE.id;
@@ -57080,15 +58930,15 @@ function createAutoCheckin(deps) {
         continue;
       }
       if (!result.ok) {
-        const message = typeof result.error?.message === "string" ? result.error.message : "";
-        if (isUnsupportedCheckin(message)) {
+        const message2 = typeof result.error?.message === "string" ? result.error.message : "";
+        if (isUnsupportedCheckin(message2)) {
           totals.skipped += 1;
           channels.push({ provider, text: "\u65E0\u7B7E\u5230\u63A5\u53E3" });
           continue;
         }
         totals.errors += 1;
         channels.push({ provider, text: "\u51FA\u9519" });
-        deps.warn?.(`[channel-pack] \u81EA\u52A8\u7B7E\u5230\uFF1A${provider} \u5931\u8D25: ${message || "\u672A\u77E5\u9519\u8BEF"}`);
+        deps.warn?.(`[channel-pack] \u81EA\u52A8\u7B7E\u5230\uFF1A${provider} \u5931\u8D25: ${message2 || "\u672A\u77E5\u9519\u8BEF"}`);
         continue;
       }
       totals.providers += 1;
@@ -57223,6 +59073,14 @@ function normalizeZcodeLoginProvider(raw) {
     }
   }
   return ZCODE_LOGIN_PROVIDER;
+}
+function parseCodeArtsCredential(raw) {
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null && typeof parsed.access_key_id === "string" ? parsed : void 0;
+  } catch {
+    return void 0;
+  }
 }
 function parseLobsteraiCredential(raw) {
   try {
@@ -57444,11 +59302,12 @@ function providerIdsOf(llm, modelAdapters) {
   const keys = Object.keys(modelAdapters ?? {});
   return keys.length > 0 ? keys.map((id) => ({ id })) : void 0;
 }
-function registerChannelPackRpc(ctx, pool, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, config = {}) {
+function registerChannelPackRpc(ctx, pool, codearts, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, config = {}) {
   ctx.inject(["connection"], (connectionCtx) => {
     registerChannelPackEndpoints(
       connectionCtx,
       pool,
+      codearts,
       lobsterai,
       qoder,
       qoderCn,
@@ -57501,7 +59360,7 @@ async function fullCatalogIds(ctx, modelAdapters, provider) {
     return { error: `\u8BFB\u53D6\u6A21\u578B\u5217\u8868\u5931\u8D25\uFF1A${reason}` };
   }
 }
-function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, config = {}) {
+function registerChannelPackEndpoints(ctx, pool, codearts, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, config = {}) {
   const connection = ctx.connection ?? ctx.get("connection");
   if (!connection || typeof connection.fetch?.register !== "function") {
     ctx.logger.warn("[channel-pack] connection.fetch not available, RPC endpoints not registered");
@@ -57527,7 +59386,7 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
       return [...new Set(accounts.filter((entry) => isSupportedProvider(entry.provider)).map((entry) => entry.provider))].sort();
     },
     claim: (provider) => handleMethod("credits.claimAll", { provider }),
-    warn: (message) => ctx.logger?.warn?.(message)
+    warn: (message2) => ctx.logger?.warn?.(message2)
   });
   autoCheckin.start();
   ctx.effect?.(() => () => autoCheckin.stop(), "channel-pack: auto checkin");
@@ -57537,7 +59396,7 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
     listAccounts: (provider) => pool.listAccountsByProvider(provider),
     readPreference: () => badgePreferences.load(),
     readAutoCheckin: () => autoCheckin.state(),
-    warn: (message) => ctx.logger?.warn?.(message)
+    warn: (message2) => ctx.logger?.warn?.(message2)
   });
   connection.fetch.register({
     path: CHANNEL_PACK_API_PATH,
@@ -57551,26 +59410,26 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
       if (contentType !== "application/json") {
         return new Response("content type must be application/json", { status: 415 });
       }
-      let message;
+      let message2;
       try {
-        message = await request.json();
+        message2 = await request.json();
       } catch {
         return new Response("body is not JSON", { status: 400 });
       }
-      const rpcId = typeof message.rpcId === "string" ? message.rpcId : "invalid-request";
-      const call = message.payload;
-      if (message.type !== "client-request" || typeof message.rpcId !== "string" || message.method !== CHANNEL_PACK_ENDPOINT || !call || typeof call.method !== "string" || !Object.prototype.hasOwnProperty.call(call, "payload")) {
+      const rpcId = typeof message2.rpcId === "string" ? message2.rpcId : "invalid-request";
+      const call = message2.payload;
+      if (message2.type !== "client-request" || typeof message2.rpcId !== "string" || message2.method !== CHANNEL_PACK_ENDPOINT || !call || typeof call.method !== "string" || !Object.prototype.hasOwnProperty.call(call, "payload")) {
         return reply(rpcId, { ok: false, error: { code: "gateway/bad-request", message: "Invalid Channel Pack management request." } });
       }
       try {
         const result = await handleMethod(call.method, call.payload, request.signal);
         return reply(rpcId, result);
       } catch (error) {
-        const message2 = error instanceof Error ? error.message : String(error);
-        ctx.logger.warn(`[channel-pack] ${String(call.method)} failed: ${message2}`);
+        const message3 = error instanceof Error ? error.message : String(error);
+        ctx.logger.warn(`[channel-pack] ${String(call.method)} failed: ${message3}`);
         return reply(rpcId, {
           ok: false,
-          error: { code: "channel-pack/handler-failed", message: message2 }
+          error: { code: "channel-pack/handler-failed", message: message3 }
         });
       }
     }
@@ -57674,6 +59533,15 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
     if (request?.provider !== void 0 && !isSupportedProvider(request.provider) || account !== void 0 && !isSupportedProvider(account.provider)) {
       return { ok: false, error: { code: "provider-unsupported", message: "\u4E0D\u652F\u6301\u6B64\u6E20\u9053\u3002" } };
     }
+    const codeartsFetcher = (input, init) => {
+      const fetcher = config.codeartsFetcher ?? directFetch;
+      if (!signal) return fetcher(input, init);
+      const upstreamSignal = init?.signal ?? (input instanceof Request ? input.signal : void 0);
+      return fetcher(input, {
+        ...init,
+        signal: upstreamSignal ? AbortSignal.any([signal, upstreamSignal]) : signal
+      });
+    };
     if (method.startsWith("opencode.")) {
       if (config.disableOpencode === true) {
         return { ok: false, error: { code: "provider-disabled", message: "OpenCode account integration is disabled in this host" } };
@@ -57696,6 +59564,31 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
         const id = `${provider}-${shortId()}`;
         const suffix = shortId().toUpperCase();
         const refName = `${provider.toUpperCase()}_ACCOUNT_${suffix}`;
+        if (provider === "codearts") {
+          const started = await codearts.startLogin({ refName });
+          await pool.addAccount({
+            id,
+            provider: "codearts",
+            nickname: id,
+            enabled: true,
+            credentialRef: refName,
+            refreshable: false,
+            createdAt: Date.now()
+          });
+          started.result.then(async (loginResult) => {
+            const credential = parseCodeArtsCredential(loginResult.access);
+            await pool.updateAccount(id, {
+              nickname: credential?.user_name !== void 0 && credential.user_name.length > 0 ? credential.user_name : id,
+              expiresAt: credential?.expires_at !== void 0 ? Number.isNaN(Date.parse(credential.expires_at)) ? void 0 : Date.parse(credential.expires_at) : void 0,
+              refreshable: Boolean(credential?.refresh_token)
+            });
+          }).catch((error) => {
+            ctx.logger.warn(`[channel-pack] background codearts login failed for ${id}: ${String(error)}`);
+            void pool.removeAccount(id).catch(() => {
+            });
+          });
+          return { ok: true, value: { accountId: id, loginUrl: started.loginUrl } };
+        }
         if (provider === LOBSTERAI.id) {
           const started = await lobsterai.startLogin({ refName });
           await pool.addAccount({
@@ -58065,6 +59958,10 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
           const entry = accounts.find((a) => a.id === req.accountId);
           if (!entry) throw new Error(`Account ${req.accountId} not found`);
           switch (entry.provider) {
+            // MOD (CodeArts restore)
+            case "codearts":
+              await codearts.refreshAccountCredential(entry.credentialRef, pool, entry.id);
+              break;
             case LOBSTERAI.id:
               await lobsterai.refreshAccountCredential(entry.credentialRef, pool, entry.id);
               break;
@@ -58482,6 +60379,16 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
       case "credits.claimAll": {
         const req = payload;
         const accounts = await pool.listAccounts(req.provider);
+        if (req.provider === "codearts") {
+          const signedFetch = codeartsFetcher;
+          const value = await collectClaimResults(accounts, void 0, {
+            resolve: (ref) => ctx.credentials.resolve(ref),
+            claim: (credential) => claimCodeArtsDailyCheckin(credential, signedFetch),
+            precheckStatus: false,
+            warn: (msg) => ctx.logger?.warn?.(msg)
+          });
+          return { ok: true, value };
+        }
         if (isQoderFamily(req.provider)) {
           const { product } = requireQoderFamily(req.provider);
           const value = await collectClaimResults(accounts, void 0, {
@@ -58630,6 +60537,27 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
       case "credits.balances": {
         const req = payload;
         const accounts = await pool.listAccounts(req.provider);
+        if (req.provider === "codearts") {
+          const signedFetch = codeartsFetcher;
+          const values = await collectCreditBalances(accounts, void 0, {
+            resolve: (ref) => ctx.credentials.resolve(ref),
+            fetchBalanceDetailed: async (credential) => {
+              const result = await fetchCodeArtsAccountInfoDetailed(credential, signedFetch);
+              if (!result.ok) return { balance: null, error: `\u8D26\u6237\u4FE1\u606F\u67E5\u8BE2\u5931\u8D25\uFF1A${result.message}` };
+              const info = result.info;
+              if (!info.isCreditPackage) {
+                return {
+                  balance: null,
+                  error: info.isTokenPackage ? "Token \u8BA1\u8D39\u8D26\u6237\uFF0C\u65E0\u79EF\u5206\u4F59\u989D" : "\u975E\u79EF\u5206\u8BA1\u8D39\u8D26\u6237\uFF0C\u65E0\u79EF\u5206\u4F59\u989D"
+                };
+              }
+              if (info.credit === void 0) return { balance: null, error: "\u672A\u8FD4\u56DE\u79EF\u5206\u6570\u636E" };
+              return { balance: info.credit };
+            },
+            warn: (msg) => ctx.logger?.warn?.(msg)
+          });
+          return { ok: true, value: { accounts: values } };
+        }
         if (req.provider === LOBSTERAI.id) {
           const values = await collectCreditBalances(accounts, LOBSTERAI, {
             resolve: (ref) => ctx.credentials.resolve(ref),
@@ -59369,14 +61297,14 @@ function registerChannelPackEndpoints(ctx, pool, lobsterai, qoder, qoderCn, trae
       }
       // ── 本机 OpenAI 网关（`src/openai-gateway/`）──
       case "gateway.getEnabled": {
-        const degrade = async (step, run, fallback) => {
+        const degrade = async (step, run, fallback2) => {
           try {
             return await run();
           } catch (error) {
             ctx.logger.warn(
               `[channel-pack] gateway.getEnabled \u7684\u300C${step}\u300D\u8BFB\u53D6\u5931\u8D25\uFF0C\u8BE5\u5B57\u6BB5\u964D\u7EA7\u4E3A\u9ED8\u8BA4\u503C\uFF1A${String(error)}`
             );
-            return fallback;
+            return fallback2;
           }
         };
         const blockedByEnv = await degrade("env \u5F00\u5173", () => !isGatewayEnabled(process.env), true);
@@ -59705,7 +61633,7 @@ import { homedir as homedir4 } from "node:os";
 import { join as join9 } from "node:path";
 
 // vendor/channel-pack/src/openai-gateway/auth.ts
-import { mkdirSync as mkdirSync6, readFileSync as readFileSync8, renameSync as renameSync6, writeFileSync as writeFileSync7, existsSync as existsSync8 } from "node:fs";
+import { mkdirSync as mkdirSync7, readFileSync as readFileSync9, renameSync as renameSync7, writeFileSync as writeFileSync8, existsSync as existsSync9 } from "node:fs";
 import { randomBytes as randomBytes9 } from "node:crypto";
 import { join as join8 } from "node:path";
 var KEY_FILE = "api-key";
@@ -59717,7 +61645,7 @@ function loadOrCreateApiKey(home, env = process.env) {
   const path2 = join8(directory, KEY_FILE);
   let stored;
   try {
-    stored = readFileSync8(path2, "utf8").trim();
+    stored = readFileSync9(path2, "utf8").trim();
   } catch {
   }
   if (stored) {
@@ -59727,14 +61655,14 @@ function loadOrCreateApiKey(home, env = process.env) {
     );
   }
   const key = randomBytes9(32).toString("base64url");
-  mkdirSync6(directory, { recursive: true });
+  mkdirSync7(directory, { recursive: true });
   const temporary = `${path2}.${process.pid}.${Date.now()}.tmp`;
-  writeFileSync7(temporary, key, { encoding: "utf8", mode: 384 });
+  writeFileSync8(temporary, key, { encoding: "utf8", mode: 384 });
   try {
-    renameSync6(temporary, path2);
+    renameSync7(temporary, path2);
   } catch (error) {
-    if (existsSync8(path2)) {
-      const existing = readFileSync8(path2, "utf8").trim();
+    if (existsSync9(path2)) {
+      const existing = readFileSync9(path2, "utf8").trim();
       if (KEY_PATTERN2.test(existing)) return { value: existing, fromEnv: false, path: path2 };
     }
     throw error;
@@ -59744,7 +61672,7 @@ function loadOrCreateApiKey(home, env = process.env) {
 
 // vendor/channel-pack/src/openai-gateway/messages.ts
 import { randomUUID as randomUUID8 } from "node:crypto";
-import { createToolResultMessage, ReasoningEffortId as ReasoningEffortId10 } from "@deepseek-ai/dsh-llm";
+import { createToolResultMessage, ReasoningEffortId as ReasoningEffortId11 } from "@deepseek-ai/dsh-llm";
 
 // vendor/channel-pack/src/openai-gateway/images.ts
 var DEFAULT_IMAGE_LIMITS = {
@@ -59825,8 +61753,8 @@ async function toImageBlock2(url, bridge, limits, already) {
 
 // vendor/channel-pack/src/openai-gateway/messages.ts
 var OpenAiGatewayError = class extends Error {
-  constructor(message, status = 400, type = "invalid_request_error", code = "invalid_request") {
-    super(message);
+  constructor(message2, status = 400, type = "invalid_request_error", code = "invalid_request") {
+    super(message2);
     this.status = status;
     this.type = type;
     this.code = code;
@@ -60048,8 +61976,8 @@ async function toGenerateOptions(body, signal, reasoningEffortOverride, maxToken
   const reasoningEffort = reasoningEffortOverride !== void 0 ? reasoningEffortOverride : body.reasoning_effort === void 0 ? void 0 : String(body.reasoning_effort);
   const limits = images.limits ?? DEFAULT_IMAGE_LIMITS;
   const messages = [];
-  for (const message of body.messages) {
-    messages.push(await convertMessage(message, provider, model, images.bridge, limits));
+  for (const message2 of body.messages) {
+    messages.push(await convertMessage(message2, provider, model, images.bridge, limits));
   }
   return {
     provider,
@@ -60062,7 +61990,7 @@ async function toGenerateOptions(body, signal, reasoningEffortOverride, maxToken
     // ⚠️ 判据是 `== null`（同时排除 undefined 与 null）：`null` = 明确不下发，
     // 两者都不能写进请求。写成 `=== undefined` 会把 null 塞进
     // `ReasoningEffortId(null)`，等于又发了一个非法档位。
-    ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId10(reasoningEffort) },
+    ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId11(reasoningEffort) },
     signal
   };
 }
@@ -60079,9 +62007,9 @@ var MISSING_MODEL_PATTERNS = [
   /模型不存在/,
   /不在本\s*provider\s*目录中/i
 ];
-function looksLikeMissingModel(message) {
-  if (typeof message !== "string" || message.length === 0) return false;
-  return MISSING_MODEL_PATTERNS.some((pattern) => pattern.test(message));
+function looksLikeMissingModel(message2) {
+  if (typeof message2 !== "string" || message2.length === 0) return false;
+  return MISSING_MODEL_PATTERNS.some((pattern) => pattern.test(message2));
 }
 var GATEWAY_FALLBACK_STATUS = 502;
 function upstreamStatusOrFallback(status) {
@@ -60107,7 +62035,7 @@ function findCaseInsensitiveSuggestion(requested, catalog) {
 
 // vendor/channel-pack/src/openai-gateway/responses.ts
 import { createHash as createHash6, randomUUID as randomUUID10 } from "node:crypto";
-import { ReasoningEffortId as ReasoningEffortId11 } from "@deepseek-ai/dsh-llm";
+import { ReasoningEffortId as ReasoningEffortId12 } from "@deepseek-ai/dsh-llm";
 
 // vendor/channel-pack/src/openai-gateway/stream.ts
 import { randomUUID as randomUUID9 } from "node:crypto";
@@ -60137,13 +62065,13 @@ function toOpenAiUsage(usage) {
 }
 
 // vendor/channel-pack/src/openai-gateway/stream.ts
-async function withSuggestion(message, suggest) {
-  if (suggest === void 0) return message;
+async function withSuggestion(message2, suggest) {
+  if (suggest === void 0) return message2;
   try {
-    const hint = await suggest(message);
-    return typeof hint === "string" && hint.length > 0 ? `${message}\uFF08${hint}\uFF09` : message;
+    const hint = await suggest(message2);
+    return typeof hint === "string" && hint.length > 0 ? `${message2}\uFF08${hint}\uFF09` : message2;
   } catch {
-    return message;
+    return message2;
   }
 }
 function finishReason(reason) {
@@ -60264,14 +62192,14 @@ async function* toOpenAiSse(chunks, requestId = `chatcmpl-${randomUUID9()}`, mod
       if (event === void 0) continue;
       if ("error" in event) {
         const error = event.error;
-        const message = typeof error.message === "string" ? error.message : "upstream error";
+        const message2 = typeof error.message === "string" ? error.message : "upstream error";
         const normalized = normalizeUpstreamFailure({
           // 上游自带状态码（如 gemini 拒绝未知模型名时的 404）优先，否则才退化成 502。
           // 原样透出会让「额度用尽」在客户端眼里读成成功。另两处出口已有同一门禁。
           status: upstreamStatusOrFallback(error.status),
           type: typeof error.type === "string" ? error.type : "server_error",
           code: typeof error.code === "string" ? error.code : "upstream_error",
-          message
+          message: message2
         });
         yield line({
           id: requestId,
@@ -60279,7 +62207,7 @@ async function* toOpenAiSse(chunks, requestId = `chatcmpl-${randomUUID9()}`, mod
           model,
           choices: [],
           error: {
-            message: await withSuggestion(message, suggest),
+            message: await withSuggestion(message2, suggest),
             type: normalized.type,
             code: normalized.code,
             // 流已发出 200，状态码改不了；把该有的 404 放进 status 字段供客户端读。
@@ -60331,21 +62259,21 @@ async function collectOpenAiCompletion(chunks, requestId = `chatcmpl-${randomUUI
     }
   } catch (error) {
     const converted = failureToOpenAiError(error);
-    const message2 = String(converted.body.error.message);
+    const message3 = String(converted.body.error.message);
     const normalized = normalizeUpstreamFailure({
       status: converted.status,
       type: String(converted.body.error.type),
       code: String(converted.body.error.code ?? "upstream_error"),
-      message: message2
+      message: message3
     });
-    throw new OpenAiGatewayError(await withSuggestion(message2, suggest), normalized.status, normalized.type, normalized.code);
+    throw new OpenAiGatewayError(await withSuggestion(message3, suggest), normalized.status, normalized.type, normalized.code);
   }
   const toolCalls = [...state.tools.entries()].sort(([a], [b]) => a - b).map(([, tool]) => ({
     id: tool.id,
     type: "function",
     function: { name: tool.name ?? "", arguments: tool.arguments }
   }));
-  const message = {
+  const message2 = {
     role: "assistant",
     content: state.content || null,
     ...state.reasoning.length === 0 ? {} : { reasoning_content: state.reasoning },
@@ -60356,7 +62284,7 @@ async function collectOpenAiCompletion(chunks, requestId = `chatcmpl-${randomUUI
     object: "chat.completion",
     created: Math.floor(Date.now() / 1e3),
     model,
-    choices: [{ index: 0, message, finish_reason: state.finishReason }],
+    choices: [{ index: 0, message: message2, finish_reason: state.finishReason }],
     ...state.usage === void 0 ? {} : { usage: usageJson(state.usage) }
   };
 }
@@ -60379,8 +62307,8 @@ function failureToOpenAiError(error) {
 
 // vendor/channel-pack/src/openai-gateway/responses.ts
 var UNSUPPORTED = "unsupported_parameter";
-function unsupported(message) {
-  return new OpenAiGatewayError(message, 400, UNSUPPORTED, UNSUPPORTED);
+function unsupported(message2) {
+  return new OpenAiGatewayError(message2, 400, UNSUPPORTED, UNSUPPORTED);
 }
 function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -60641,7 +62569,7 @@ async function toResponsesGenerateOptions(body, signal, reasoningEffortOverride,
     ...tools === void 0 ? {} : { tools },
     ...maxTokens === void 0 ? {} : { maxTokens },
     ...temperature === void 0 ? {} : { temperature },
-    ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId11(reasoningEffort) },
+    ...reasoningEffort == null ? {} : { reasoningEffort: ReasoningEffortId12(reasoningEffort) },
     signal
   };
 }
@@ -60811,14 +62739,14 @@ function outputOf(items, nsMap) {
 }
 async function toUpstreamError(error, suggest) {
   const converted = failureToOpenAiError(error);
-  const message = String(converted.body.error.message);
+  const message2 = String(converted.body.error.message);
   const normalized = normalizeUpstreamFailure({
     status: converted.status,
     type: String(converted.body.error.type),
     code: String(converted.body.error.code ?? "upstream_error"),
-    message
+    message: message2
   });
-  return new OpenAiGatewayError(await withSuggestion(message, suggest), normalized.status, normalized.type, normalized.code);
+  return new OpenAiGatewayError(await withSuggestion(message2, suggest), normalized.status, normalized.type, normalized.code);
 }
 function responsesError(converted) {
   const code = converted.type === "rate_limit_exceeded" || converted.type === "rate_limit_error" ? "rate_limit_exceeded" : "server_error";
@@ -61091,9 +63019,9 @@ data: ${JSON.stringify({ type, sequence_number: sequence++, ...payload })}
 // vendor/channel-pack/src/openai-gateway/server.ts
 var BODY_LIMIT = 16 * 1024 * 1024;
 var defaultLogger = {
-  info: (message) => console.info(message),
-  warn: (message) => console.warn(message),
-  error: (message) => console.error(message)
+  info: (message2) => console.info(message2),
+  warn: (message2) => console.warn(message2),
+  error: (message2) => console.error(message2)
 };
 function jsonResponse(response, status, value) {
   if (response.headersSent) return;
@@ -61199,8 +63127,8 @@ function createOpenAiGateway(options) {
       );
     }
   };
-  const makeSuggestion = (requestedId) => async (message) => {
-    if (!looksLikeMissingModel(message)) return void 0;
+  const makeSuggestion = (requestedId) => async (message2) => {
+    if (!looksLikeMissingModel(message2)) return void 0;
     const catalog = await loadModelIdsHint();
     const found = findCaseInsensitiveSuggestion(requestedId, catalog);
     return found === void 0 ? void 0 : `\u4F60\u662F\u4E0D\u662F\u60F3\u7528 ${found}`;
@@ -61416,9 +63344,9 @@ function makeGatewayAttachmentBridge(ctx) {
 }
 function mountOpenAiGateway(ctx, pool) {
   const logger2 = {
-    info: (message) => ctx.logger?.info?.(message),
-    warn: (message) => ctx.logger?.warn?.(message),
-    error: (message) => ctx.logger?.error?.(message)
+    info: (message2) => ctx.logger?.info?.(message2),
+    warn: (message2) => ctx.logger?.warn?.(message2),
+    error: (message2) => ctx.logger?.error?.(message2)
   };
   const describe2 = (error) => error instanceof Error ? error.message : String(error);
   try {
@@ -61455,7 +63383,7 @@ function mountOpenAiGateway(ctx, pool) {
 }
 
 // vendor/channel-pack/src/loop-recovery.ts
-import { createUserMessage as createUserMessage2, LlmError as LlmError17 } from "@deepseek-ai/dsh-llm";
+import { createUserMessage as createUserMessage2, LlmError as LlmError18 } from "@deepseek-ai/dsh-llm";
 var LOOP_RESUME_PROMPT = "\u7EE7\u7EED\u672A\u5B8C\u6210\u7684\u4EFB\u52A1\u3002\u4E0A\u4E00\u8F6E\u4F60\u7684\u601D\u8003\u9677\u5165\u4E86\u91CD\u590D\uFF08\u540C\u4E00\u6BB5\u63A8\u7406\u53CD\u590D\u51FA\u73B0\uFF09\u800C\u88AB\u4E2D\u6B62 \u2014\u2014 \u8BF7\u6362\u4E00\u79CD\u601D\u8DEF\uFF0C\u4E0D\u8981\u91CD\u590D\u521A\u624D\u90A3\u6BB5\u63A8\u7406\uFF0C\u76F4\u63A5\u63A8\u8FDB\u4EFB\u52A1\u3002";
 var LOOP_RESUME_DEFAULT_MAX = 2;
 var LOOP_RESUME_MAX_LIMIT = 10;
@@ -61476,14 +63404,14 @@ function resolveLoopResumePolicy(env = process.env) {
   };
 }
 function isReasoningLoopFailure(error) {
-  if (error instanceof LlmError17) return error.code === REASONING_LOOP_CODE;
+  if (error instanceof LlmError18) return error.code === REASONING_LOOP_CODE;
   if (typeof error !== "object" || error === null) return false;
   return error.code === REASONING_LOOP_CODE;
 }
 function createLoopResumeController(options) {
   const { policy, log } = options;
-  const deliver = options.deliver ?? ((agent, message) => {
-    agent.followup(message);
+  const deliver = options.deliver ?? ((agent, message2) => {
+    agent.followup(message2);
   });
   const states = /* @__PURE__ */ new Map();
   function stateFor(agent) {
@@ -61518,15 +63446,15 @@ function createLoopResumeController(options) {
       if (agent.inbox.hasPending === true || (agent.inbox.nextTurn?.length ?? 0) > 0 || (agent.inbox.nextStep?.length ?? 0) > 0) return false;
       let injectedId;
       try {
-        const message = createUserMessage2({
+        const message2 = createUserMessage2({
           content: [{ type: "text", text: LOOP_RESUME_PROMPT }],
           // `kind: 'user'`：这就是一条普通用户指令（与用户手打「继续」同形），
           // 故 UI 显示、落盘、重放全部走既有路径，无需任何格式变更。
           source: { kind: "user" }
         });
-        injectedId = message.id;
-        state.injected.add(message.id);
-        deliver(agent, message);
+        injectedId = message2.id;
+        state.injected.add(message2.id);
+        deliver(agent, message2);
       } catch (error) {
         if (injectedId !== void 0) state.injected.delete(injectedId);
         log.warn(`[channel-pack] \u81EA\u52A8\u7EED\u8DD1\u6295\u9012\u5931\u8D25\uFF08${agent.id}\uFF09\uFF1A${String(error)}`);
@@ -61537,10 +63465,10 @@ function createLoopResumeController(options) {
       );
       return true;
     },
-    observeInput(agent, message) {
+    observeInput(agent, message2) {
       const state = states.get(agent.id);
       if (state === void 0) return;
-      if (state.injected.delete(message.id)) return;
+      if (state.injected.delete(message2.id)) return;
       state.attempts = 0;
       state.pending = false;
     },
@@ -61575,9 +63503,9 @@ function installLoopResume(ctx) {
       // ⚠️ 用 `withoutInitiator()` 排队：这几行跑在别的 agent 的事件派发里
       // （`agent/status` / `agent/error`），排队动作不该继承「当时恰好是谁在
       // 运行」的发起者归属 —— 与 harness 自己的 `goal-round-driver` 同一手法。
-      deliver: (agent, message) => {
+      deliver: (agent, message2) => {
         scope.agents.withoutInitiator(() => {
-          agent.followup(message);
+          agent.followup(message2);
         });
       }
     });
@@ -61618,10 +63546,10 @@ function installLoopResume(ctx) {
         controller.observeIdle(agent);
       });
     });
-    scope.on("agent/inbox/inserted", ({ agent, message }) => {
+    scope.on("agent/inbox/inserted", ({ agent, message: message2 }) => {
       if (!active || disposed.has(agent) || live.get(agent.id) !== agent) return;
       scheduled.delete(agent);
-      controller.observeInput(agent, message);
+      controller.observeInput(agent, message2);
     });
     scope.on("agent/inbox/discarded", ({ agent }) => {
       cancelPending(agent);
@@ -61645,7 +63573,7 @@ function installLoopResume(ctx) {
 }
 
 // vendor/channel-pack/src/token-ledger-store.ts
-import { existsSync as existsSync9, mkdirSync as mkdirSync7, readFileSync as readFileSync9, renameSync as renameSync7, writeFileSync as writeFileSync8 } from "node:fs";
+import { existsSync as existsSync10, mkdirSync as mkdirSync8, readFileSync as readFileSync10, renameSync as renameSync8, writeFileSync as writeFileSync9 } from "node:fs";
 import { join as join10 } from "node:path";
 var TOKEN_LEDGER_FILE = "token-ledger.json";
 var TOKEN_LEDGER_DAYS = 90;
@@ -61654,10 +63582,10 @@ var SCHEMA5 = "channel-pack/token-ledger/v1";
 function pruneDays(days) {
   const cutoff = Date.now() + 8 * 60 * 60 * 1e3 - TOKEN_LEDGER_DAYS * 24 * 60 * 60 * 1e3;
   const pruned = /* @__PURE__ */ new Map();
-  for (const [day, buckets] of days) {
-    const dayStartUtc8 = Date.parse(`${day}T00:00:00Z`) - 8 * 60 * 60 * 1e3;
+  for (const [day2, buckets] of days) {
+    const dayStartUtc8 = Date.parse(`${day2}T00:00:00Z`) - 8 * 60 * 60 * 1e3;
     if (Number.isFinite(dayStartUtc8) && dayStartUtc8 < cutoff) continue;
-    pruned.set(day, buckets);
+    pruned.set(day2, buckets);
   }
   return pruned;
 }
@@ -61695,12 +63623,12 @@ var FileLedgerStore = class {
   readFile() {
     const out = /* @__PURE__ */ new Map();
     try {
-      if (!existsSync9(this.path)) return out;
-      const parsed = JSON.parse(readFileSync9(this.path, "utf-8"));
+      if (!existsSync10(this.path)) return out;
+      const parsed = JSON.parse(readFileSync10(this.path, "utf-8"));
       if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return out;
       const record = parsed;
       if (typeof record.days !== "object" || record.days === null || Array.isArray(record.days)) return out;
-      for (const [day, rawBuckets] of Object.entries(record.days)) {
+      for (const [day2, rawBuckets] of Object.entries(record.days)) {
         if (typeof rawBuckets !== "object" || rawBuckets === null || Array.isArray(rawBuckets)) continue;
         const bucketList = rawBuckets;
         const target = /* @__PURE__ */ new Map();
@@ -61723,7 +63651,7 @@ var FileLedgerStore = class {
             tpsCount: Number(b.tpsCount) || 0
           });
         }
-        out.set(day, target);
+        out.set(day2, target);
       }
     } catch (error) {
       this.logger?.warn(`[channel-pack] \u8BFB\u53D6 ${this.path} \u5931\u8D25\uFF0C\u5386\u53F2\u7528\u91CF\u6309\u7A7A\u8868\u5904\u7406: ${String(error)}`);
@@ -61787,19 +63715,19 @@ var FileLedgerStore = class {
    */
   flush() {
     try {
-      mkdirSync7(join10(this.path, ".."), { recursive: true });
+      mkdirSync8(join10(this.path, ".."), { recursive: true });
       const merged = this.readFile();
       let hasDelta = false;
-      for (const [day, buckets] of this.days) {
-        const base = this.written.get(day);
-        let target = merged.get(day);
+      for (const [day2, buckets] of this.days) {
+        const base = this.written.get(day2);
+        let target = merged.get(day2);
         for (const [key, bucket] of buckets) {
           const delta = subtractBucket(bucket, base?.get(key));
           if (delta === void 0) continue;
           hasDelta = true;
           if (target === void 0) {
             target = /* @__PURE__ */ new Map();
-            merged.set(day, target);
+            merged.set(day2, target);
           }
           const existing = target.get(key);
           if (existing === void 0) {
@@ -61811,12 +63739,12 @@ var FileLedgerStore = class {
       }
       if (!hasDelta) return;
       const days = {};
-      for (const [day, buckets] of pruneDays(merged)) {
-        days[day] = Object.fromEntries(buckets);
+      for (const [day2, buckets] of pruneDays(merged)) {
+        days[day2] = Object.fromEntries(buckets);
       }
       const tmp = `${this.path}.tmp`;
-      writeFileSync8(tmp, JSON.stringify({ schema: SCHEMA5, days }, null, 2), "utf-8");
-      renameSync7(tmp, this.path);
+      writeFileSync9(tmp, JSON.stringify({ schema: SCHEMA5, days }, null, 2), "utf-8");
+      renameSync8(tmp, this.path);
       this.written = cloneDays(this.days);
     } catch (error) {
       this.logger?.warn(`[channel-pack] \u5199\u5165 ${this.path} \u5931\u8D25\uFF08\u672C\u6B21\u7EDF\u8BA1\u4E0D\u5165\u76D8\uFF09: ${String(error)}`);
@@ -61825,8 +63753,8 @@ var FileLedgerStore = class {
 };
 function cloneDays(days) {
   const out = /* @__PURE__ */ new Map();
-  for (const [day, buckets] of days) {
-    out.set(day, new Map([...buckets].map(([key, bucket]) => [key, { ...bucket }])));
+  for (const [day2, buckets] of days) {
+    out.set(day2, new Map([...buckets].map(([key, bucket]) => [key, { ...bucket }])));
   }
   return out;
 }
@@ -61886,14 +63814,14 @@ import { credentialRef as credentialRef12 } from "@deepseek-ai/dsh-credentials";
 // vendor/channel-pack/src/minimax-oauth.ts
 import { createHash as createHash7, randomBytes as randomBytes10 } from "node:crypto";
 var MinimaxLoginCancelledError = class extends Error {
-  constructor(message = "\u7528\u6237\u53D6\u6D88\u4E86 MiniMax \u6388\u6743") {
-    super(message);
+  constructor(message2 = "\u7528\u6237\u53D6\u6D88\u4E86 MiniMax \u6388\u6743") {
+    super(message2);
     this.name = "MinimaxLoginCancelledError";
   }
 };
 var MinimaxLoginExpiredError = class extends Error {
-  constructor(message = "MiniMax \u8BBE\u5907\u7801\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55") {
-    super(message);
+  constructor(message2 = "MiniMax \u8BBE\u5907\u7801\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55") {
+    super(message2);
     this.name = "MinimaxLoginExpiredError";
   }
 };
@@ -62082,8 +64010,8 @@ var MINIMAX_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token
 };
 var MinimaxRefreshTokenExpiredError = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -62180,8 +64108,8 @@ var MinimaxAuth = class extends Service8 {
       await this.ctx.credentials.set(credentialRef12(this.credentialRefName), JSON.stringify(next));
       this.lastRefreshError = void 0;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.lastRefreshError = message;
+      const message2 = error instanceof Error ? error.message : String(error);
+      this.lastRefreshError = message2;
       throw error;
     }
   }
@@ -62215,8 +64143,8 @@ var MinimaxAuth = class extends Service8 {
       accessors: MINIMAX_EXPIRY_ACCESSORS,
       refresh: (c) => this.refreshCredentialFor(c),
       save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-      warn: (message) => this.ctx.logger?.warn?.(message),
-      info: (message) => this.ctx.logger?.info?.(message)
+      warn: (message2) => this.ctx.logger?.warn?.(message2),
+      info: (message2) => this.ctx.logger?.info?.(message2)
     });
   }
   /**
@@ -62250,7 +64178,7 @@ var MinimaxAuth = class extends Service8 {
           current: entry,
           refresh: (c) => this.refreshCredentialFor(c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
         });
       } catch (error) {
         if (error instanceof MinimaxRefreshTokenExpiredError) {
@@ -62285,8 +64213,8 @@ var MinimaxAuth = class extends Service8 {
         this.product
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (/invalid_grant|expired|revoked/i.test(message)) {
+      const message2 = error instanceof Error ? error.message : String(error);
+      if (/invalid_grant|expired|revoked/i.test(message2)) {
         throw new MinimaxRefreshTokenExpiredError("refresh_token \u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
       }
       throw error;
@@ -62404,10 +64332,10 @@ function parseMinimaxModelsPayload(payload) {
 }
 
 // vendor/channel-pack/src/minimax-adapter.ts
-import { LlmAdapter as LlmAdapter9, LlmError as LlmError18, ReasoningEffortId as ReasoningEffortId12 } from "@deepseek-ai/dsh-llm";
+import { LlmAdapter as LlmAdapter10, LlmError as LlmError19, ReasoningEffortId as ReasoningEffortId13 } from "@deepseek-ai/dsh-llm";
 
 // vendor/channel-pack/src/minimax-messages.ts
-import { ToolCallId as ToolCallId6 } from "@deepseek-ai/dsh-llm";
+import { ToolCallId as ToolCallId7 } from "@deepseek-ai/dsh-llm";
 function buildMinimaxMessagesPayload(options) {
   const payload = {
     model: options.model,
@@ -62465,11 +64393,11 @@ function serializeMinimaxMessages(messages, images) {
     }
     pendingAssistant = void 0;
   };
-  for (const message of normalized) {
-    if (message.role === "system") continue;
+  for (const message2 of normalized) {
+    if (message2.role === "system") continue;
     const content = [];
     let blocks = 0;
-    for (const block of message.content) {
+    for (const block of message2.content) {
       blocks++;
       if (block.type === "tool-call") {
         if (!keepCallIds.has(String(block.id))) continue;
@@ -62514,14 +64442,14 @@ function serializeMinimaxMessages(messages, images) {
       }
       const text = blockText(block);
       if (text === "") continue;
-      if (message.role === "assistant" && block.type === "reasoning") {
+      if (message2.role === "assistant" && block.type === "reasoning") {
         continue;
       }
       content.push({ type: "text", text });
     }
-    const isPureToolMessage = message.role !== "assistant" && content.length === 0 && blocks > 0;
+    const isPureToolMessage = message2.role !== "assistant" && content.length === 0 && blocks > 0;
     if (isPureToolMessage) continue;
-    if (message.role === "assistant") {
+    if (message2.role === "assistant") {
       commitPending();
       if (content.length === 0) continue;
       pendingAssistant = { role: "assistant", content };
@@ -62593,7 +64521,7 @@ function nonNegativeInt2(value) {
 }
 async function* consumeMinimaxSse(options) {
   const reader = options.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder2 = new TextDecoder();
   let buffer = "";
   let eventName = "";
   const blocks = /* @__PURE__ */ new Map();
@@ -62625,13 +64553,13 @@ async function* consumeMinimaxSse(options) {
     const type = typeof frame.type === "string" ? frame.type : eventName;
     if (type === "error") {
       const error = frame.error;
-      const message = typeof error === "object" && error !== null ? String(error.message ?? "\u672A\u77E5\u9519\u8BEF") : "\u672A\u77E5\u9519\u8BEF";
-      throw new Error(`minimax: \u6D41\u5185\u9519\u8BEF\uFF1A${message}`);
+      const message2 = typeof error === "object" && error !== null ? String(error.message ?? "\u672A\u77E5\u9519\u8BEF") : "\u672A\u77E5\u9519\u8BEF";
+      throw new Error(`minimax: \u6D41\u5185\u9519\u8BEF\uFF1A${message2}`);
     }
     if (type === "message_start") {
-      const message = frame.message;
-      if (typeof message === "object" && message !== null) {
-        usage = { ...usage, ...readMinimaxUsage(message.usage) };
+      const message2 = frame.message;
+      if (typeof message2 === "object" && message2 !== null) {
+        usage = { ...usage, ...readMinimaxUsage(message2.usage) };
       }
       return;
     }
@@ -62675,7 +64603,7 @@ async function* consumeMinimaxSse(options) {
         yield {
           type: "tool-call-delta",
           index,
-          id: ToolCallId6(state?.toolId ?? ""),
+          id: ToolCallId7(state?.toolId ?? ""),
           argumentsDelta: d.partial_json
         };
       }
@@ -62693,7 +64621,7 @@ async function* consumeMinimaxSse(options) {
       } else {
         block = {
           type: "tool-call",
-          id: ToolCallId6(state.toolId ?? ""),
+          id: ToolCallId7(state.toolId ?? ""),
           name: state.toolName ?? "",
           arguments: state.toolArgs
         };
@@ -62715,7 +64643,7 @@ async function* consumeMinimaxSse(options) {
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        buffer += decoder.decode();
+        buffer += decoder2.decode();
         if (buffer !== "") {
           const tail = buffer.split("\n");
           buffer = "";
@@ -62723,7 +64651,7 @@ async function* consumeMinimaxSse(options) {
         }
         break;
       }
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder2.decode(value, { stream: true });
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
       for (const rawLine of lines) yield* processLine(rawLine);
@@ -62752,14 +64680,14 @@ function minimaxReasoningInfo(entry) {
     if (!ids.includes("none")) ids.push("none");
   }
   const efforts = ids.map((id) => {
-    if (id === "none") return { id: ReasoningEffortId12(id), name: "\u5173\u95ED\u601D\u8003" };
-    if (id === "on") return { id: ReasoningEffortId12(id), name: "\u5F00\u542F\u601D\u8003" };
-    return { id: ReasoningEffortId12(id), name: id };
+    if (id === "none") return { id: ReasoningEffortId13(id), name: "\u5173\u95ED\u601D\u8003" };
+    if (id === "on") return { id: ReasoningEffortId13(id), name: "\u5F00\u542F\u601D\u8003" };
+    return { id: ReasoningEffortId13(id), name: id };
   });
-  const defaultEffort = entry.defaultEffort !== void 0 && ids.includes(entry.defaultEffort) ? ReasoningEffortId12(entry.defaultEffort) : void 0;
+  const defaultEffort = entry.defaultEffort !== void 0 && ids.includes(entry.defaultEffort) ? ReasoningEffortId13(entry.defaultEffort) : void 0;
   return { efforts, ...defaultEffort === void 0 ? {} : { defaultEffort } };
 }
-var MinimaxAdapter = class extends LlmAdapter9 {
+var MinimaxAdapter = class extends LlmAdapter10 {
   constructor(options) {
     super();
     this.options = options;
@@ -62883,23 +64811,23 @@ var MinimaxAdapter = class extends LlmAdapter9 {
       credential = await this.options.resolveCredential(options.model);
     }
     if (credential === void 0 || credential.access_token === "") {
-      throw new LlmError18("minimax: no usable credential; log in first", "MISSING_CREDENTIAL");
+      throw new LlmError19("minimax: no usable credential; log in first", "MISSING_CREDENTIAL");
     }
     const entry = (await this.loadModels()).find((item) => item.id === options.model);
     const imageRefs = /* @__PURE__ */ new Map();
-    for (const message of options.messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, imageRefs);
+    for (const message2 of options.messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, imageRefs);
     }
     let images;
     if (imageRefs.size > 0) {
       if (entry?.supportsImage !== true) {
-        throw new LlmError18(
+        throw new LlmError19(
           `minimax: \u6A21\u578B "${options.model}" \u4E0D\u652F\u6301\u56FE\u7247\u8F93\u5165`,
           "UNSUPPORTED_CONTENT"
         );
       }
       if (this.options.readImage === void 0) {
-        throw new LlmError18(
+        throw new LlmError19(
           "minimax: \u56FE\u7247\u8F93\u5165\u9700\u8981\u9644\u4EF6\u670D\u52A1\uFF08readImage \u672A\u63D0\u4F9B\uFF09",
           "UNSUPPORTED_CONTENT"
         );
@@ -62940,14 +64868,14 @@ var MinimaxAdapter = class extends LlmAdapter9 {
     if (!response.ok) {
       const text = await response.text().catch(() => "");
       const code = response.status === 402 ? "QUOTA_EXCEEDED" : httpErrorCode2(response.status);
-      throw new LlmError18(
+      throw new LlmError19(
         `minimax: HTTP ${response.status}${text === "" ? "" : ` \u2014 ${text.slice(0, 500)}`}`,
         code,
         { status: response.status }
       );
     }
     if (response.body === null) {
-      throw new LlmError18("minimax: \u54CD\u5E94\u7F3A\u5C11 body", "EMPTY_RESPONSE");
+      throw new LlmError19("minimax: \u54CD\u5E94\u7F3A\u5C11 body", "EMPTY_RESPONSE");
     }
     yield* consumeMinimaxSse({ body: response.body, signal: options.signal });
   }
@@ -62962,157 +64890,6 @@ function registerMinimaxLlm(ctx, options) {
 // vendor/channel-pack/src/gemini-auth.ts
 import { Service as Service9 } from "@deepseek-ai/cordis";
 import { credentialRef as credentialRef13 } from "@deepseek-ai/dsh-credentials";
-
-// vendor/channel-pack/src/channel-fetch.ts
-var import_undici2 = __toESM(require_undici(), 1);
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import path from "node:path";
-function parseWindowsProxy(output) {
-  const value = (name2) => new RegExp(`^\\s*${name2}\\s+REG_\\w+\\s+(.+)$`, "mi").exec(output)?.[1]?.trim() ?? "";
-  if (Number(value("ProxyEnable")) !== 1 || value("ProxyServer") === "") return void 0;
-  return { server: value("ProxyServer"), bypass: value("ProxyOverride") };
-}
-async function readWindowsProxy() {
-  const executable = path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "reg.exe");
-  try {
-    const { stdout } = await promisify(execFile)(executable, [
-      "query",
-      "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
-    ], { windowsHide: true, timeout: 2e3, maxBuffer: 64 * 1024, encoding: "utf8" });
-    return stdout;
-  } catch {
-    return "";
-  }
-}
-function loopback(host) {
-  return host === "localhost" || host.endsWith(".localhost") || host === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(host);
-}
-function channelProxyBypassed(target, patterns, windows = false) {
-  const hostname = target.hostname.toLowerCase();
-  const port = target.port || (target.protocol === "https:" ? "443" : "80");
-  return patterns.split(/[;,\s]+/).filter(Boolean).some((raw) => {
-    let pattern = raw.toLowerCase();
-    if (pattern === "*") return true;
-    if (windows && pattern === "<local>") return !hostname.includes(".") && !hostname.includes(":");
-    const withPort = /^(.*):(\d+)$/.exec(pattern);
-    if (withPort) {
-      if (withPort[2] !== port) return false;
-      pattern = withPort[1];
-    }
-    if (pattern.includes("*")) {
-      const escaped = pattern.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*");
-      return new RegExp(`^${escaped}$`, "i").test(hostname);
-    }
-    const domain = pattern.replace(/^\./, "");
-    return hostname === domain || !windows && hostname.endsWith(`.${domain}`);
-  });
-}
-function windowsProxyFor(target, config) {
-  if (channelProxyBypassed(target, config.bypass, true)) return void 0;
-  if (!config.server.includes("=")) return config.server;
-  const entries = new Map(config.server.split(";").map((row) => {
-    const at = row.indexOf("=");
-    return [row.slice(0, at).trim().toLowerCase(), row.slice(at + 1).trim()];
-  }));
-  const selected = entries.get(target.protocol.slice(0, -1));
-  if (selected) return selected;
-  const socks = entries.get("socks");
-  return socks ? `socks5://${socks.replace(/^socks5h?:\/\//, "")}` : void 0;
-}
-var ChannelNetworkError = class extends Error {
-  name = "ChannelNetworkError";
-  /** DSH 的重试分类。不设则记为 UNKNOWN，而 UNKNOWN 不在重试白名单里； */
-  /** 赋成白名单内的 TRANSPORT / TIMEOUT，瞬时网络抖动才会被重试。 */
-  code;
-};
-function networkFailure(error, route) {
-  if (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError")) return error;
-  const codes = /* @__PURE__ */ new Set();
-  let current = error;
-  for (let depth = 0; depth < 5 && current && typeof current === "object"; depth++) {
-    const record = current;
-    if (typeof record.code === "string" && /^[A-Z][A-Z0-9_]{1,80}$/.test(record.code)) codes.add(record.code);
-    current = record.cause;
-  }
-  const failure = new ChannelNetworkError(`\u6E20\u9053\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25\uFF08${route}${codes.size ? `\uFF1B${[...codes].join("\u3001")}` : ""}\uFF09\uFF1A\u8BF7\u68C0\u67E5\u4EE3\u7406\u8FDE\u901A\u6027\u540E\u91CD\u8BD5`, { cause: error });
-  failure.code = codes.has("ETIMEDOUT") ? "TIMEOUT" : "TRANSPORT";
-  return failure;
-}
-function createChannelFetch(options = {}) {
-  const dispatchers = /* @__PURE__ */ new Map();
-  let system;
-  let systemAt = 0;
-  let closed = false;
-  const fetchImpl = (input, init) => (options.fetchImpl ?? globalThis.fetch)(input, init);
-  const fetcher = async (input, init) => {
-    if (closed) throw new Error("\u6E20\u9053\u51FA\u7F51\u670D\u52A1\u5DF2\u505C\u6B62");
-    const target = new URL(input instanceof Request ? input.url : String(input));
-    const signal = init?.signal ?? (input instanceof Request ? input.signal : void 0);
-    signal?.throwIfAborted();
-    let route = "\u76F4\u8FDE";
-    try {
-      if (init?.dispatcher !== void 0) {
-        route = "\u8C03\u7528\u65B9\u6307\u5B9A\u4EE3\u7406";
-        return await fetchImpl(input, init);
-      }
-      if (loopback(target.hostname)) {
-        return await fetchImpl(input, init);
-      }
-      if (options.outlet?.active()) {
-        route = "\u63D2\u4EF6\u51FA\u53E3\u4EE3\u7406";
-        return await options.outlet.fetch(input, { ...init, redirect: "error" });
-      }
-      const env = options.environment ?? process.env;
-      const envValue = (name2) => env[name2.toLowerCase()] ?? env[name2];
-      const proxy = (target.protocol === "https:" ? envValue("HTTPS_PROXY") : envValue("HTTP_PROXY")) || envValue("ALL_PROXY");
-      let address;
-      if (proxy) {
-        route = "\u73AF\u5883\u4EE3\u7406";
-        if (!channelProxyBypassed(target, envValue("NO_PROXY") ?? "")) address = proxy;
-      } else if ((options.platform ?? process.platform) === "win32") {
-        if (!system || Date.now() - systemAt >= 3e4) {
-          systemAt = Date.now();
-          system = (options.readSystemProxy ?? readWindowsProxy)().then(parseWindowsProxy);
-        }
-        const config = await system;
-        signal?.throwIfAborted();
-        if (closed) throw new Error("\u6E20\u9053\u51FA\u7F51\u670D\u52A1\u5DF2\u505C\u6B62");
-        if (config) {
-          address = windowsProxyFor(target, config);
-          route = "Windows \u7CFB\u7EDF\u4EE3\u7406";
-        }
-      }
-      if (!address) {
-        if (route !== "\u76F4\u8FDE") route = "\u76F4\u8FDE\uFF0C\u4EE3\u7406\u4F8B\u5916\u6216\u5F53\u524D\u534F\u8BAE\u65E0\u4EE3\u7406";
-        return await fetchImpl(input, init);
-      }
-      const proxyUrl = new URL(address.includes("://") ? address : `http://${address}`);
-      const authority = `${proxyUrl.hostname}:${proxyUrl.port || (proxyUrl.protocol === "https:" ? "443" : proxyUrl.protocol.startsWith("socks") ? "1080" : "80")}`;
-      const auth = proxyUrl.username ? `${proxyUrl.username}${proxyUrl.password ? `:${proxyUrl.password}` : ""}@` : "";
-      const parsed = normalizeProxy(`${proxyUrl.protocol}//${auth}${authority}`);
-      if (!parsed.ok) throw new Error("\u4EE3\u7406\u5730\u5740\u65E0\u6548");
-      let dispatcher = dispatchers.get(parsed.proxy.url);
-      if (!dispatcher) {
-        dispatcher = options.dispatcherFor ? options.dispatcherFor(parsed.proxy) : new import_undici2.Dispatcher1Wrapper(createProxyDispatcher(parsed.proxy));
-        dispatchers.set(parsed.proxy.url, dispatcher);
-      }
-      return await fetchImpl(input, { ...init, dispatcher });
-    } catch (error) {
-      if (signal?.aborted) throw signal.reason;
-      throw networkFailure(error, route);
-    }
-  };
-  return {
-    fetch: fetcher,
-    async close() {
-      closed = true;
-      const all = [...dispatchers.values()];
-      dispatchers.clear();
-      await Promise.allSettled(all.map((dispatcher) => dispatcher.destroy()));
-    }
-  };
-}
 
 // vendor/channel-pack/src/gemini-oauth.ts
 import { createServer as createServer7 } from "node:http";
@@ -63134,14 +64911,14 @@ var GEMINI_SCOPES = [
   "https://www.googleapis.com/auth/experimentsandconfigs"
 ];
 var GeminiLoginCancelledError = class extends Error {
-  constructor(message = "Google \u6388\u6743\u5DF2\u53D6\u6D88") {
-    super(message);
+  constructor(message2 = "Google \u6388\u6743\u5DF2\u53D6\u6D88") {
+    super(message2);
     this.name = "GeminiLoginCancelledError";
   }
 };
 var GeminiLoginExpiredError = class extends Error {
-  constructor(message = "Google \u6388\u6743\u8D85\u65F6\uFF0C\u8BF7\u91CD\u65B0\u53D1\u8D77") {
-    super(message);
+  constructor(message2 = "Google \u6388\u6743\u8D85\u65F6\uFF0C\u8BF7\u91CD\u65B0\u53D1\u8D77") {
+    super(message2);
     this.name = "GeminiLoginExpiredError";
   }
 };
@@ -63441,8 +65218,8 @@ var GEMINI_EXPIRY_ACCESSORS = {
   identityOf: (credential) => credential.access_token
 };
 var GeminiRefreshTokenExpiredError = class extends Error {
-  constructor(message) {
-    super(message);
+  constructor(message2) {
+    super(message2);
     this.name = "RefreshTokenExpiredError";
   }
 };
@@ -63568,8 +65345,8 @@ var GeminiAuth = class extends Service9 {
         accessors: GEMINI_EXPIRY_ACCESSORS,
         refresh: (c) => this.refreshCredential(c),
         save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-        warn: (message) => this.ctx.logger?.warn?.(message),
-        info: (message) => this.ctx.logger?.info?.(message)
+        warn: (message2) => this.ctx.logger?.warn?.(message2),
+        info: (message2) => this.ctx.logger?.info?.(message2)
       });
     });
   }
@@ -63615,8 +65392,8 @@ var GeminiAuth = class extends Service9 {
           current: entry,
           refresh: (c) => this.refreshCredentialUnderLock(entry.credentialRef, c),
           save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
-          warn: (message) => this.ctx.logger?.warn?.(message),
-          info: (message) => this.ctx.logger?.info?.(message)
+          warn: (message2) => this.ctx.logger?.warn?.(message2),
+          info: (message2) => this.ctx.logger?.info?.(message2)
         });
       } catch (error) {
         if (error instanceof GeminiRefreshTokenExpiredError) {
@@ -63634,7 +65411,7 @@ var GeminiAuth = class extends Service9 {
               accountId: entry.id,
               current: entry,
               tag: `[${this.product.id}]`,
-              warn: (message) => this.ctx.logger?.warn?.(message)
+              warn: (message2) => this.ctx.logger?.warn?.(message2)
             });
             continue;
           }
@@ -63749,8 +65526,8 @@ var GeminiAuth = class extends Service9 {
       return credentialFromGeminiGrant(grant, credential);
     } catch (error) {
       if (error instanceof ChannelNetworkError) throw error;
-      const message = error instanceof Error ? error.message : String(error);
-      if (/invalid_grant|invalid_client|expired|revoked|unauthorized/i.test(message)) {
+      const message2 = error instanceof Error ? error.message : String(error);
+      if (/invalid_grant|invalid_client|expired|revoked|unauthorized/i.test(message2)) {
         throw new GeminiRefreshTokenExpiredError("refresh_token \u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
       }
       throw error;
@@ -63760,7 +65537,7 @@ var GeminiAuth = class extends Service9 {
 
 // vendor/channel-pack/src/gemini-sigstore.ts
 import { createHash as createHash8 } from "node:crypto";
-import { existsSync as existsSync10, mkdirSync as mkdirSync8, readFileSync as readFileSync10, renameSync as renameSync8, writeFileSync as writeFileSync9 } from "node:fs";
+import { existsSync as existsSync11, mkdirSync as mkdirSync9, readFileSync as readFileSync11, renameSync as renameSync9, writeFileSync as writeFileSync10 } from "node:fs";
 import { dirname as dirname2, join as join11 } from "node:path";
 var GEMINI_SIG_FILE = "gemini-sigs.json";
 var GEMINI_SIG_MAX_ENTRIES = 2e3;
@@ -63870,10 +65647,10 @@ var GeminiSigStore = class {
       2
     );
     try {
-      mkdirSync8(dirname2(this.path), { recursive: true });
+      mkdirSync9(dirname2(this.path), { recursive: true });
       const tmp = `${this.path}.tmp`;
-      writeFileSync9(tmp, payload, "utf-8");
-      renameSync8(tmp, this.path);
+      writeFileSync10(tmp, payload, "utf-8");
+      renameSync9(tmp, this.path);
     } catch (error) {
       this.logger?.warn(`[gemini] \u7B7E\u540D\u7F13\u5B58\u5199\u5165\u5931\u8D25\uFF08\u4E0D\u5F71\u54CD\u63A8\u7406\uFF09: ${String(error)}`);
     }
@@ -63883,8 +65660,8 @@ var GeminiSigStore = class {
     const out = /* @__PURE__ */ new Map();
     if (this.path === void 0) return out;
     try {
-      if (!existsSync10(this.path)) return out;
-      const parsed = JSON.parse(readFileSync10(this.path, "utf-8"));
+      if (!existsSync11(this.path)) return out;
+      const parsed = JSON.parse(readFileSync11(this.path, "utf-8"));
       if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return out;
       for (const [key, value] of Object.entries(parsed)) {
         if (typeof value !== "object" || value === null) continue;
@@ -63912,7 +65689,7 @@ function createGeminiSigStore(ctx) {
 }
 
 // vendor/channel-pack/src/opencode-adapter.ts
-import { LlmAdapter as LlmAdapter10, LlmError as LlmError19, ReasoningEffortId as ReasoningEffortId13 } from "@deepseek-ai/dsh-llm";
+import { LlmAdapter as LlmAdapter11, LlmError as LlmError20, ReasoningEffortId as ReasoningEffortId14 } from "@deepseek-ai/dsh-llm";
 
 // vendor/channel-pack/src/opencode-messages.ts
 var FREE_LANE_GATE_TOOLS = ["read", "shell"];
@@ -64023,10 +65800,10 @@ function aliasHistoryToolCalls(payload, toolNameMap) {
   if (toolNameMap === void 0 || toolNameMap.size === 0) return;
   const aliases = new Map([...toolNameMap].map(([alias, original]) => [original, alias]));
   if (!Array.isArray(payload.messages)) return;
-  payload.messages = payload.messages.map((message) => {
-    if (message === null || typeof message !== "object" || Array.isArray(message)) return message;
-    const row = message;
-    if (!Array.isArray(row.tool_calls)) return message;
+  payload.messages = payload.messages.map((message2) => {
+    if (message2 === null || typeof message2 !== "object" || Array.isArray(message2)) return message2;
+    const row = message2;
+    if (!Array.isArray(row.tool_calls)) return message2;
     return {
       ...row,
       tool_calls: row.tool_calls.map((call) => {
@@ -64136,7 +65913,7 @@ function buildOpencodePayloadWithToolMap(input) {
 
 // vendor/channel-pack/src/opencode-capability.ts
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { readFileSync as readFileSync11 } from "node:fs";
+import { readFileSync as readFileSync12 } from "node:fs";
 import { homedir as homedir5 } from "node:os";
 import { join as join12 } from "node:path";
 var MEASURED_IMAGE_OVERRIDES = {
@@ -64222,7 +65999,7 @@ function loadDiskCacheSync() {
   if (diskLoaded) return;
   diskLoaded = true;
   try {
-    const raw = readFileSync11(cacheFilePath(), "utf8");
+    const raw = readFileSync12(cacheFilePath(), "utf8");
     const parsed = JSON.parse(raw);
     if (parsed?.version === 3 && Array.isArray(parsed.entries) && parsed.entries.length > 0) {
       memory = parsed.entries;
@@ -64240,10 +66017,10 @@ async function writeDiskCache(entries) {
   } catch {
   }
 }
-var FETCH_TIMEOUT_MS = 2e4;
+var FETCH_TIMEOUT_MS2 = 2e4;
 async function fetchAndCache() {
   const response = await fetch(OPENCODE_MODELS_DEV_URL, {
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS2)
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const body = await response.json();
@@ -64259,7 +66036,7 @@ async function fetchAndCache() {
   await writeDiskCache(out);
 }
 function refreshOpencodeCapabilities(onUpdated, force = false) {
-  if (refreshing !== void 0 && Date.now() - refreshingStartedAt > FETCH_TIMEOUT_MS * 2) {
+  if (refreshing !== void 0 && Date.now() - refreshingStartedAt > FETCH_TIMEOUT_MS2 * 2) {
     refreshing = void 0;
   }
   if (refreshing !== void 0) return;
@@ -64354,7 +66131,7 @@ function resolveOpencodeEffort(model, requested, capabilities) {
   if (translated.kind === "mapped") return { effort: translated.effort, outcome: "mapped" };
   return { outcome: "dropped" };
 }
-var OpencodeAdapter = class extends LlmAdapter10 {
+var OpencodeAdapter = class extends LlmAdapter11 {
   constructor(options) {
     super();
     this.options = options;
@@ -64422,7 +66199,7 @@ var OpencodeAdapter = class extends LlmAdapter10 {
         efforts: capability.efforts.map((effort) => ({
           // ⚠️ `id` 是**品牌类型**（`ReasoningEffortId`），必须经它的构造函数 ——
           // 与 Qoder 同款（`src/qoder-adapter.ts:581`）。
-          id: ReasoningEffortId13(effort),
+          id: ReasoningEffortId14(effort),
           // ⚠️ 没有官方中文的档位（models.dev 会下发 `minimal` / `xhigh` 等
           // Qoder 那份表里没有的值）**回退到 id 本身** —— 宁可显示英文原值，
           // 也不猜一个可能错译的中文。
@@ -64448,10 +66225,10 @@ var OpencodeAdapter = class extends LlmAdapter10 {
   async *stream(options) {
     const slots = await this.options.identitySlots();
     if (slots.length === 0) {
-      throw new LlmError19("opencode: \u6CA1\u6709\u53EF\u7528\u901A\u9053", "MISSING_CREDENTIAL");
+      throw new LlmError20("opencode: \u6CA1\u6709\u53EF\u7528\u901A\u9053", "MISSING_CREDENTIAL");
     }
     if (pickSlot(slots, options.model, /* @__PURE__ */ new Set()) === void 0) {
-      throw new LlmError19(
+      throw new LlmError20(
         `opencode: \u6A21\u578B "${options.model}" \u9700\u8981 API key \u8D26\u53F7\u901A\u9053\uFF08\u533F\u540D\u901A\u9053\u53EA\u652F\u6301\u514D\u8D39\u6A21\u578B\uFF09\uFF0C\u8BF7\u5148\u5728 Channel Pack \u7684 OpenCode \u9762\u677F\u6DFB\u52A0\u4E00\u4E2A\u8D26\u53F7`,
         "MISSING_CREDENTIAL"
       );
@@ -64461,7 +66238,7 @@ var OpencodeAdapter = class extends LlmAdapter10 {
     for (; ; ) {
       const slot2 = pickSlot(slots, options.model, tried);
       if (slot2 === void 0) {
-        throw new LlmError19(
+        throw new LlmError20(
           `opencode: \u6240\u6709\u901A\u9053\u5BF9\u8BE5\u6A21\u578B\u5747\u53D7\u9650${limited.length > 0 ? `\uFF08${limited.join("\u3001")}\uFF09` : ""}`,
           "QUOTA_EXCEEDED"
         );
@@ -64478,13 +66255,13 @@ var OpencodeAdapter = class extends LlmAdapter10 {
         return;
       } catch (error) {
         if (delivered || error instanceof ModelQueuedError) throw error;
-        if (error instanceof LlmError19 && error.code === "QUOTA_EXCEEDED") throw error;
+        if (error instanceof LlmError20 && error.code === "QUOTA_EXCEEDED") throw error;
         const info = classifyOpencodeFailure(error);
         if (info.kind === "free_tier") {
           this.options.warn?.(
             `opencode: \u514D\u8D39\u901A\u9053\u88AB FreeTierError \u62D2\u7EDD \u2014\u2014 \u68C0\u67E5 session id \u5F62\u72B6\uFF08\u5E94\u4E3A ses_ + 12hex + 14base62\uFF09\uFF1A${info.detail}`
           );
-          throw new LlmError19(
+          throw new LlmError20(
             `opencode: \u514D\u8D39\u901A\u9053\u88AB\u4E0A\u6E38\u62D2\u7EDD\uFF08FreeTierError\uFF09\u3002\u8BE5\u9519\u8BEF\u7531\u8BF7\u6C42\u5F62\u72B6\u89E6\u53D1\uFF08session id \u5F62\u72B6\u4E0D\u5BF9\u65F6\u51FA\u73B0\uFF09\uFF0C\u6362 API key \u6216\u6362\u51FA\u53E3\u90FD\u65E0\u6548\u3002`,
             "AUTH",
             { status: 403 }
@@ -64522,19 +66299,19 @@ var OpencodeAdapter = class extends LlmAdapter10 {
    */
   async resolveImageUrls(model, messages) {
     const refs = /* @__PURE__ */ new Map();
-    for (const message of messages) {
-      if (Array.isArray(message.content)) collectImages2(message.content, refs);
+    for (const message2 of messages) {
+      if (Array.isArray(message2.content)) collectImages2(message2.content, refs);
     }
     if (refs.size === 0) return void 0;
     const capabilities = getOpencodeCapabilitiesSync();
     if (!supportsOpencodeImage(capabilities.find((c) => c.id === model))) {
-      throw new LlmError19(
+      throw new LlmError20(
         `opencode: \u6A21\u578B "${model}" \u4E0D\u652F\u6301\u56FE\u7247\u8F93\u5165\uFF08\u80FD\u529B\u4EE5\u8FDC\u7AEF models.dev \u4E3A\u51C6\uFF09`,
         "UNSUPPORTED_CONTENT"
       );
     }
     if (this.options.readImage === void 0) {
-      throw new LlmError19("opencode: \u56FE\u7247\u8F93\u5165\u9700\u8981\u9644\u4EF6\u670D\u52A1", "UNSUPPORTED_CONTENT");
+      throw new LlmError20("opencode: \u56FE\u7247\u8F93\u5165\u9700\u8981\u9644\u4EF6\u670D\u52A1", "UNSUPPORTED_CONTENT");
     }
     const readImage = this.options.readImage;
     const out = /* @__PURE__ */ new Map();
@@ -64587,7 +66364,7 @@ var OpencodeAdapter = class extends LlmAdapter10 {
     if (!response.ok) {
       const text = await response.text().catch(() => "");
       const retryAfterMs = retryAfterMsFromResponse(response.headers);
-      throw new LlmError19(
+      throw new LlmError20(
         `opencode: HTTP ${response.status} \u2014 ${text.slice(0, 300)}`,
         httpErrorCode2(response.status),
         {
@@ -64611,8 +66388,8 @@ function classifyOpencodeFailure(error) {
   const failure = typeof error === "object" && error !== null ? error : {};
   const status = typeof failure.failure?.status === "number" ? failure.failure.status : 0;
   const providerRetryAfterMs = typeof failure.failure?.providerRetryAfterMs === "number" && Number.isFinite(failure.failure.providerRetryAfterMs) ? failure.failure.providerRetryAfterMs : void 0;
-  const message = error instanceof Error ? error.message : String(error);
-  const info = classifyOpencodeError(status, message);
+  const message2 = error instanceof Error ? error.message : String(error);
+  const info = classifyOpencodeError(status, message2);
   return providerRetryAfterMs === void 0 ? info : { ...info, retryAfterMs: info.retryAfterMs ?? providerRetryAfterMs };
 }
 var sessionIds = /* @__PURE__ */ new WeakMap();
@@ -64630,6 +66407,2043 @@ function registerOpencodeLlm(ctx, options) {
   registerAdapterIdempotent(ctx.llm, [OPENCODE.id], adapter);
   return adapter;
 }
+
+// vendor/channel-pack/src/service.ts
+import { Service as Service10 } from "@deepseek-ai/cordis";
+import { credentialRef as credentialRef14 } from "@deepseek-ai/dsh-credentials";
+
+// vendor/channel-pack/src/login.ts
+import { createServer as createServer8 } from "node:http";
+import { spawn as spawn4 } from "node:child_process";
+import { getRandomValues, randomUUID as randomUUID12, randomBytes as randomBytes13 } from "node:crypto";
+
+// vendor/channel-pack/src/oauth.ts
+import { createHash as createHash9, randomBytes as randomBytes12 } from "node:crypto";
+
+// node_modules/jose/dist/webapi/lib/buffer_utils.js
+var encoder = new TextEncoder();
+var decoder = new TextDecoder();
+var MAX_INT32 = 2 ** 32;
+function concat(...buffers) {
+  const size = buffers.reduce((acc, { length }) => acc + length, 0);
+  const buf = new Uint8Array(size);
+  let i = 0;
+  for (const buffer of buffers) {
+    buf.set(buffer, i);
+    i += buffer.length;
+  }
+  return buf;
+}
+function encode(string) {
+  const bytes = new Uint8Array(string.length);
+  for (let i = 0; i < string.length; i++) {
+    const code = string.charCodeAt(i);
+    if (code > 127) {
+      throw new TypeError("non-ASCII string encountered in encode()");
+    }
+    bytes[i] = code;
+  }
+  return bytes;
+}
+
+// node_modules/jose/dist/webapi/lib/base64.js
+function encodeBase64(input) {
+  if (Uint8Array.prototype.toBase64) {
+    return input.toBase64();
+  }
+  const CHUNK_SIZE = 32768;
+  const arr = [];
+  for (let i = 0; i < input.length; i += CHUNK_SIZE) {
+    arr.push(String.fromCharCode.apply(null, input.subarray(i, i + CHUNK_SIZE)));
+  }
+  return btoa(arr.join(""));
+}
+function decodeBase64(encoded) {
+  if (Uint8Array.fromBase64) {
+    return Uint8Array.fromBase64(encoded);
+  }
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// node_modules/jose/dist/webapi/util/base64url.js
+function decode(input) {
+  if (Uint8Array.fromBase64) {
+    return Uint8Array.fromBase64(typeof input === "string" ? input : decoder.decode(input), {
+      alphabet: "base64url"
+    });
+  }
+  let encoded = input;
+  if (encoded instanceof Uint8Array) {
+    encoded = decoder.decode(encoded);
+  }
+  encoded = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  try {
+    return decodeBase64(encoded);
+  } catch {
+    throw new TypeError("The input to be decoded is not correctly encoded.");
+  }
+}
+function encode2(input) {
+  let unencoded = input;
+  if (typeof unencoded === "string") {
+    unencoded = encoder.encode(unencoded);
+  }
+  if (Uint8Array.prototype.toBase64) {
+    return unencoded.toBase64({ alphabet: "base64url", omitPadding: true });
+  }
+  return encodeBase64(unencoded).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+// node_modules/jose/dist/webapi/util/errors.js
+var JOSEError = class extends Error {
+  static code = "ERR_JOSE_GENERIC";
+  code = "ERR_JOSE_GENERIC";
+  constructor(message2, options) {
+    super(message2, options);
+    this.name = this.constructor.name;
+    Error.captureStackTrace?.(this, this.constructor);
+  }
+};
+var JOSENotSupported = class extends JOSEError {
+  static code = "ERR_JOSE_NOT_SUPPORTED";
+  code = "ERR_JOSE_NOT_SUPPORTED";
+};
+var JWSInvalid = class extends JOSEError {
+  static code = "ERR_JWS_INVALID";
+  code = "ERR_JWS_INVALID";
+};
+var JWTInvalid = class extends JOSEError {
+  static code = "ERR_JWT_INVALID";
+  code = "ERR_JWT_INVALID";
+};
+
+// node_modules/jose/dist/webapi/lib/crypto_key.js
+var unusable = (name2, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name2}`);
+var isAlgorithm = (algorithm, name2) => algorithm.name === name2;
+function getHashLength(hash) {
+  return parseInt(hash.name.slice(4), 10);
+}
+function getNamedCurve(alg) {
+  switch (alg) {
+    case "ES256":
+      return "P-256";
+    case "ES384":
+      return "P-384";
+    case "ES512":
+      return "P-521";
+    default:
+      throw new Error("unreachable");
+  }
+}
+function checkUsage(key, usage) {
+  if (usage && !key.usages.includes(usage)) {
+    throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
+  }
+}
+function checkSigCryptoKey(key, alg, usage) {
+  switch (alg) {
+    case "HS256":
+    case "HS384":
+    case "HS512": {
+      if (!isAlgorithm(key.algorithm, "HMAC"))
+        throw unusable("HMAC");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "RS256":
+    case "RS384":
+    case "RS512": {
+      if (!isAlgorithm(key.algorithm, "RSASSA-PKCS1-v1_5"))
+        throw unusable("RSASSA-PKCS1-v1_5");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "PS256":
+    case "PS384":
+    case "PS512": {
+      if (!isAlgorithm(key.algorithm, "RSA-PSS"))
+        throw unusable("RSA-PSS");
+      const expected = parseInt(alg.slice(2), 10);
+      const actual = getHashLength(key.algorithm.hash);
+      if (actual !== expected)
+        throw unusable(`SHA-${expected}`, "algorithm.hash");
+      break;
+    }
+    case "Ed25519":
+    case "EdDSA": {
+      if (!isAlgorithm(key.algorithm, "Ed25519"))
+        throw unusable("Ed25519");
+      break;
+    }
+    case "ML-DSA-44":
+    case "ML-DSA-65":
+    case "ML-DSA-87": {
+      if (!isAlgorithm(key.algorithm, alg))
+        throw unusable(alg);
+      break;
+    }
+    case "ES256":
+    case "ES384":
+    case "ES512": {
+      if (!isAlgorithm(key.algorithm, "ECDSA"))
+        throw unusable("ECDSA");
+      const expected = getNamedCurve(alg);
+      const actual = key.algorithm.namedCurve;
+      if (actual !== expected)
+        throw unusable(expected, "algorithm.namedCurve");
+      break;
+    }
+    default:
+      throw new TypeError("CryptoKey does not support this operation");
+  }
+  checkUsage(key, usage);
+}
+
+// node_modules/jose/dist/webapi/lib/invalid_key_input.js
+function message(msg, actual, ...types) {
+  types = types.filter(Boolean);
+  if (types.length > 2) {
+    const last = types.pop();
+    msg += `one of type ${types.join(", ")}, or ${last}.`;
+  } else if (types.length === 2) {
+    msg += `one of type ${types[0]} or ${types[1]}.`;
+  } else {
+    msg += `of type ${types[0]}.`;
+  }
+  if (actual == null) {
+    msg += ` Received ${actual}`;
+  } else if (typeof actual === "function" && actual.name) {
+    msg += ` Received function ${actual.name}`;
+  } else if (typeof actual === "object" && actual != null) {
+    if (actual.constructor?.name) {
+      msg += ` Received an instance of ${actual.constructor.name}`;
+    }
+  }
+  return msg;
+}
+var invalidKeyInput = (actual, ...types) => message("Key must be ", actual, ...types);
+var withAlg = (alg, actual, ...types) => message(`Key for the ${alg} algorithm must be `, actual, ...types);
+
+// node_modules/jose/dist/webapi/lib/is_key_like.js
+var isCryptoKey = (key) => {
+  if (key?.[Symbol.toStringTag] === "CryptoKey")
+    return true;
+  try {
+    return key instanceof CryptoKey;
+  } catch {
+    return false;
+  }
+};
+var isKeyObject = (key) => key?.[Symbol.toStringTag] === "KeyObject";
+var isKeyLike = (key) => isCryptoKey(key) || isKeyObject(key);
+
+// node_modules/jose/dist/webapi/lib/is_disjoint.js
+function isDisjoint(...headers) {
+  const sources = headers.filter(Boolean);
+  if (sources.length === 0 || sources.length === 1) {
+    return true;
+  }
+  let acc;
+  for (const header of sources) {
+    const parameters = Object.keys(header);
+    if (!acc || acc.size === 0) {
+      acc = new Set(parameters);
+      continue;
+    }
+    for (const parameter of parameters) {
+      if (acc.has(parameter)) {
+        return false;
+      }
+      acc.add(parameter);
+    }
+  }
+  return true;
+}
+
+// node_modules/jose/dist/webapi/lib/is_object.js
+var isObjectLike = (value) => typeof value === "object" && value !== null;
+function isObject2(input) {
+  if (!isObjectLike(input) || Object.prototype.toString.call(input) !== "[object Object]") {
+    return false;
+  }
+  if (Object.getPrototypeOf(input) === null) {
+    return true;
+  }
+  let proto = input;
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+  return Object.getPrototypeOf(input) === proto;
+}
+
+// node_modules/jose/dist/webapi/lib/check_key_length.js
+function checkKeyLength(alg, key) {
+  if (alg.startsWith("RS") || alg.startsWith("PS")) {
+    const { modulusLength } = key.algorithm;
+    if (typeof modulusLength !== "number" || modulusLength < 2048) {
+      throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
+    }
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/jwk_to_key.js
+function subtleMapping(jwk) {
+  let algorithm;
+  let keyUsages;
+  switch (jwk.kty) {
+    case "AKP": {
+      switch (jwk.alg) {
+        case "ML-DSA-44":
+        case "ML-DSA-65":
+        case "ML-DSA-87":
+          algorithm = { name: jwk.alg };
+          keyUsages = jwk.priv ? ["sign"] : ["verify"];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    case "RSA": {
+      switch (jwk.alg) {
+        case "PS256":
+        case "PS384":
+        case "PS512":
+          algorithm = { name: "RSA-PSS", hash: `SHA-${jwk.alg.slice(-3)}` };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "RS256":
+        case "RS384":
+        case "RS512":
+          algorithm = { name: "RSASSA-PKCS1-v1_5", hash: `SHA-${jwk.alg.slice(-3)}` };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "RSA-OAEP":
+        case "RSA-OAEP-256":
+        case "RSA-OAEP-384":
+        case "RSA-OAEP-512":
+          algorithm = {
+            name: "RSA-OAEP",
+            hash: `SHA-${parseInt(jwk.alg.slice(-3), 10) || 1}`
+          };
+          keyUsages = jwk.d ? ["decrypt", "unwrapKey"] : ["encrypt", "wrapKey"];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    case "EC": {
+      switch (jwk.alg) {
+        case "ES256":
+          algorithm = { name: "ECDSA", namedCurve: "P-256" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ES384":
+          algorithm = { name: "ECDSA", namedCurve: "P-384" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ES512":
+          algorithm = { name: "ECDSA", namedCurve: "P-521" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ECDH-ES":
+        case "ECDH-ES+A128KW":
+        case "ECDH-ES+A192KW":
+        case "ECDH-ES+A256KW":
+          algorithm = { name: "ECDH", namedCurve: jwk.crv };
+          keyUsages = jwk.d ? ["deriveBits"] : [];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    case "OKP": {
+      switch (jwk.alg) {
+        case "Ed25519":
+        case "EdDSA":
+          algorithm = { name: "Ed25519" };
+          keyUsages = jwk.d ? ["sign"] : ["verify"];
+          break;
+        case "ECDH-ES":
+        case "ECDH-ES+A128KW":
+        case "ECDH-ES+A192KW":
+        case "ECDH-ES+A256KW":
+          algorithm = { name: jwk.crv };
+          keyUsages = jwk.d ? ["deriveBits"] : [];
+          break;
+        default:
+          throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      }
+      break;
+    }
+    default:
+      throw new JOSENotSupported('Invalid or unsupported JWK "kty" (Key Type) Parameter value');
+  }
+  return { algorithm, keyUsages };
+}
+async function jwkToKey(jwk) {
+  if (!jwk.alg) {
+    throw new TypeError('"alg" argument is required when "jwk.alg" is not present');
+  }
+  const { algorithm, keyUsages } = subtleMapping(jwk);
+  const keyData = { ...jwk };
+  if (keyData.kty !== "AKP") {
+    delete keyData.alg;
+  }
+  delete keyData.use;
+  return crypto.subtle.importKey("jwk", keyData, algorithm, jwk.ext ?? (jwk.d || jwk.priv ? false : true), jwk.key_ops ?? keyUsages);
+}
+
+// node_modules/jose/dist/webapi/key/import.js
+async function importJWK(jwk, alg, options) {
+  if (!isObject2(jwk)) {
+    throw new TypeError("JWK must be an object");
+  }
+  let ext;
+  alg ??= jwk.alg;
+  ext ??= options?.extractable ?? jwk.ext;
+  switch (jwk.kty) {
+    case "oct":
+      if (typeof jwk.k !== "string" || !jwk.k) {
+        throw new TypeError('missing "k" (Key Value) Parameter value');
+      }
+      return decode(jwk.k);
+    case "RSA":
+      if ("oth" in jwk && jwk.oth !== void 0) {
+        throw new JOSENotSupported('RSA JWK "oth" (Other Primes Info) Parameter value is not supported');
+      }
+      return jwkToKey({ ...jwk, alg, ext });
+    case "AKP": {
+      if (typeof jwk.alg !== "string" || !jwk.alg) {
+        throw new TypeError('missing "alg" (Algorithm) Parameter value');
+      }
+      if (alg !== void 0 && alg !== jwk.alg) {
+        throw new TypeError("JWK alg and alg option value mismatch");
+      }
+      return jwkToKey({ ...jwk, ext });
+    }
+    case "EC":
+    case "OKP":
+      return jwkToKey({ ...jwk, alg, ext });
+    default:
+      throw new JOSENotSupported('Unsupported "kty" (Key Type) Parameter value');
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/validate_crit.js
+function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
+  if (joseHeader.crit !== void 0 && protectedHeader?.crit === void 0) {
+    throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
+  }
+  if (!protectedHeader || protectedHeader.crit === void 0) {
+    return /* @__PURE__ */ new Set();
+  }
+  if (!Array.isArray(protectedHeader.crit) || protectedHeader.crit.length === 0 || protectedHeader.crit.some((input) => typeof input !== "string" || input.length === 0)) {
+    throw new Err('"crit" (Critical) Header Parameter MUST be an array of non-empty strings when present');
+  }
+  let recognized;
+  if (recognizedOption !== void 0) {
+    recognized = new Map([...Object.entries(recognizedOption), ...recognizedDefault.entries()]);
+  } else {
+    recognized = recognizedDefault;
+  }
+  for (const parameter of protectedHeader.crit) {
+    if (!recognized.has(parameter)) {
+      throw new JOSENotSupported(`Extension Header Parameter "${parameter}" is not recognized`);
+    }
+    if (joseHeader[parameter] === void 0) {
+      throw new Err(`Extension Header Parameter "${parameter}" is missing`);
+    }
+    if (recognized.get(parameter) && protectedHeader[parameter] === void 0) {
+      throw new Err(`Extension Header Parameter "${parameter}" MUST be integrity protected`);
+    }
+  }
+  return new Set(protectedHeader.crit);
+}
+
+// node_modules/jose/dist/webapi/lib/is_jwk.js
+var isJWK = (key) => isObject2(key) && typeof key.kty === "string";
+var isPrivateJWK = (key) => key.kty !== "oct" && (key.kty === "AKP" && typeof key.priv === "string" || typeof key.d === "string");
+var isPublicJWK = (key) => key.kty !== "oct" && key.d === void 0 && key.priv === void 0;
+var isSecretJWK = (key) => key.kty === "oct" && typeof key.k === "string";
+
+// node_modules/jose/dist/webapi/lib/normalize_key.js
+var cache4;
+var handleJWK = async (key, jwk, alg, freeze = false) => {
+  cache4 ||= /* @__PURE__ */ new WeakMap();
+  let cached2 = cache4.get(key);
+  if (cached2?.[alg]) {
+    return cached2[alg];
+  }
+  const cryptoKey = await jwkToKey({ ...jwk, alg });
+  if (freeze)
+    Object.freeze(key);
+  if (!cached2) {
+    cache4.set(key, { [alg]: cryptoKey });
+  } else {
+    cached2[alg] = cryptoKey;
+  }
+  return cryptoKey;
+};
+var handleKeyObject = (keyObject, alg) => {
+  cache4 ||= /* @__PURE__ */ new WeakMap();
+  let cached2 = cache4.get(keyObject);
+  if (cached2?.[alg]) {
+    return cached2[alg];
+  }
+  const isPublic = keyObject.type === "public";
+  const extractable = isPublic ? true : false;
+  let cryptoKey;
+  if (keyObject.asymmetricKeyType === "x25519") {
+    switch (alg) {
+      case "ECDH-ES":
+      case "ECDH-ES+A128KW":
+      case "ECDH-ES+A192KW":
+      case "ECDH-ES+A256KW":
+        break;
+      default:
+        throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    cryptoKey = keyObject.toCryptoKey(keyObject.asymmetricKeyType, extractable, isPublic ? [] : ["deriveBits"]);
+  }
+  if (keyObject.asymmetricKeyType === "ed25519") {
+    if (alg !== "EdDSA" && alg !== "Ed25519") {
+      throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    cryptoKey = keyObject.toCryptoKey(keyObject.asymmetricKeyType, extractable, [
+      isPublic ? "verify" : "sign"
+    ]);
+  }
+  switch (keyObject.asymmetricKeyType) {
+    case "ml-dsa-44":
+    case "ml-dsa-65":
+    case "ml-dsa-87": {
+      if (alg !== keyObject.asymmetricKeyType.toUpperCase()) {
+        throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+      }
+      cryptoKey = keyObject.toCryptoKey(keyObject.asymmetricKeyType, extractable, [
+        isPublic ? "verify" : "sign"
+      ]);
+    }
+  }
+  if (keyObject.asymmetricKeyType === "rsa") {
+    let hash;
+    switch (alg) {
+      case "RSA-OAEP":
+        hash = "SHA-1";
+        break;
+      case "RS256":
+      case "PS256":
+      case "RSA-OAEP-256":
+        hash = "SHA-256";
+        break;
+      case "RS384":
+      case "PS384":
+      case "RSA-OAEP-384":
+        hash = "SHA-384";
+        break;
+      case "RS512":
+      case "PS512":
+      case "RSA-OAEP-512":
+        hash = "SHA-512";
+        break;
+      default:
+        throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    if (alg.startsWith("RSA-OAEP")) {
+      return keyObject.toCryptoKey({
+        name: "RSA-OAEP",
+        hash
+      }, extractable, isPublic ? ["encrypt"] : ["decrypt"]);
+    }
+    cryptoKey = keyObject.toCryptoKey({
+      name: alg.startsWith("PS") ? "RSA-PSS" : "RSASSA-PKCS1-v1_5",
+      hash
+    }, extractable, [isPublic ? "verify" : "sign"]);
+  }
+  if (keyObject.asymmetricKeyType === "ec") {
+    const nist = /* @__PURE__ */ new Map([
+      ["prime256v1", "P-256"],
+      ["secp384r1", "P-384"],
+      ["secp521r1", "P-521"]
+    ]);
+    const namedCurve = nist.get(keyObject.asymmetricKeyDetails?.namedCurve);
+    if (!namedCurve) {
+      throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+    }
+    if (alg === "ES256" && namedCurve === "P-256") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg === "ES384" && namedCurve === "P-384") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg === "ES512" && namedCurve === "P-521") {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDSA",
+        namedCurve
+      }, extractable, [isPublic ? "verify" : "sign"]);
+    }
+    if (alg.startsWith("ECDH-ES")) {
+      cryptoKey = keyObject.toCryptoKey({
+        name: "ECDH",
+        namedCurve
+      }, extractable, isPublic ? [] : ["deriveBits"]);
+    }
+  }
+  if (!cryptoKey) {
+    throw new TypeError("given KeyObject instance cannot be used for this algorithm");
+  }
+  if (!cached2) {
+    cache4.set(keyObject, { [alg]: cryptoKey });
+  } else {
+    cached2[alg] = cryptoKey;
+  }
+  return cryptoKey;
+};
+async function normalizeKey2(key, alg) {
+  if (key instanceof Uint8Array) {
+    return key;
+  }
+  if (isCryptoKey(key)) {
+    return key;
+  }
+  if (isKeyObject(key)) {
+    if (key.type === "secret") {
+      return key.export();
+    }
+    if ("toCryptoKey" in key && typeof key.toCryptoKey === "function") {
+      try {
+        return handleKeyObject(key, alg);
+      } catch (err) {
+        if (err instanceof TypeError) {
+          throw err;
+        }
+      }
+    }
+    let jwk = key.export({ format: "jwk" });
+    return handleJWK(key, jwk, alg);
+  }
+  if (isJWK(key)) {
+    if (key.k) {
+      return decode(key.k);
+    }
+    return handleJWK(key, key, alg, true);
+  }
+  throw new Error("unreachable");
+}
+
+// node_modules/jose/dist/webapi/lib/check_key_type.js
+var tag = (key) => key?.[Symbol.toStringTag];
+var jwkMatchesOp = (alg, key, usage) => {
+  if (key.use !== void 0) {
+    let expected;
+    switch (usage) {
+      case "sign":
+      case "verify":
+        expected = "sig";
+        break;
+      case "encrypt":
+      case "decrypt":
+        expected = "enc";
+        break;
+    }
+    if (key.use !== expected) {
+      throw new TypeError(`Invalid key for this operation, its "use" must be "${expected}" when present`);
+    }
+  }
+  if (key.alg !== void 0 && key.alg !== alg) {
+    throw new TypeError(`Invalid key for this operation, its "alg" must be "${alg}" when present`);
+  }
+  if (Array.isArray(key.key_ops)) {
+    let expectedKeyOp;
+    switch (true) {
+      case (usage === "sign" || usage === "verify"):
+      case alg === "dir":
+      case alg.includes("CBC-HS"):
+        expectedKeyOp = usage;
+        break;
+      case alg.startsWith("PBES2"):
+        expectedKeyOp = "deriveBits";
+        break;
+      case /^A\d{3}(?:GCM)?(?:KW)?$/.test(alg):
+        if (!alg.includes("GCM") && alg.endsWith("KW")) {
+          expectedKeyOp = usage === "encrypt" ? "wrapKey" : "unwrapKey";
+        } else {
+          expectedKeyOp = usage;
+        }
+        break;
+      case (usage === "encrypt" && alg.startsWith("RSA")):
+        expectedKeyOp = "wrapKey";
+        break;
+      case usage === "decrypt":
+        expectedKeyOp = alg.startsWith("RSA") ? "unwrapKey" : "deriveBits";
+        break;
+    }
+    if (expectedKeyOp && key.key_ops?.includes?.(expectedKeyOp) === false) {
+      throw new TypeError(`Invalid key for this operation, its "key_ops" must include "${expectedKeyOp}" when present`);
+    }
+  }
+  return true;
+};
+var symmetricTypeCheck = (alg, key, usage) => {
+  if (key instanceof Uint8Array)
+    return;
+  if (isJWK(key)) {
+    if (isSecretJWK(key) && jwkMatchesOp(alg, key, usage))
+      return;
+    throw new TypeError(`JSON Web Key for symmetric algorithms must have JWK "kty" (Key Type) equal to "oct" and the JWK "k" (Key Value) present`);
+  }
+  if (!isKeyLike(key)) {
+    throw new TypeError(withAlg(alg, key, "CryptoKey", "KeyObject", "JSON Web Key", "Uint8Array"));
+  }
+  if (key.type !== "secret") {
+    throw new TypeError(`${tag(key)} instances for symmetric algorithms must be of type "secret"`);
+  }
+};
+var asymmetricTypeCheck = (alg, key, usage) => {
+  if (isJWK(key)) {
+    switch (usage) {
+      case "decrypt":
+      case "sign":
+        if (isPrivateJWK(key) && jwkMatchesOp(alg, key, usage))
+          return;
+        throw new TypeError(`JSON Web Key for this operation must be a private JWK`);
+      case "encrypt":
+      case "verify":
+        if (isPublicJWK(key) && jwkMatchesOp(alg, key, usage))
+          return;
+        throw new TypeError(`JSON Web Key for this operation must be a public JWK`);
+    }
+  }
+  if (!isKeyLike(key)) {
+    throw new TypeError(withAlg(alg, key, "CryptoKey", "KeyObject", "JSON Web Key"));
+  }
+  if (key.type === "secret") {
+    throw new TypeError(`${tag(key)} instances for asymmetric algorithms must not be of type "secret"`);
+  }
+  if (key.type === "public") {
+    switch (usage) {
+      case "sign":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm signing must be of type "private"`);
+      case "decrypt":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm decryption must be of type "private"`);
+    }
+  }
+  if (key.type === "private") {
+    switch (usage) {
+      case "verify":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm verifying must be of type "public"`);
+      case "encrypt":
+        throw new TypeError(`${tag(key)} instances for asymmetric algorithm encryption must be of type "public"`);
+    }
+  }
+};
+function checkKeyType(alg, key, usage) {
+  switch (alg.substring(0, 2)) {
+    case "A1":
+    case "A2":
+    case "di":
+    case "HS":
+    case "PB":
+      symmetricTypeCheck(alg, key, usage);
+      break;
+    default:
+      asymmetricTypeCheck(alg, key, usage);
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/key_to_jwk.js
+async function keyToJWK(key) {
+  if (isKeyObject(key)) {
+    if (key.type === "secret") {
+      key = key.export();
+    } else {
+      return key.export({ format: "jwk" });
+    }
+  }
+  if (key instanceof Uint8Array) {
+    return {
+      kty: "oct",
+      k: encode2(key)
+    };
+  }
+  if (!isCryptoKey(key)) {
+    throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "Uint8Array"));
+  }
+  if (!key.extractable) {
+    throw new TypeError("non-extractable CryptoKey cannot be exported as a JWK");
+  }
+  const { ext, key_ops, alg, use, ...jwk } = await crypto.subtle.exportKey("jwk", key);
+  if (jwk.kty === "AKP") {
+    ;
+    jwk.alg = alg;
+  }
+  return jwk;
+}
+
+// node_modules/jose/dist/webapi/key/export.js
+async function exportJWK(key) {
+  return keyToJWK(key);
+}
+
+// node_modules/jose/dist/webapi/lib/subtle_dsa.js
+function subtleAlgorithm(alg, algorithm) {
+  const hash = `SHA-${alg.slice(-3)}`;
+  switch (alg) {
+    case "HS256":
+    case "HS384":
+    case "HS512":
+      return { hash, name: "HMAC" };
+    case "PS256":
+    case "PS384":
+    case "PS512":
+      return { hash, name: "RSA-PSS", saltLength: parseInt(alg.slice(-3), 10) >> 3 };
+    case "RS256":
+    case "RS384":
+    case "RS512":
+      return { hash, name: "RSASSA-PKCS1-v1_5" };
+    case "ES256":
+    case "ES384":
+    case "ES512":
+      return { hash, name: "ECDSA", namedCurve: algorithm.namedCurve };
+    case "Ed25519":
+    case "EdDSA":
+      return { name: "Ed25519" };
+    case "ML-DSA-44":
+    case "ML-DSA-65":
+    case "ML-DSA-87":
+      return { name: alg };
+    default:
+      throw new JOSENotSupported(`alg ${alg} is not supported either by JOSE or your javascript runtime`);
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/get_sign_verify_key.js
+async function getSigKey(alg, key, usage) {
+  if (key instanceof Uint8Array) {
+    if (!alg.startsWith("HS")) {
+      throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
+    }
+    return crypto.subtle.importKey("raw", key, { hash: `SHA-${alg.slice(-3)}`, name: "HMAC" }, false, [usage]);
+  }
+  checkSigCryptoKey(key, alg, usage);
+  return key;
+}
+
+// node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+var epoch = (date) => Math.floor(date.getTime() / 1e3);
+var minute = 60;
+var hour = minute * 60;
+var day = hour * 24;
+var week = day * 7;
+var year = day * 365.25;
+var REGEX = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)(?: (ago|from now))?$/i;
+function secs(str) {
+  const matched = REGEX.exec(str);
+  if (!matched || matched[4] && matched[1]) {
+    throw new TypeError("Invalid time period format");
+  }
+  const value = parseFloat(matched[2]);
+  const unit = matched[3].toLowerCase();
+  let numericDate;
+  switch (unit) {
+    case "sec":
+    case "secs":
+    case "second":
+    case "seconds":
+    case "s":
+      numericDate = Math.round(value);
+      break;
+    case "minute":
+    case "minutes":
+    case "min":
+    case "mins":
+    case "m":
+      numericDate = Math.round(value * minute);
+      break;
+    case "hour":
+    case "hours":
+    case "hr":
+    case "hrs":
+    case "h":
+      numericDate = Math.round(value * hour);
+      break;
+    case "day":
+    case "days":
+    case "d":
+      numericDate = Math.round(value * day);
+      break;
+    case "week":
+    case "weeks":
+    case "w":
+      numericDate = Math.round(value * week);
+      break;
+    default:
+      numericDate = Math.round(value * year);
+      break;
+  }
+  if (matched[1] === "-" || matched[4] === "ago") {
+    return -numericDate;
+  }
+  return numericDate;
+}
+function validateInput(label, input) {
+  if (!Number.isFinite(input)) {
+    throw new TypeError(`Invalid ${label} input`);
+  }
+  return input;
+}
+var JWTClaimsBuilder = class {
+  #payload;
+  constructor(payload) {
+    if (!isObject2(payload)) {
+      throw new TypeError("JWT Claims Set MUST be an object");
+    }
+    this.#payload = structuredClone(payload);
+  }
+  data() {
+    return encoder.encode(JSON.stringify(this.#payload));
+  }
+  get iss() {
+    return this.#payload.iss;
+  }
+  set iss(value) {
+    this.#payload.iss = value;
+  }
+  get sub() {
+    return this.#payload.sub;
+  }
+  set sub(value) {
+    this.#payload.sub = value;
+  }
+  get aud() {
+    return this.#payload.aud;
+  }
+  set aud(value) {
+    this.#payload.aud = value;
+  }
+  set jti(value) {
+    this.#payload.jti = value;
+  }
+  set nbf(value) {
+    if (typeof value === "number") {
+      this.#payload.nbf = validateInput("setNotBefore", value);
+    } else if (value instanceof Date) {
+      this.#payload.nbf = validateInput("setNotBefore", epoch(value));
+    } else {
+      this.#payload.nbf = epoch(/* @__PURE__ */ new Date()) + secs(value);
+    }
+  }
+  set exp(value) {
+    if (typeof value === "number") {
+      this.#payload.exp = validateInput("setExpirationTime", value);
+    } else if (value instanceof Date) {
+      this.#payload.exp = validateInput("setExpirationTime", epoch(value));
+    } else {
+      this.#payload.exp = epoch(/* @__PURE__ */ new Date()) + secs(value);
+    }
+  }
+  set iat(value) {
+    if (value === void 0) {
+      this.#payload.iat = epoch(/* @__PURE__ */ new Date());
+    } else if (value instanceof Date) {
+      this.#payload.iat = validateInput("setIssuedAt", epoch(value));
+    } else if (typeof value === "string") {
+      this.#payload.iat = validateInput("setIssuedAt", epoch(/* @__PURE__ */ new Date()) + secs(value));
+    } else {
+      this.#payload.iat = validateInput("setIssuedAt", value);
+    }
+  }
+};
+
+// node_modules/jose/dist/webapi/lib/sign.js
+async function sign(alg, key, data) {
+  const cryptoKey = await getSigKey(alg, key, "sign");
+  checkKeyLength(alg, cryptoKey);
+  const signature = await crypto.subtle.sign(subtleAlgorithm(alg, cryptoKey.algorithm), cryptoKey, data);
+  return new Uint8Array(signature);
+}
+
+// node_modules/jose/dist/webapi/jws/flattened/sign.js
+var FlattenedSign = class {
+  #payload;
+  #protectedHeader;
+  #unprotectedHeader;
+  constructor(payload) {
+    if (!(payload instanceof Uint8Array)) {
+      throw new TypeError("payload must be an instance of Uint8Array");
+    }
+    this.#payload = payload;
+  }
+  setProtectedHeader(protectedHeader) {
+    if (this.#protectedHeader) {
+      throw new TypeError("setProtectedHeader can only be called once");
+    }
+    this.#protectedHeader = protectedHeader;
+    return this;
+  }
+  setUnprotectedHeader(unprotectedHeader) {
+    if (this.#unprotectedHeader) {
+      throw new TypeError("setUnprotectedHeader can only be called once");
+    }
+    this.#unprotectedHeader = unprotectedHeader;
+    return this;
+  }
+  async sign(key, options) {
+    if (!this.#protectedHeader && !this.#unprotectedHeader) {
+      throw new JWSInvalid("either setProtectedHeader or setUnprotectedHeader must be called before #sign()");
+    }
+    if (!isDisjoint(this.#protectedHeader, this.#unprotectedHeader)) {
+      throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
+    }
+    const joseHeader = {
+      ...this.#protectedHeader,
+      ...this.#unprotectedHeader
+    };
+    const extensions = validateCrit(JWSInvalid, /* @__PURE__ */ new Map([["b64", true]]), options?.crit, this.#protectedHeader, joseHeader);
+    let b64 = true;
+    if (extensions.has("b64")) {
+      b64 = this.#protectedHeader.b64;
+      if (typeof b64 !== "boolean") {
+        throw new JWSInvalid('The "b64" (base64url-encode payload) Header Parameter must be a boolean');
+      }
+    }
+    const { alg } = joseHeader;
+    if (typeof alg !== "string" || !alg) {
+      throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
+    }
+    checkKeyType(alg, key, "sign");
+    let payloadS;
+    let payloadB;
+    if (b64) {
+      payloadS = encode2(this.#payload);
+      payloadB = encode(payloadS);
+    } else {
+      payloadB = this.#payload;
+      payloadS = "";
+    }
+    let protectedHeaderString;
+    let protectedHeaderBytes;
+    if (this.#protectedHeader) {
+      protectedHeaderString = encode2(JSON.stringify(this.#protectedHeader));
+      protectedHeaderBytes = encode(protectedHeaderString);
+    } else {
+      protectedHeaderString = "";
+      protectedHeaderBytes = new Uint8Array();
+    }
+    const data = concat(protectedHeaderBytes, encode("."), payloadB);
+    const k = await normalizeKey2(key, alg);
+    const signature = await sign(alg, k, data);
+    const jws = {
+      signature: encode2(signature),
+      payload: payloadS
+    };
+    if (this.#unprotectedHeader) {
+      jws.header = this.#unprotectedHeader;
+    }
+    if (this.#protectedHeader) {
+      jws.protected = protectedHeaderString;
+    }
+    return jws;
+  }
+};
+
+// node_modules/jose/dist/webapi/jws/compact/sign.js
+var CompactSign = class {
+  #flattened;
+  constructor(payload) {
+    this.#flattened = new FlattenedSign(payload);
+  }
+  setProtectedHeader(protectedHeader) {
+    this.#flattened.setProtectedHeader(protectedHeader);
+    return this;
+  }
+  async sign(key, options) {
+    const jws = await this.#flattened.sign(key, options);
+    if (jws.payload === void 0) {
+      throw new TypeError("use the flattened module for creating JWS with b64: false");
+    }
+    return `${jws.protected}.${jws.payload}.${jws.signature}`;
+  }
+};
+
+// node_modules/jose/dist/webapi/jwt/sign.js
+var SignJWT = class {
+  #protectedHeader;
+  #jwt;
+  constructor(payload = {}) {
+    this.#jwt = new JWTClaimsBuilder(payload);
+  }
+  setIssuer(issuer) {
+    this.#jwt.iss = issuer;
+    return this;
+  }
+  setSubject(subject) {
+    this.#jwt.sub = subject;
+    return this;
+  }
+  setAudience(audience) {
+    this.#jwt.aud = audience;
+    return this;
+  }
+  setJti(jwtId) {
+    this.#jwt.jti = jwtId;
+    return this;
+  }
+  setNotBefore(input) {
+    this.#jwt.nbf = input;
+    return this;
+  }
+  setExpirationTime(input) {
+    this.#jwt.exp = input;
+    return this;
+  }
+  setIssuedAt(input) {
+    this.#jwt.iat = input;
+    return this;
+  }
+  setProtectedHeader(protectedHeader) {
+    this.#protectedHeader = protectedHeader;
+    return this;
+  }
+  async sign(key, options) {
+    const sig = new CompactSign(this.#jwt.data());
+    sig.setProtectedHeader(this.#protectedHeader);
+    if (Array.isArray(this.#protectedHeader?.crit) && this.#protectedHeader.crit.includes("b64") && this.#protectedHeader.b64 === false) {
+      throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
+    }
+    return sig.sign(key, options);
+  }
+};
+
+// node_modules/jose/dist/webapi/key/generate_key_pair.js
+function getModulusLengthOption(options) {
+  const modulusLength = options?.modulusLength ?? 2048;
+  if (typeof modulusLength !== "number" || modulusLength < 2048) {
+    throw new JOSENotSupported("Invalid or unsupported modulusLength option provided, 2048 bits or larger keys must be used");
+  }
+  return modulusLength;
+}
+async function generateKeyPair(alg, options) {
+  let algorithm;
+  let keyUsages;
+  switch (alg) {
+    case "PS256":
+    case "PS384":
+    case "PS512":
+      algorithm = {
+        name: "RSA-PSS",
+        hash: `SHA-${alg.slice(-3)}`,
+        publicExponent: Uint8Array.of(1, 0, 1),
+        modulusLength: getModulusLengthOption(options)
+      };
+      keyUsages = ["sign", "verify"];
+      break;
+    case "RS256":
+    case "RS384":
+    case "RS512":
+      algorithm = {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: `SHA-${alg.slice(-3)}`,
+        publicExponent: Uint8Array.of(1, 0, 1),
+        modulusLength: getModulusLengthOption(options)
+      };
+      keyUsages = ["sign", "verify"];
+      break;
+    case "RSA-OAEP":
+    case "RSA-OAEP-256":
+    case "RSA-OAEP-384":
+    case "RSA-OAEP-512":
+      algorithm = {
+        name: "RSA-OAEP",
+        hash: `SHA-${parseInt(alg.slice(-3), 10) || 1}`,
+        publicExponent: Uint8Array.of(1, 0, 1),
+        modulusLength: getModulusLengthOption(options)
+      };
+      keyUsages = ["decrypt", "unwrapKey", "encrypt", "wrapKey"];
+      break;
+    case "ES256":
+      algorithm = { name: "ECDSA", namedCurve: "P-256" };
+      keyUsages = ["sign", "verify"];
+      break;
+    case "ES384":
+      algorithm = { name: "ECDSA", namedCurve: "P-384" };
+      keyUsages = ["sign", "verify"];
+      break;
+    case "ES512":
+      algorithm = { name: "ECDSA", namedCurve: "P-521" };
+      keyUsages = ["sign", "verify"];
+      break;
+    case "Ed25519":
+    case "EdDSA": {
+      keyUsages = ["sign", "verify"];
+      algorithm = { name: "Ed25519" };
+      break;
+    }
+    case "ML-DSA-44":
+    case "ML-DSA-65":
+    case "ML-DSA-87": {
+      keyUsages = ["sign", "verify"];
+      algorithm = { name: alg };
+      break;
+    }
+    case "ECDH-ES":
+    case "ECDH-ES+A128KW":
+    case "ECDH-ES+A192KW":
+    case "ECDH-ES+A256KW": {
+      keyUsages = ["deriveBits"];
+      const crv = options?.crv ?? "P-256";
+      switch (crv) {
+        case "P-256":
+        case "P-384":
+        case "P-521": {
+          algorithm = { name: "ECDH", namedCurve: crv };
+          break;
+        }
+        case "X25519":
+          algorithm = { name: "X25519" };
+          break;
+        default:
+          throw new JOSENotSupported("Invalid or unsupported crv option provided, supported values are P-256, P-384, P-521, and X25519");
+      }
+      break;
+    }
+    default:
+      throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+  }
+  return crypto.subtle.generateKey(algorithm, options?.extractable ?? false, keyUsages);
+}
+
+// vendor/channel-pack/src/oauth.ts
+var CLIENT_ID = "codearts-agent";
+var REDIRECT_PATH = "/oauth/callback";
+var STS_TOKEN_ENDPOINT = "https://sts.cn-north-4.myhuaweicloud.com/v1/oauth2/tokens";
+var TOKEN_TIMEOUT_MS = 6e4;
+var GRANT_AUTHORIZATION_CODE = "authorization_code";
+var GRANT_REFRESH_TOKEN = "refresh_token";
+function generatePkcePair() {
+  const codeVerifier = randomBytes12(48).toString("base64url");
+  const codeChallenge = createHash9("sha256").update(codeVerifier).digest("base64url");
+  return { codeVerifier, codeChallenge };
+}
+async function generateDpopKeyPair() {
+  const { privateKey, publicKey } = await generateKeyPair("ES256", { extractable: true, crv: "P-256" });
+  return {
+    privateKeyJwk: await exportJWK(privateKey),
+    publicKeyJwk: await exportJWK(publicKey)
+  };
+}
+async function signDpopJws(keyPair, htm, htu) {
+  const key = await importJWK(keyPair.privateKeyJwk, "ES256", { extractable: false });
+  const payload = {
+    htm,
+    htu,
+    iat: Math.floor(Date.now() / 1e3),
+    jti: randomBytes12(32).toString("hex")
+  };
+  return new SignJWT(payload).setProtectedHeader({ alg: "ES256", typ: "dpop+jwt", jwk: keyPair.publicKeyJwk }).sign(key);
+}
+var RefreshTokenExpiredError7 = class extends Error {
+  constructor(message2) {
+    super(message2);
+    this.name = "RefreshTokenExpiredError";
+  }
+};
+async function requestToken(body, keyPair, fetcher = fetch) {
+  const dpop = await signDpopJws(keyPair, "POST", STS_TOKEN_ENDPOINT);
+  let response;
+  try {
+    response = await fetcher(STS_TOKEN_ENDPOINT, {
+      method: "POST",
+      headers: {
+        DPoP: dpop,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams(body).toString(),
+      signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS)
+    });
+  } catch (error) {
+    throw new Error(`CodeArts token request network error: ${String(error)}`);
+  }
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+  if (!response.ok || !data?.credentials) {
+    const message2 = `CodeArts token request failed: ${response.status}${data ? ` ${JSON.stringify(data)}` : ""}`;
+    const errorCode = String(data?.error_code ?? "");
+    if (data?.error === "invalid_grant" || errorCode.includes("ExpiredRefreshToken")) {
+      throw new RefreshTokenExpiredError7(message2);
+    }
+    throw new Error(message2);
+  }
+  return data;
+}
+async function exchangeAuthorizationCode(code, codeVerifier, port, keyPair, fetcher = fetch) {
+  return requestToken({
+    client_id: CLIENT_ID,
+    code,
+    code_verifier: codeVerifier,
+    grant_type: GRANT_AUTHORIZATION_CODE,
+    redirect_uri: `http://127.0.0.1:${port}${REDIRECT_PATH}`
+  }, keyPair, fetcher);
+}
+async function exchangeRefreshToken(refreshToken, codeVerifier, keyPair, fetcher = fetch) {
+  return requestToken({
+    client_id: CLIENT_ID,
+    code_verifier: codeVerifier,
+    grant_type: GRANT_REFRESH_TOKEN,
+    refresh_token: refreshToken
+  }, keyPair, fetcher);
+}
+function credentialFromTokenResponse(token, pkce, keyPair) {
+  const credentials = token.credentials ?? {};
+  return {
+    access_key_id: credentials.access_key_id ?? "",
+    secret_access_key: credentials.secret_access_key ?? "",
+    security_token: credentials.security_token ?? "",
+    expires_at: credentials.expiration ?? "",
+    refresh_token: token.refresh_token,
+    code_verifier: pkce.codeVerifier,
+    dpop_private_key_jwk: keyPair.privateKeyJwk
+  };
+}
+function keyPairFromStoredJwk(jwk) {
+  return {
+    privateKeyJwk: jwk,
+    publicKeyJwk: { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }
+  };
+}
+
+// vendor/channel-pack/src/login.ts
+var CODEARTS_LOGIN_BASE = "https://devcloud.cn-north-4.huaweicloud.com/doer/redirect";
+var HUAWEI_AUTH_BASE = "https://auth.huaweicloud.com/authui/login.html";
+var CREDENTIAL_ENDPOINT = "https://snap-access.cn-north-4.myhuaweicloud.com/snap-manager/v1/login/ticket";
+var PLUGIN_NAME = "snap_jetbrains";
+var PLUGIN_VERSION = "26.3.3";
+function generateRandomSecret() {
+  const bytes = getRandomValues(new Uint8Array(32));
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function buildLoginUrl(port, ticketId) {
+  const callbackUrl = `http://127.0.0.1:${port}/authentication`;
+  const redirectUrl = `${CODEARTS_LOGIN_BASE}?IdeaType=jetbrains&auth_callback_url=${encodeURIComponent(callbackUrl)}&plugin-name=${PLUGIN_NAME}&plugin-version=${PLUGIN_VERSION}&ticket_id=${encodeURIComponent(ticketId)}`;
+  const loginUrl = `${HUAWEI_AUTH_BASE}?service=${encodeURIComponent(redirectUrl)}`;
+  return { redirectUrl, loginUrl };
+}
+function parseCredentialResponse(data) {
+  if (data.credential) {
+    const access = data.credential.access ?? "";
+    const st = data.credential.securitytoken ?? data.credential.securityToken ?? "";
+    if (access && st) {
+      return {
+        access_key_id: access,
+        secret_access_key: data.credential.secret ?? "",
+        security_token: st,
+        expires_at: data.credential.expires_at ?? data.credential.expiresAt ?? "",
+        domain_id: data.domain_id ?? "",
+        user_id: data.user_id ?? "",
+        user_name: data.user_name ?? ""
+      };
+    }
+  }
+  if (data.result) {
+    const ak = data.result.accessKeyId ?? "";
+    const st = data.result.securityToken ?? "";
+    if (ak && st) {
+      return {
+        access_key_id: ak,
+        secret_access_key: data.result.secretAccessKey ?? "",
+        security_token: st,
+        expires_at: data.result.expiration ?? data.result.expiresAt ?? ""
+      };
+    }
+  }
+  return null;
+}
+function expiresFromCredential(credential) {
+  if (credential.expires_at) {
+    const parsed = Date.parse(credential.expires_at);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return Date.now() + 864e5;
+}
+async function pollForCredential(ticketId, secret, options = {}) {
+  const fetcher = options.fetcher ?? fetch;
+  const maxAttempts = options.maxAttempts ?? 120;
+  const pluginName = options.pluginName ?? PLUGIN_NAME;
+  const pluginVersion = options.pluginVersion ?? PLUGIN_VERSION;
+  const url = `${CREDENTIAL_ENDPOINT}?ticket_id=${encodeURIComponent(ticketId)}&secret=${encodeURIComponent(secret)}`;
+  for (let i = 0; i < maxAttempts; i++) {
+    if (i > 0) await new Promise((resolve2) => setTimeout(resolve2, 1e3));
+    let response;
+    try {
+      response = await fetcher(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json;charset=UTF-8",
+          "plugin-name": pluginName,
+          "plugin-version": pluginVersion
+        }
+      });
+    } catch {
+      continue;
+    }
+    if (!response.ok) continue;
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      continue;
+    }
+    const credential = data ? parseCredentialResponse(data) : null;
+    if (credential) return credential;
+  }
+  throw new Error("CodeArts login timed out");
+}
+function openBrowser2(url) {
+  const warn = (error) => {
+    console.error("[codearts-auth] failed to open browser; open manually:", url, error);
+  };
+  const win = process.platform === "win32";
+  if (win) {
+    const args = ["/c", "start", '""', `"${url}"`];
+    try {
+      const child = spawn4("cmd", args, { detached: true, stdio: "ignore", windowsVerbatimArguments: true });
+      child.on("error", warn);
+      child.unref();
+      return;
+    } catch (error) {
+      warn(error);
+      return;
+    }
+  }
+  const cmd = process.platform === "darwin" ? "open" : "xdg-open";
+  try {
+    const child = spawn4(cmd, [url], { detached: true, stdio: "ignore" });
+    child.on("error", warn);
+    child.unref();
+  } catch (error) {
+    warn(error);
+  }
+}
+var CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+  "Access-Control-Max-Age": "86400"
+};
+function pickToken(params) {
+  return params.get("token") ?? params.get("access_token") ?? params.get("accessToken") ?? params.get("authCode") ?? "";
+}
+function startCallbackServer2(ticketId, secret, options) {
+  let resolveResult;
+  let rejectResult;
+  const result = new Promise((resolve2, reject) => {
+    resolveResult = resolve2;
+    rejectResult = reject;
+  });
+  const server = createServer8((request, response) => {
+    const url = new URL(request.url ?? "/", `http://127.0.0.1:${request.socket.localPort}`);
+    if (url.pathname !== "/authentication" && !url.pathname.startsWith("/authentication")) {
+      response.writeHead(404).end("Not found");
+      return;
+    }
+    if (request.method === "OPTIONS") {
+      response.writeHead(204, CORS_HEADERS).end();
+      return;
+    }
+    const params = url.searchParams;
+    const directToken = pickToken(params);
+    if (directToken) {
+      response.writeHead(200, CORS_HEADERS).end();
+      resolveResult({ access: directToken, expires: Date.now() + 864e5, loginUrl: "" });
+      return;
+    }
+    const fingerprint = params.get("fingerprint");
+    if (fingerprint) {
+      try {
+        const decoded = Buffer.from(fingerprint, "base64").toString();
+        const fpToken = pickToken(new URL(decoded).searchParams);
+        if (fpToken) {
+          response.writeHead(200, CORS_HEADERS).end();
+          resolveResult({ access: fpToken, expires: Date.now() + 864e5, loginUrl: "" });
+          return;
+        }
+      } catch {
+      }
+    }
+    const callbackSecret = params.get("secret");
+    if (callbackSecret) {
+      response.writeHead(200, CORS_HEADERS).end();
+      void pollForCredential(ticketId, callbackSecret, options).then(
+        (credential) => resolveResult({
+          access: JSON.stringify(credential),
+          expires: expiresFromCredential(credential),
+          loginUrl: ""
+        }),
+        (error) => rejectResult(error)
+      );
+      return;
+    }
+    response.writeHead(400).end("Missing token or secret");
+  });
+  return new Promise((resolveStart, rejectStart) => {
+    server.on("error", (error) => rejectStart(error));
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+      resolveStart({ port, server, result });
+    });
+  });
+}
+async function runLoginFlow(options = {}) {
+  const ticketId = randomUUID12();
+  const secret = generateRandomSecret();
+  const { port, server, result } = await startCallbackServer2(ticketId, secret, options);
+  const { loginUrl } = buildLoginUrl(port, ticketId);
+  try {
+    const opener = options.openBrowser ?? openBrowser2;
+    await opener(loginUrl);
+    const outcome = await result;
+    return { ...outcome, loginUrl };
+  } finally {
+    await new Promise((resolve2) => server.close(resolve2));
+  }
+}
+var PORTAL_AUTHORIZE_BASE = "https://codearts.huaweicloud.com/portal/authorize";
+var PORTAL_LOGIN_BASE = "https://codearts.huaweicloud.com/portal/login";
+function buildPortalLoginResultUrl(succeeded) {
+  return `${PORTAL_LOGIN_BASE}?login_succeed=${succeeded}&uri_scheme=${CLIENT_ID}&locale=${OAUTH_LOCALE}`;
+}
+var LOGIN_PLUGIN_NAME = "snap_AIIDE";
+var LOGIN_PLUGIN_VERSION = "5.2.0";
+var OAUTH_THEME = "2";
+var OAUTH_LOCALE = "zh-cn";
+function buildOAuthLoginUrl(port, pkce, ticketId) {
+  return `${PORTAL_AUTHORIZE_BASE}?theme=${OAUTH_THEME}&locale=${OAUTH_LOCALE}&uri_scheme=${CLIENT_ID}&client_id=${CLIENT_ID}&port=${port}&code_challenge=${pkce.codeChallenge}&code_challenge_method=SHA-256&ticket_id=${ticketId}&plugin-name=${LOGIN_PLUGIN_NAME}&plugin-version=${LOGIN_PLUGIN_VERSION}`;
+}
+function startOAuthCallbackServer(ticketId, pkce, keyPair, options) {
+  let resolveResult;
+  let rejectResult;
+  const result = new Promise((resolve2, reject) => {
+    resolveResult = resolve2;
+    rejectResult = reject;
+  });
+  const server = createServer8((request, response) => {
+    const url = new URL(request.url ?? "/", `http://127.0.0.1:${request.socket.localPort}`);
+    if (url.pathname !== REDIRECT_PATH && !url.pathname.startsWith(REDIRECT_PATH)) {
+      response.writeHead(404).end("Not found");
+      return;
+    }
+    if (request.method === "OPTIONS") {
+      response.writeHead(204, CORS_HEADERS).end();
+      return;
+    }
+    const callbackSecret = url.searchParams.get("secret");
+    if (callbackSecret) {
+      const redirectTo = url.searchParams.get("redirect") ?? buildPortalLoginResultUrl(true);
+      response.writeHead(307, { ...CORS_HEADERS, Location: redirectTo }).end();
+      void pollForCredential(ticketId, callbackSecret, {
+        ...options,
+        pluginName: LOGIN_PLUGIN_NAME,
+        pluginVersion: LOGIN_PLUGIN_VERSION
+      }).then(
+        (credential) => resolveResult({ access: JSON.stringify(credential), expires: expiresFromCredential(credential), loginUrl: "" }),
+        (error) => rejectResult(error)
+      );
+      return;
+    }
+    const code = url.searchParams.get("code");
+    if (code) {
+      void exchangeAuthorizationCode(code, pkce.codeVerifier, request.socket.localPort ?? 0, keyPair, options.fetcher).then(
+        (token) => {
+          const credential = credentialFromTokenResponse(token, pkce, keyPair);
+          response.writeHead(307, { ...CORS_HEADERS, Location: buildPortalLoginResultUrl(true) }).end();
+          resolveResult({ access: JSON.stringify(credential), expires: expiresFromCredential(credential), loginUrl: "" });
+        },
+        (error) => {
+          response.writeHead(307, { ...CORS_HEADERS, Location: buildPortalLoginResultUrl(false) }).end();
+          rejectResult(error);
+        }
+      );
+      return;
+    }
+    response.writeHead(400).end("Missing authorization code or secret");
+  });
+  return listenOnCallbackPort(server).then((port) => ({ port, server, result }));
+}
+var OAUTH_CALLBACK_TIMEOUT_MS = 18e4;
+var MIN_CALLBACK_PORT = 1e4;
+function listenOnCallbackPort(server) {
+  return new Promise((resolve2, reject) => {
+    const tryListen = (port) => {
+      server.once("error", reject);
+      server.listen(port, "127.0.0.1", () => {
+        const address = server.address();
+        const assigned = typeof address === "object" && address ? address.port : 0;
+        if (assigned >= MIN_CALLBACK_PORT) {
+          resolve2(assigned);
+          return;
+        }
+        server.close(() => {
+          const retry = Math.floor(Math.random() * (65536 - MIN_CALLBACK_PORT)) + MIN_CALLBACK_PORT;
+          tryListen(retry);
+        });
+      });
+    };
+    tryListen(0);
+  });
+}
+async function startOAuthFlow(options = {}) {
+  const ticketId = randomBytes13(32).toString("hex");
+  const pkce = generatePkcePair();
+  const keyPair = await generateDpopKeyPair();
+  const { port, server, result } = await startOAuthCallbackServer(ticketId, pkce, keyPair, options);
+  const loginUrl = buildOAuthLoginUrl(port, pkce, ticketId);
+  let closed = false;
+  const close = async () => {
+    if (closed) return;
+    closed = true;
+    await new Promise((resolve2) => server.close(() => resolve2()));
+  };
+  const resultWithUrl = Promise.race([
+    result,
+    new Promise((_, reject) => {
+      const timer = setTimeout(() => reject(new Error("CodeArts OAuth login timed out")), OAUTH_CALLBACK_TIMEOUT_MS);
+      timer.unref?.();
+    })
+  ]).then((outcome) => ({ ...outcome, loginUrl }));
+  resultWithUrl.catch(() => {
+  }).finally(() => {
+    void close();
+  });
+  return { loginUrl, result: resultWithUrl, close };
+}
+async function runOAuthFlow(options = {}) {
+  const started = await startOAuthFlow(options);
+  try {
+    const opener = options.openBrowser ?? openBrowser2;
+    await opener(started.loginUrl);
+    return await started.result;
+  } finally {
+    await started.close();
+  }
+}
+
+// vendor/channel-pack/src/service.ts
+function isCodeArtsRefreshable(credential) {
+  return Boolean(
+    credential.refresh_token && credential.code_verifier && credential.dpop_private_key_jwk
+  );
+}
+var CODEARTS_EXPIRY_ACCESSORS = {
+  expiresAtOf: (credential) => {
+    const parsed = credential.expires_at ? Date.parse(credential.expires_at) : Number.NaN;
+    return Number.isFinite(parsed) ? parsed : void 0;
+  },
+  refreshableOf: isCodeArtsRefreshable,
+  identityOf: (credential) => credential.access_key_id ?? ""
+};
+var CODEARTS_CREDENTIAL_REF = "CODEARTS_ACCESS_TOKEN";
+function parseCredential6(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return void 0;
+  }
+}
+var CodeArtsAuth = class extends Service10 {
+  /** 登录会话是否仍处于活跃状态；stop() 置 false，防止在途刷新回写已登出凭据。 */
+  active = true;
+  /** 可注入 fetch；默认使用保留代理路由的独立签名传输。 */
+  fetchImpl = directFetch;
+  /**
+   * 按凭据 ref 分的**续期互斥队列**（进程内）。
+   *
+   * 为什么必须有它（本次 401 的直接成因之一）：CodeArts 有三条各自独立的续期入口
+   * 会并发消费**同一份** refresh_token ——
+   * ① `src/index.ts` 每 30 分钟（含启动首轮）的 `refreshAll`；
+   * ② 推理路径的按需续期（`llm-adapter.ts` 的「过期预判」与「401 兜底」）；
+   * ③ RPC `account.refresh`（⚠️ **无面板入口**，调用方是仓库外脚本）。
+   * 而 DSH 本身还会并发发起多条模型请求（主回复 + 标题生成 + 上下文压缩），
+   * 每条都可能独立走到 ②。华为 STS 在签发新凭据时**旧的那一份 refresh_token
+   * 即失效**，于是并发下必然出现「1 个成功、其余全部 `invalid_grant`」，
+   * 而失败方把它读成「refresh_token 已失效」并据此作废整个账号。
+   *
+   * ⚠️ 这把锁只在**本进程**内有效。多实例（如同一台机器上的 dsh web 与 desktop）
+   * 各自持锁，跨进程互踩仍会发生 —— 那部分靠 `refreshAll` 里
+   * 「判终态前先重读凭据」的防护兜住（两处都必须有，少一个都会复发）。
+   */
+  refreshQueues = /* @__PURE__ */ new Map();
+  /**
+   * 已就「refresh_token 失效」告警过的 ref → 上次告警的服务端原文。
+   *
+   * 同一账号连续多轮撞上同一个终态错误时只说一次，避免每 30 分钟刷满日志；
+   * 错误原文一变（说明状况变了）就重新告警。
+   */
+  terminalWarned = /* @__PURE__ */ new Map();
+  constructor(ctx, options = {}) {
+    super(ctx, "codeartsAuth");
+    if (options.fetcher) this.fetchImpl = options.fetcher;
+  }
+  /** 取（或建）某个凭据 ref 的续期队列。 */
+  queueFor(refName) {
+    let queue = this.refreshQueues.get(refName);
+    if (queue === void 0) {
+      queue = new SerialQueue();
+      this.refreshQueues.set(refName, queue);
+    }
+    return queue;
+  }
+  /** 读取某个凭据 ref 下的当前凭据；缺失或不可解析时 undefined。 */
+  async readCredential(refName) {
+    const resolved = await this.ctx.credentials.resolve(credentialRef14(refName));
+    if (!resolved) return void 0;
+    return parseCredential6(resolved.value);
+  }
+  /**
+   * 判断两份凭据是否「同一份」（用于识别他处是否已经续过）。
+   *
+   * ⚠️ 必须**按值**比：`parseCredential` 每次都产生新对象，引用比较恒为「不相等」，
+   * 会让幂等短路在每一轮都误判成「凭据已更新」。
+   */
+  sameCredential(a, b) {
+    return a.access_key_id === b.access_key_id && a.expires_at === b.expires_at && a.refresh_token === b.refresh_token;
+  }
+  /** 运行登录流程（默认新式 OAuth；flow: 'ticket' 走旧流程回退）并持久化凭据。 */
+  async login(options = {}) {
+    this.active = true;
+    const flow = options.flow === "ticket" ? await runLoginFlow(options) : await runOAuthFlow(options);
+    return this.persistLogin(flow, options);
+  }
+  /**
+   * **两步式登录**：起回调服务器并立即返回登录 URL，由调用方先打开窗口。
+   *
+   * 为什么需要它（真实缺陷）：Channel Pack 的「+ 新建账号」原先调用阻塞式
+   * {@link login}，而浏览器只在用户点击后的短暂窗口（transient activation，
+   * 约 5 秒）内允许 `window.open`。等阻塞调用返回时手势早已过期，
+   * `window.open` 被弹窗拦截器拒绝并返回 `null`，前端兜底逻辑便执行
+   * `window.location.href = loginUrl`，把**整个设置页**跳转到登录页
+   * ——用户看到的正是「主页面直接跳转过去了」。
+   *
+   * 调用方拿到 `loginUrl` 后应当**立即** `window.open`，再 await `result`。
+   */
+  async startLogin(options = {}) {
+    this.active = true;
+    const started = await startOAuthFlow(options);
+    const result = started.result.then((flow) => this.persistLogin(flow, options));
+    result.catch(() => {
+    });
+    return { loginUrl: started.loginUrl, result, close: started.close };
+  }
+  /**
+   * 持久化一次登录结果：写凭据、按需登记账号池。
+   *
+   * 抽成独立方法供 {@link login} 与 {@link startLogin} 共用 ——
+   * 两条路径的差别只在「何时返回 loginUrl」，落库逻辑必须完全一致，
+   * 否则两步式路径会静默缺少账号登记。
+   *
+   * ⚠️ 单凭据模式移除后，**凭据一律写入账号池条目对应的 ref**
+   * （Channel Pack 传入的 `CODEARTS_ACCOUNT_XXX`）。`refName` 缺省时仍回退到历史常量
+   * `CODEARTS_CREDENTIAL_REF`，但**已无任何读取方**，仅为兼容既有调用签名。
+   */
+  async persistLogin(flow, options = {}) {
+    const refName = options.refName ?? CODEARTS_CREDENTIAL_REF;
+    const ref = credentialRef14(refName);
+    await this.ctx.credentials.set(ref, flow.access);
+    if (options.pool) {
+      void this.refreshModels(options.pool).catch(() => {
+      });
+    }
+    const credential = parseCredential6(flow.access);
+    if (options.accountId && options.pool) {
+      const expiresAt = credential?.expires_at ? Date.parse(credential.expires_at) : void 0;
+      await options.pool.addAccount({
+        id: options.accountId,
+        provider: "codearts",
+        nickname: options.accountId,
+        enabled: true,
+        credentialRef: refName,
+        createdAt: Date.now(),
+        expiresAt: Number.isNaN(expiresAt) ? void 0 : expiresAt,
+        refreshable: Boolean(credential?.refresh_token)
+      });
+    }
+    return {
+      access: flow.access,
+      expires: flow.expires,
+      ref,
+      loginUrl: flow.loginUrl,
+      refreshable: Boolean(credential?.refresh_token)
+    };
+  }
+  /**
+   * 按凭据 ref 续期**指定账号**的凭据。
+   *
+   * 这是 RPC `account.refresh` 与定时调度器走的路径，读写的是账号池条目
+   * 对应的 `CODEARTS_ACCOUNT_XXX`。
+   *
+   * ⚠️ `account.refresh` **没有面板入口**（issue IKJOZA 取证：36 处 `rpcCall(` 里没有它，
+   * `git log -S "rpcCall('account.refresh'"` 零命中），别照着旧注释去找「刷新」按钮。
+   *
+   * ⚠️ 早期这里的方法注释在对比一个 `refresh()` —— 那个方法读写固定单凭据 ref
+   * `CODEARTS_ACCESS_TOKEN`，**已随单凭据模式一并移除**。当时用 `refresh()`
+   * 去刷账号池里的账号会刷到另一个凭据上（真实缺陷），这也是 `account.refresh`
+   * RPC 一定要按 `entry.credentialRef` 分派的原因。现在只剩本方法这一条路径。
+   *
+   * ⚠️ **必须回写账号池的 `expiresAt`**（issue !IKIRTT）：UI 读的是池值，
+   * 只更新凭据会让「已过期」的红字在续期成功后**依然挂着**。
+   *
+   * @param pool 账号池；提供时把新 `expiresAt` / `refreshable` 写回。
+   * @param accountId 账号 id，调用方已知时显式传入（反查会跳过已停用账号）。
+   */
+  async refreshAccountCredential(refName, pool, accountId) {
+    await this.queueFor(refName).run(async () => {
+      const ref = credentialRef14(refName);
+      const credential = await this.readCredential(refName);
+      if (credential === void 0) throw new Error("\u51ED\u636E\u672A\u914D\u7F6E");
+      if (!isCodeArtsRefreshable(credential)) throw new Error("\u65E0 refresh_token\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
+      if (!shouldRefreshNow(CODEARTS_EXPIRY_ACCESSORS.expiresAtOf(credential))) {
+        await syncAccountExpiry({
+          pool,
+          provider: "codearts",
+          credential,
+          accessors: CODEARTS_EXPIRY_ACCESSORS,
+          accountId,
+          tag: "[codearts]",
+          warn: (message2) => this.ctx.logger?.warn?.(message2)
+        });
+        return;
+      }
+      const refreshed = await this.refreshCredential(credential);
+      await this.ctx.credentials.set(ref, JSON.stringify(refreshed));
+      await syncAccountExpiry({
+        pool,
+        provider: "codearts",
+        credential: refreshed,
+        accessors: CODEARTS_EXPIRY_ACCESSORS,
+        accountId,
+        tag: "[codearts]",
+        warn: (message2) => this.ctx.logger?.warn?.(message2)
+      });
+    });
+  }
+  /**
+   * 加锁续期：拿到锁后**重读凭据**，只在他处还没续过的时候真的发请求。
+   *
+   * 与 {@link refreshAccountCredential} 共用同一条 per-ref 队列，因此
+   * 「批量续期」「按需续期」「手动刷新」三条入口在同一进程内必然串行；
+   * 锁内重读则是为了跨进程场景（同一台机器上 dsh web 与 desktop 两个实例）
+   * 少烧一次 refresh_token —— 那种互斥锁管不到，只能靠「先看当前值」兜。
+   *
+   * @param credential 调用方读到的那份凭据（可能已经在等锁期间过期于他处）。
+   * @returns 应当落盘并回写账号池的凭据。
+   */
+  async refreshCredentialUnderLock(refName, credential) {
+    return await this.queueFor(refName).run(async () => {
+      const latest = await this.readCredential(refName) ?? credential;
+      if (!this.sameCredential(latest, credential) && !shouldRefreshNow(CODEARTS_EXPIRY_ACCESSORS.expiresAtOf(latest))) {
+        this.ctx.logger?.info?.(
+          `[codearts] \u51ED\u636E\u5DF2\u88AB\u4ED6\u5904\u7EED\u671F\uFF0C\u8DF3\u8FC7\u672C\u6B21\u7EED\u671F\u8BF7\u6C42\uFF08\u907F\u514D\u91CD\u590D\u6D88\u8D39 refresh_token\uFF09`
+        );
+        return latest;
+      }
+      return await this.refreshCredential(latest);
+    });
+  }
+  /**
+   * 用 refresh_token 换取一份新凭据（**不触碰存储**）。
+   *
+   * 抽出来供 `refreshAccountCredential()` 与 `refreshAll()` 共用 ——
+   * 两处原先各写一遍「取密钥对 → 换取 → 合并无变化字段」，
+   * 一旦字段合并逻辑分叉就会出现「某条路径丢了 `model_rate_limits`」。
+   */
+  async refreshCredential(credential) {
+    const refreshToken = credential.refresh_token;
+    const codeVerifier = credential.code_verifier;
+    const dpopJwk = credential.dpop_private_key_jwk;
+    if (!refreshToken || !codeVerifier || !dpopJwk) {
+      throw new Error("\u65E0 refresh_token\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
+    }
+    const keyPair = keyPairFromStoredJwk(dpopJwk);
+    const token = await exchangeRefreshToken(refreshToken, codeVerifier, keyPair, this.fetchImpl);
+    const refreshed = credentialFromTokenResponse(token, { codeVerifier, codeChallenge: "" }, keyPair);
+    refreshed.domain_id = credential.domain_id;
+    refreshed.user_id = credential.user_id;
+    refreshed.user_name = credential.user_name;
+    if (credential.model_rate_limits) refreshed.model_rate_limits = credential.model_rate_limits;
+    return refreshed;
+  }
+  /**
+   * 批量续期所有 codearts 账号。
+   *
+   * 单账号失败不影响其他账号，但**必须留日志**：CodeArts 是九个 provider 里
+   * 唯一整份文件没有一处 `logger` 的（issue !IKIRTT 的可观测性条目），
+   * 而它的 access_token 只有约 2 小时寿命、最容易撞过期，失败无痕最难查。
+   *
+   * ⚠️ **lead-time 过滤**：距过期不足 1 小时才真的发续期请求（与单凭据时代
+   * `REFRESH_LEAD_MS` 同语义），跳过的账号只做有效期对账。详见
+   * `refreshAccountWithReconcile`。
+   *
+   * ## ⚠️ 调度判据读**凭据**，不读账号池里的 `refreshable`（本次 401 的根因）
+   *
+   * 旧实现第一行是 `if (!entry.refreshable) continue`。那让这个布尔变成一道
+   * **单向门**：任何一次把它写成 false 的路径（服务端拒绝、并发重放烧掉
+   * refresh_token、DPoP 校验没过被误判成终态……）都会让该账号在此后
+   * **永远不进这条循环** —— 定时续期跳过它、启动首轮也跳过它，于是
+   * 「自动续期没工作、重启也还是 401」，而凭据本体可能完全健康
+   * （实测：refresh_token 还有 18 天寿命、`code_verifier` 与 DPoP 私钥都在）。
+   *
+   * 现在的口径：`refreshable` 只是**凭据材料的镜像**，由本方法每轮对账得出，
+   * 不是「曾被服务端拒绝过」的案底。凭据有材料就照常尝试续期，缺材料才写 false；
+   * 一旦被别的路径误写成 false 而凭据其实齐全，本轮会**自动改回 true**（自愈）。
+   */
+  async refreshAll(pool) {
+    const accounts = await pool.listAccounts("codearts");
+    for (const entry of accounts) {
+      const ref = credentialRef14(entry.credentialRef);
+      let credential;
+      try {
+        const resolved = await this.ctx.credentials.resolve(ref);
+        if (!resolved) {
+          if (entry.refreshable) await pool.updateAccount(entry.id, { refreshable: false });
+          continue;
+        }
+        credential = parseCredential6(resolved.value);
+        if (credential === void 0 || !isCodeArtsRefreshable(credential)) {
+          if (entry.refreshable) await pool.updateAccount(entry.id, { refreshable: false });
+          continue;
+        }
+        if (!entry.refreshable) {
+          this.ctx.logger?.info?.(
+            `[codearts] \u8D26\u53F7 ${entry.id} \u7684\u51ED\u636E\u5177\u5907\u7EED\u671F\u6750\u6599\uFF0C\u672C\u8F6E\u6062\u590D\u81EA\u52A8\u7EED\u671F\uFF08\u6B64\u524D\u7684\u6807\u8BB0\u4E0E\u51ED\u636E\u4E0D\u7B26\uFF09`
+          );
+        }
+        await refreshAccountWithReconcile({
+          pool,
+          provider: "codearts",
+          tag: "[codearts]",
+          accountId: entry.id,
+          credential,
+          accessors: CODEARTS_EXPIRY_ACCESSORS,
+          current: entry,
+          refresh: (c) => this.refreshCredentialUnderLock(entry.credentialRef, c),
+          save: (c) => this.ctx.credentials.set(ref, JSON.stringify(c)),
+          warn: (message2) => this.ctx.logger?.warn?.(message2),
+          info: (message2) => this.ctx.logger?.info?.(message2)
+        });
+      } catch (error) {
+        if (error instanceof RefreshTokenExpiredError7) {
+          const detail = error instanceof Error ? error.message : String(error);
+          const latest = await this.readCredential(entry.credentialRef).catch(() => void 0);
+          if (latest !== void 0 && isCodeArtsRefreshable(latest) && credential !== void 0 && latest.refresh_token !== credential.refresh_token) {
+            this.ctx.logger?.info?.(
+              `[codearts] \u8D26\u53F7 ${entry.id} \u7EED\u671F\u88AB\u62D2\u4F46\u51ED\u636E\u5DF2\u88AB\u4ED6\u5904\u66F4\u65B0\uFF08\u5E76\u53D1\u91CD\u653E\uFF09\uFF0C\u6309\u6700\u65B0\u51ED\u636E\u5BF9\u8D26\uFF0C\u4E0D\u6807\u8BB0\u4E3A\u4E0D\u53EF\u7EED\u671F`
+            );
+            await syncAccountExpiry({
+              pool,
+              provider: "codearts",
+              credential: latest,
+              accessors: CODEARTS_EXPIRY_ACCESSORS,
+              accountId: entry.id,
+              current: entry,
+              tag: "[codearts]",
+              warn: (message2) => this.ctx.logger?.warn?.(message2)
+            });
+            continue;
+          }
+          if (entry.refreshable) {
+            try {
+              await pool.updateAccount(entry.id, { refreshable: false });
+            } catch {
+            }
+          }
+          const last = this.terminalWarned.get(entry.credentialRef);
+          if (last !== detail) {
+            this.terminalWarned.set(entry.credentialRef, detail);
+            this.ctx.logger?.warn?.(
+              `[codearts] \u8D26\u53F7 ${entry.id} \u7684 refresh_token \u5DF2\u5931\u6548\uFF0C\u5DF2\u6807\u8BB0\u4E3A\u4E0D\u53EF\u7EED\u671F\uFF08\u9700\u91CD\u65B0\u767B\u5F55\uFF09\uFF1B\u670D\u52A1\u7AEF\u539F\u6587\uFF1A${detail}`
+            );
+          }
+        } else {
+          this.ctx.logger?.warn?.(
+            `[codearts] \u8D26\u53F7 ${entry.id} \u7EED\u671F\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+    }
+  }
+  /**
+   * 停止服务：置 inactive，阻止在途刷新回写。
+   *
+   * 单凭据模式移除后这里不再需要停调度器 —— 登录态与续期都归属账号池条目，
+   * 续期由 `src/index.ts` 的多账号调度器（{@link refreshAll}）驱动。
+   */
+  stop() {
+    this.active = false;
+  }
+  /**
+   * 用**账号池里某个可用账号**的凭据从远端拉取模型列表；非空时更新内存缓存与磁盘。
+   *
+   * ⚠️ **必须传 `pool`**：CodeArts 已移除「单凭据模式」，不再有
+   * `CODEARTS_ACCESS_TOKEN` 那样的固定 ref 可读 —— 凭据一律来自账号池条目
+   * （`CODEARTS_ACCOUNT_XXX`）。早期签名不接收 `pool` 并直接读固定 ref，
+   * 移除单凭据后那样会恒返回空列表。
+   *
+   * 为什么用「可用账号」而不是遍历全部账号：模型目录是**账号无关**的（同一个
+   * 华为云账号体系下发同一份目录），取第一个能解析出 AK/SK 的账号即可，
+   * 无需为每个账号各拉一次。
+   */
+  async refreshModels(pool) {
+    if (!this.active) return [];
+    const credential = await this.firstUsableCredential(pool);
+    if (credential === void 0) return [];
+    const models = await fetchCodeArtsRemoteModels(credential, this.fetchImpl);
+    if (models.length > 0) {
+      setMemoryCache(models);
+      saveModelsCache(models);
+    }
+    return models;
+  }
+  /**
+   * 取账号池里第一个**凭据可解析且含 AK/SK** 的账号凭据。
+   *
+   * 按 `readAccounts()` 的既有顺序（用户的 Channel Pack 拖拽顺序）遍历，短路返回。
+   * `getAvailableAccount` 不适合这里：它会按 `enabled` 与限流状态过滤，而
+   * 「拉模型目录」既不需要账号处于启用状态、也与限流无关。
+   */
+  async firstUsableCredential(pool) {
+    for (const entry of pool.listAccountsByProvider("codearts")) {
+      const resolved = await this.ctx.credentials.resolve(credentialRef14(entry.credentialRef));
+      if (!resolved) continue;
+      const credential = parseCredential6(resolved.value);
+      if (credential?.access_key_id && credential.secret_access_key) return credential;
+    }
+    return void 0;
+  }
+};
 
 // vendor/channel-pack/src/index.ts
 import { execFile as execFile2 } from "node:child_process";
@@ -64715,9 +68529,16 @@ function apply(ctx, config = {}) {
   ctx.effect(() => () => {
     void network.close();
   });
+  const signedNetwork = createDirectFetch({ outlet: config.outlet });
+  const detachSignedNetwork = attachDirectFetch(signedNetwork.fetch);
+  ctx.effect(() => () => {
+    detachSignedNetwork();
+    void signedNetwork.close();
+  });
   suppressAutoSettingsPage(ctx);
   registerProviderSettings(
     ctx,
+    "llm-codearts",
     "llm-lobsterai",
     "llm-qoder",
     "llm-qodercn",
@@ -64733,7 +68554,7 @@ function apply(ctx, config = {}) {
   const accountForRefresh = async (provider, accountId) => {
     if (accountId === void 0) return pool.getAvailableAccount(provider, "");
     const entry = pool.listAccountsByProvider(provider).find((account) => account.id === accountId);
-    if (entry === void 0) throw new LlmError20(`${provider}: \u5F53\u524D\u8BF7\u6C42\u7684\u8D26\u53F7\u5DF2\u79FB\u9664`, "MISSING_CREDENTIAL");
+    if (entry === void 0) throw new LlmError21(`${provider}: \u5F53\u524D\u8BF7\u6C42\u7684\u8D26\u53F7\u5DF2\u79FB\u9664`, "MISSING_CREDENTIAL");
     return { entry };
   };
   configureDeadModelStore(ctx);
@@ -64754,21 +68575,38 @@ function apply(ctx, config = {}) {
       modelId ?? ""
     );
     if (limited === void 0) return;
-    throw new LlmError20(
+    throw new LlmError21(
       `${product.displayName}\uFF1A\u6A21\u578B ${modelId} \u7684\u53EF\u7528\u8D26\u53F7\u5747\u5728\u9650\u6D41\u4E2D\uFF0C\u6700\u8FD1\u4E00\u4E2A\u5C06\u4E8E ${new Date(limited.resetAtMs).toLocaleString("zh-CN")} \u89E3\u7981\u3002\u53EF\u6539\u7528\u5176\u5B83 provider / \u6A21\u578B\uFF0C\u6216\u7B49\u5F85\u89E3\u7981\u540E\u518D\u8BD5\uFF08\u65E0\u9700\u91CD\u65B0\u767B\u5F55\uFF09\u3002`,
       "QUOTA_EXCEEDED"
     );
   };
+  const codeartsService = new CodeArtsAuth(ctx, { fetcher: signedNetwork.fetch });
+  const codeartsAdapter = registerCodeArtsLlm(ctx, {
+    fetchImpl: signedNetwork.fetch,
+    credentialRef: credentialRef15(CODEARTS_CREDENTIAL_REF),
+    resolveCredential: async () => {
+      const available2 = await pool.getAvailableAccount(PROVIDER, "");
+      return available2?.credential;
+    },
+    refresh: async () => {
+      const available2 = await pool.getAvailableAccount(PROVIDER, "");
+      if (available2) {
+        await codeartsService.refreshAccountCredential(available2.entry.credentialRef, pool, available2.entry.id);
+      }
+    },
+    fetchRemoteModels: () => codeartsService.refreshModels(pool),
+    accountPool: pool
+  });
   const lobsterai = new LobsteraiAuth(ctx);
   const lobsteraiAdapter = registerLobsteraiLlm(ctx, {
-    credentialRef: credentialRef14(LOBSTERAI.defaultCredentialRef),
+    credentialRef: credentialRef15(LOBSTERAI.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(LOBSTERAI.id, modelId ?? "");
       if (available2) {
         reportLedgerAccount(LOBSTERAI.id, available2.entry.id);
         return available2.credential;
       }
-      const resolved = await ctx.credentials.resolve(credentialRef14(LOBSTERAI.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(LOBSTERAI.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -64793,7 +68631,7 @@ function apply(ctx, config = {}) {
   const qoder = new QoderAuth(ctx);
   const activeQoderAccountId = /* @__PURE__ */ new Map();
   const qoderAdapter = registerQoderLlm(ctx, {
-    credentialRef: credentialRef14(QODER.defaultCredentialRef),
+    credentialRef: credentialRef15(QODER.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(QODER.id, modelId ?? "");
       if (available2) {
@@ -64803,7 +68641,7 @@ function apply(ctx, config = {}) {
       }
       activeQoderAccountId.set(QODER.id, void 0);
       throwIfAllAccountsRateLimited(QODER, modelId);
-      const resolved = await ctx.credentials.resolve(credentialRef14(QODER.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(QODER.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -64841,7 +68679,7 @@ function apply(ctx, config = {}) {
   });
   const qoderCn = new QoderAuth(ctx, { product: QODER_CN });
   const qoderCnAdapter = registerQoderLlm(ctx, {
-    credentialRef: credentialRef14(QODER_CN.defaultCredentialRef),
+    credentialRef: credentialRef15(QODER_CN.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(QODER_CN.id, modelId ?? "");
       if (available2) {
@@ -64851,7 +68689,7 @@ function apply(ctx, config = {}) {
       }
       activeQoderAccountId.set(QODER_CN.id, void 0);
       throwIfAllAccountsRateLimited(QODER_CN, modelId);
-      const resolved = await ctx.credentials.resolve(credentialRef14(QODER_CN.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(QODER_CN.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -64888,14 +68726,14 @@ function apply(ctx, config = {}) {
   });
   const trae = new TraeAuth(ctx);
   const traeAdapter = registerTraeLlm(ctx, {
-    credentialRef: credentialRef14(TRAE.defaultCredentialRef),
+    credentialRef: credentialRef15(TRAE.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(TRAE.id, modelId ?? "");
       if (available2) {
         reportLedgerAccount(TRAE.id, available2.entry.id);
         return available2.credential;
       }
-      const resolved = await ctx.credentials.resolve(credentialRef14(TRAE.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(TRAE.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -64919,14 +68757,14 @@ function apply(ctx, config = {}) {
   let activeClineAccountId = "";
   const clineAdapter = registerClineLlm(ctx, {
     fetchImpl: network.fetch,
-    credentialRef: credentialRef14(CLINE.defaultCredentialRef),
+    credentialRef: credentialRef15(CLINE.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(CLINE.id, modelId ?? "");
       activeClineAccountId = available2?.entry.id ?? "";
       if (activeClineAccountId.length > 0) reportLedgerAccount(CLINE.id, activeClineAccountId);
       if (available2) return available2.credential;
       throwIfAllAccountsRateLimited(CLINE, modelId);
-      const resolved = await ctx.credentials.resolve(credentialRef14(CLINE.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(CLINE.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -64952,7 +68790,7 @@ function apply(ctx, config = {}) {
   });
   const loomy = new LoomyAuth(ctx);
   const resolveLoomyCredentialByRef = async (refName) => {
-    const resolved = await ctx.credentials.resolve(credentialRef14(refName));
+    const resolved = await ctx.credentials.resolve(credentialRef15(refName));
     if (!resolved) return void 0;
     try {
       return JSON.parse(resolved.value);
@@ -64965,7 +68803,7 @@ function apply(ctx, config = {}) {
     resolveCredential: resolveLoomyCredentialByRef
   });
   const loomyAdapter = registerLoomyLlm(ctx, {
-    credentialRef: credentialRef14(LOOMY.defaultCredentialRef),
+    credentialRef: credentialRef15(LOOMY.defaultCredentialRef),
     /**
      * 解析本轮该用哪个账号的凭据。
      *
@@ -65003,7 +68841,7 @@ function apply(ctx, config = {}) {
         }
       }
       throwIfAllAccountsRateLimited(LOOMY, modelId);
-      const resolved = await ctx.credentials.resolve(credentialRef14(LOOMY.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(LOOMY.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -65016,7 +68854,7 @@ function apply(ctx, config = {}) {
       if (accountId !== void 0 && entry === void 0) throw new Error("loomy: account no longer exists");
       if (entry) await loomy.refreshAccountCredential(entry.credentialRef, pool, entry.id);
       else await loomy.refresh();
-      const resolved = await ctx.credentials.resolve(credentialRef14(entry?.credentialRef ?? LOOMY.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(entry?.credentialRef ?? LOOMY.defaultCredentialRef));
       if (!resolved) throw new Error("loomy: credential no longer exists");
       return JSON.parse(resolved.value);
     },
@@ -65035,7 +68873,7 @@ function apply(ctx, config = {}) {
     // 失败时返回空数组，由适配器回退兜底表。
     fetchRemoteModels: async () => {
       const available2 = await pool.getAvailableAccount(LOOMY.id, "");
-      const resolved = available2 !== null && available2 !== void 0 ? { value: JSON.stringify(available2.credential) } : await ctx.credentials.resolve(credentialRef14(LOOMY.defaultCredentialRef));
+      const resolved = available2 !== null && available2 !== void 0 ? { value: JSON.stringify(available2.credential) } : await ctx.credentials.resolve(credentialRef15(LOOMY.defaultCredentialRef));
       if (resolved === void 0) return [];
       let credential;
       try {
@@ -65057,7 +68895,7 @@ function apply(ctx, config = {}) {
   });
   const raccoon = new RaccoonAuth(ctx);
   const raccoonAdapter = registerRaccoonLlm(ctx, {
-    credentialRef: credentialRef14(RACCOON.defaultCredentialRef),
+    credentialRef: credentialRef15(RACCOON.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(RACCOON.id, modelId ?? "");
       if (available2) {
@@ -65065,7 +68903,7 @@ function apply(ctx, config = {}) {
         return available2.credential;
       }
       throwIfAllAccountsRateLimited(RACCOON, modelId);
-      const resolved = await ctx.credentials.resolve(credentialRef14(RACCOON.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(RACCOON.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -65078,7 +68916,7 @@ function apply(ctx, config = {}) {
       if (accountId !== void 0 && entry === void 0) throw new Error("raccoon: account no longer exists");
       if (entry) await raccoon.refreshAccountCredential(entry.credentialRef, pool, entry.id);
       else await raccoon.refresh();
-      const resolved = await ctx.credentials.resolve(credentialRef14(entry?.credentialRef ?? RACCOON.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(entry?.credentialRef ?? RACCOON.defaultCredentialRef));
       if (!resolved) throw new Error("raccoon: credential no longer exists");
       return JSON.parse(resolved.value);
     },
@@ -65102,14 +68940,14 @@ function apply(ctx, config = {}) {
   });
   const minimax = new MinimaxAuth(ctx);
   const minimaxAdapter = registerMinimaxLlm(ctx, {
-    credentialRef: credentialRef14(MINIMAX.defaultCredentialRef),
+    credentialRef: credentialRef15(MINIMAX.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(MINIMAX.id, modelId ?? "");
       if (available2) {
         reportLedgerAccount(MINIMAX.id, available2.entry.id);
         return available2.credential;
       }
-      const resolved = await ctx.credentials.resolve(credentialRef14(MINIMAX.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(MINIMAX.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -65152,14 +68990,14 @@ function apply(ctx, config = {}) {
   const geminiAdapter = registerGeminiLlm(ctx, {
     fetchImpl: network.fetch,
     projectFetcher: network.fetch,
-    credentialRef: credentialRef14(GEMINI.defaultCredentialRef),
+    credentialRef: credentialRef15(GEMINI.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(GEMINI.id, modelId ?? "");
       if (available2) {
         reportLedgerAccount(GEMINI.id, available2.entry.id);
         return available2.credential;
       }
-      const resolved = await ctx.credentials.resolve(credentialRef14(GEMINI.defaultCredentialRef));
+      const resolved = await ctx.credentials.resolve(credentialRef15(GEMINI.defaultCredentialRef));
       if (!resolved) return void 0;
       try {
         return JSON.parse(resolved.value);
@@ -65192,8 +69030,8 @@ function apply(ctx, config = {}) {
     projectCache: geminiProjectCache,
     persistProject: async (value) => {
       const available2 = await pool.getAvailableAccount(GEMINI.id, "");
-      const ref = available2 ? available2.entry.credentialRef : credentialRef14(GEMINI.defaultCredentialRef);
-      await ctx.credentials.set(credentialRef14(ref), value);
+      const ref = available2 ? available2.entry.credentialRef : credentialRef15(GEMINI.defaultCredentialRef);
+      await ctx.credentials.set(credentialRef15(ref), value);
     },
     ...ctx.logger === void 0 ? {} : { logger: ctx.logger }
   });
@@ -65217,8 +69055,8 @@ function apply(ctx, config = {}) {
      * ⚠ 取 logger 用两级可选链（同文件既有的 `log` / `makeReadImageRequest` 写法）：
      *   宿主某些形态不给 logger，写成点号直调会让调用点所在的产出路径抛 TypeError。
      */
-    carrierLog: (message) => {
-      ctx.logger?.warn?.(message);
+    carrierLog: (message2) => {
+      ctx.logger?.warn?.(message2);
     }
   });
   const resolveZcodeCaptchaConfig = async () => {
@@ -65231,7 +69069,7 @@ function apply(ctx, config = {}) {
   };
   const activeZcodeAccountId = /* @__PURE__ */ new Map();
   const zcodeAdapter = registerZcodeLlm(ctx, {
-    credentialRef: credentialRef14(ZCODE.defaultCredentialRef),
+    credentialRef: credentialRef15(ZCODE.defaultCredentialRef),
     resolveCredential: async (modelId) => {
       const available2 = await pool.getAvailableAccount(ZCODE.id, modelId ?? "");
       if (available2) {
@@ -65300,8 +69138,8 @@ function apply(ctx, config = {}) {
      * 都是 `ctx.logger?.warn?.(...)`）。宿主没给 logger 时**静默**，
      * 绝不能在推理路径上抛错。
      */
-    log: (message) => {
-      ctx.logger?.info?.(message);
+    log: (message2) => {
+      ctx.logger?.info?.(message2);
     },
     /**
      * ⚠ **图片字节桥接** —— 这是图片能真正发出去的关键。
@@ -65365,6 +69203,8 @@ function apply(ctx, config = {}) {
   });
   const REFRESH_INTERVAL_MS = 30 * 60 * 1e3;
   const refreshTargets = [
+    // MOD (CodeArts restore): 可续期（IAM OAuth / DPoP），逐账号按 ref 刷新。
+    [PROVIDER, (p) => codeartsService.refreshAll(p)],
     ["lobsterai", (p) => lobsterai.refreshAll(p)],
     ["qoder", (p) => qoder.refreshAll(p)],
     ["qodercn", (p) => qoderCn.refreshAll(p)],
@@ -65387,12 +69227,12 @@ function apply(ctx, config = {}) {
     ["gemini", (p) => gemini.refreshAll(p)]
   ];
   async function refreshAllCredentials() {
-    for (const [tag, refreshAll] of refreshTargets) {
+    for (const [tag2, refreshAll] of refreshTargets) {
       try {
         await refreshAll(pool);
       } catch (error) {
         ctx.logger?.warn?.(
-          `[channel-pack] ${tag} \u6279\u91CF\u7EED\u671F\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
+          `[channel-pack] ${tag2} \u6279\u91CF\u7EED\u671F\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
         );
       }
     }
@@ -65436,7 +69276,7 @@ function apply(ctx, config = {}) {
         await Promise.all(pool.listAccountsByProvider(OPENCODE.id).filter(
           (entry) => model === void 0 || !((entry.modelRateLimits?.[model] ?? 0) > Date.now())
         ).map(async (entry) => {
-          const resolved = await ctx.credentials.resolve(credentialRef14(entry.credentialRef)).catch(() => void 0);
+          const resolved = await ctx.credentials.resolve(credentialRef15(entry.credentialRef)).catch(() => void 0);
           let parsed = {};
           if (resolved !== void 0) {
             try {
@@ -65478,7 +69318,7 @@ function apply(ctx, config = {}) {
       markLimited: async (slotId, modelId, resetAtMs) => {
         await pool.updateModelRateLimit(slotId, modelId, resetAtMs);
       },
-      warn: (message) => ctx.logger.warn(`[channel-pack] ${message}`),
+      warn: (message2) => ctx.logger.warn(`[channel-pack] ${message2}`),
       // ⚠️ 图片字节桥接：Zen 有多个免费模型实测支持图片输入（big-pickle /
       // space-bunny-free / mimo-v2.6 / mimo-v2.5，2026-10-02 真机验证），
       // 模态由 `opencode-capability.ts` 按远端 models.dev 播报。
@@ -65489,7 +69329,7 @@ function apply(ctx, config = {}) {
     });
     void ensureDefaultAnonymousSlot(
       (entry) => pool.addAccount(entry),
-      (refName, value) => ctx.credentials.set(credentialRef14(refName), value),
+      (refName, value) => ctx.credentials.set(credentialRef15(refName), value),
       () => pool.listAccountsByProvider(OPENCODE.id),
       // ⚠️ 判据是「池里有没有匿名条目」而不是「有没有账号」：用户若主动
       // 删光了匿名通道，那是明确选择，不该每次启动又塞回来（删除会像失灵）。
@@ -65520,6 +69360,8 @@ function apply(ctx, config = {}) {
     }
   };
   const modelAdapters = {
+    // MOD (CodeArts restore): registerCodeArtsLlm 返回适配器实例（含 listAllModels）。
+    codearts: pruned(PROVIDER, codeartsAdapter),
     // 服务实例 `service` 不同名，故这里可以简写）。
     lobsterai: pruned(LOBSTERAI.id, lobsteraiAdapter),
     qoder: pruned(QODER.id, qoderAdapter),
@@ -65537,10 +69379,12 @@ function apply(ctx, config = {}) {
     void geminiSigStore.flush().catch(() => {
     });
   });
-  registerChannelPackRpc(ctx, pool, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, {
+  registerChannelPackRpc(ctx, pool, codeartsService, lobsterai, qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, {
     ...config,
     // ⚠️ 配额等附属查询必须复用同一出口；省略会让 gemini-credits 回落到裸 fetch。
-    fetcher: network.fetch
+    fetcher: network.fetch,
+    // MOD (CodeArts restore): 积分/账户查询复用 SDK-HMAC 签名出口。
+    codeartsFetcher: signedNetwork.fetch
   });
   mountOpenAiGateway(ctx, pool);
   installLoopResume(ctx);

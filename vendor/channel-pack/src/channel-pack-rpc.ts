@@ -29,6 +29,11 @@ import {
   isGatewayRunning,
   setGatewayDesiredEnabled,
 } from './openai-gateway/runtime.js'
+// MOD (CodeArts restore)
+import type { CodeArtsAuth } from './service.js'
+import type { CodeArtsCredential } from './types.js'
+import { fetchCodeArtsAccountInfoDetailed, claimCodeArtsDailyCheckin } from './codearts-credits.js'
+import { directFetch } from './direct-fetch.js'
 import type { LobsteraiAuth } from './lobsterai-auth.js'
 import type { QoderAuth } from './qoder-auth.js'
 import type { TraeAuth } from './trae-auth.js'
@@ -271,6 +276,18 @@ export function normalizeZcodeLoginProvider(raw: string | undefined): ZcodeLogin
     }
   }
   return ZCODE_LOGIN_PROVIDER
+}
+
+// MOD (CodeArts restore): 解析 CodeArts 凭据 JSON；解析失败返回 undefined。
+function parseCodeArtsCredential(raw: string): CodeArtsCredential | undefined {
+  try {
+    const parsed = JSON.parse(raw) as CodeArtsCredential
+    return typeof parsed === 'object' && parsed !== null && typeof parsed.access_key_id === 'string'
+      ? parsed
+      : undefined
+  } catch {
+    return undefined
+  }
 }
 
 /** 解析 LobsterAI 凭据 JSON；解析失败返回 undefined。 */
@@ -736,6 +753,8 @@ export interface ChannelPackRpcConfig {
    * 只有配额查询报 fetch failed」（issue #762）。
    */
   fetcher?: typeof fetch
+  /** MOD (CodeArts restore): 签名出口（IAM SDK-HMAC），供 CodeArts 积分/账户查询复用。 */
+  codeartsFetcher?: typeof fetch
 }
 
 /**
@@ -748,6 +767,12 @@ export interface ChannelPackRpcConfig {
 export function registerChannelPackRpc(
   ctx: Context,
   pool: AccountPool,
+  /**
+   * MOD (CodeArts restore): CodeArts（华为云 HMAC 签名 + 回调登录）实例。
+   * 与旧版一致放在第一个 provider 位（pool 之后、lobsterai 之前），
+   * 使历史的 `...auths` 位置传参（codearts 打头）保持兼容。
+   */
+  codearts: CodeArtsAuth,
   lobsterai: LobsteraiAuth,
   qoder: QoderAuth,
   /** Qoder **中国版**实例（与 `qoder` 同协议、不同 product；RPC 分支按注册表分派）。 */
@@ -780,7 +805,7 @@ export function registerChannelPackRpc(
 ): void {
   ctx.inject(['connection'], (connectionCtx) => {
     registerChannelPackEndpoints(
-      connectionCtx as Context, pool, lobsterai,
+      connectionCtx as Context, pool, codearts, lobsterai,
       qoder, qoderCn, trae, cline, loomy, raccoon, minimax, zcode, gemini, modelAdapters, config,
     )
   })
@@ -881,6 +906,7 @@ async function fullCatalogIds(
 function registerChannelPackEndpoints(
   ctx: Context,
   pool: AccountPool,
+  codearts: CodeArtsAuth,
   lobsterai: LobsteraiAuth,
   qoder: QoderAuth,
   qoderCn: QoderAuth,
@@ -1273,6 +1299,17 @@ function registerChannelPackEndpoints(
     if ((request?.provider !== undefined && !isSupportedProvider(request.provider)) || (account !== undefined && !isSupportedProvider(account.provider))) {
       return { ok: false, error: { code: 'provider-unsupported', message: '不支持此渠道。' } }
     }
+    // 每个 RPC 独立绑定传输与取消信号，避免使用最后挂载上下文的默认出口。
+    // 合并上游自行设置的超时，既保留超时也响应客户端断开；后台调用可省略 signal。
+    const codeartsFetcher: typeof fetch = (input, init) => {
+      const fetcher = config.codeartsFetcher ?? directFetch
+      if (!signal) return fetcher(input, init)
+      const upstreamSignal = init?.signal ?? (input instanceof Request ? input.signal : undefined)
+      return fetcher(input, {
+        ...init,
+        signal: upstreamSignal ? AbortSignal.any([signal, upstreamSignal]) : signal,
+      })
+    }
     if (method.startsWith('opencode.')) {
       if (config.disableOpencode === true) {
         return { ok: false, error: { code: 'provider-disabled', message: 'OpenCode account integration is disabled in this host' } }
@@ -1296,7 +1333,30 @@ function registerChannelPackEndpoints(
         const id = `${provider}-${shortId()}`
         const suffix = shortId().toUpperCase()
         const refName = `${provider.toUpperCase()}_ACCOUNT_${suffix}`
-if (provider === LOBSTERAI.id) {
+        // MOD (CodeArts restore): 回调式登录，两步式（先返回 URL，后台等回调）。
+        if (provider === 'codearts') {
+          const started = await codearts.startLogin({ refName })
+          await pool.addAccount({
+            id, provider: 'codearts', nickname: id, enabled: true,
+            credentialRef: refName, refreshable: false, createdAt: Date.now(),
+          })
+          started.result.then(async (loginResult) => {
+            const credential = parseCodeArtsCredential(loginResult.access)
+            await pool.updateAccount(id, {
+              nickname: credential?.user_name !== undefined && credential.user_name.length > 0
+                ? credential.user_name : id,
+              expiresAt: credential?.expires_at !== undefined
+                ? (Number.isNaN(Date.parse(credential.expires_at)) ? undefined : Date.parse(credential.expires_at))
+                : undefined,
+              refreshable: Boolean(credential?.refresh_token),
+            })
+          }).catch((error: unknown) => {
+            ctx.logger.warn(`[channel-pack] background codearts login failed for ${id}: ${String(error)}`)
+            void pool.removeAccount(id).catch(() => {})
+          })
+          return { ok: true, value: { accountId: id, loginUrl: started.loginUrl } }
+        }
+        if (provider === LOBSTERAI.id) {
 
           const started = await lobsterai.startLogin({ refName })
           await pool.addAccount({
@@ -1827,6 +1887,10 @@ if (provider === LOBSTERAI.id) {
           // 调用方是仓库外的脚本/手工 RPC。下面三处历史注释曾把它写成
           // 「账号卡片的刷新按钮」——那是失实的，会把排障的人引到不存在的 UI。
           switch (entry.provider) {
+            // MOD (CodeArts restore)
+            case 'codearts':
+              await codearts.refreshAccountCredential(entry.credentialRef, pool, entry.id)
+              break
             case LOBSTERAI.id:
               await lobsterai.refreshAccountCredential(entry.credentialRef, pool, entry.id)
               break
@@ -2390,6 +2454,18 @@ if (provider === LOBSTERAI.id) {
       case 'credits.claimAll': {
         const req = payload as RpcCreditsClaimAllRequest
         const accounts = await pool.listAccounts(req.provider)
+        // MOD (CodeArts restore): 领取自带账户类型+活动预检，跳外部状态查询。
+        if (req.provider === 'codearts') {
+          // 使用绑定了本次 RPC 取消信号的签名出口（含旧位置参数调用的共享出口回退）。
+          const signedFetch = codeartsFetcher
+          const value = await collectClaimResults<CodeArtsCredential, undefined>(accounts, undefined, {
+            resolve: (ref) => ctx.credentials.resolve(ref),
+            claim: (credential) => claimCodeArtsDailyCheckin(credential, signedFetch),
+            precheckStatus: false,
+            warn: (msg) => ctx.logger?.warn?.(msg),
+          })
+          return { ok: true, value: value satisfies RpcCreditsClaimAllResponse }
+        }
         if (isQoderFamily(req.provider)) {
           const { product } = requireQoderFamily(req.provider)
           // Qoder 的领取流程**自带活动列表查询**（loadCampaigns → 逐个 claim），
@@ -2601,6 +2677,29 @@ if (provider === LOBSTERAI.id) {
       case 'credits.balances': {
         const req = payload as RpcCreditsBalancesRequest
         const accounts = await pool.listAccounts(req.provider)
+        // MOD (CodeArts restore): 余额来自 statistics/plugin，非积分账户要给明确原因。
+        if (req.provider === 'codearts') {
+          // 使用绑定了本次 RPC 取消信号的签名出口（含旧位置参数调用的共享出口回退）。
+          const signedFetch = codeartsFetcher
+          const values = await collectCreditBalances<CodeArtsCredential, undefined>(accounts, undefined, {
+            resolve: (ref) => ctx.credentials.resolve(ref),
+            fetchBalanceDetailed: async (credential) => {
+              const result = await fetchCodeArtsAccountInfoDetailed(credential, signedFetch)
+              if (!result.ok) return { balance: null, error: `账户信息查询失败：${result.message}` }
+              const info = result.info
+              if (!info.isCreditPackage) {
+                return {
+                  balance: null,
+                  error: info.isTokenPackage ? 'Token 计费账户，无积分余额' : '非积分计费账户，无积分余额',
+                }
+              }
+              if (info.credit === undefined) return { balance: null, error: '未返回积分数据' }
+              return { balance: info.credit }
+            },
+            warn: (msg) => ctx.logger?.warn?.(msg),
+          })
+          return { ok: true, value: { accounts: values } satisfies RpcCreditsBalancesResponse }
+        }
         if (req.provider === LOBSTERAI.id) {
           const values = await collectCreditBalances<LobsteraiCredential, typeof LOBSTERAI>(accounts, LOBSTERAI, {
             resolve: (ref) => ctx.credentials.resolve(ref),

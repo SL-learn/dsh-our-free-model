@@ -278,6 +278,46 @@ export async function pollRaccoonQrLogin(
 }
 
 /**
+ * 解除 IAM 确认要求（官方解法，200901 的根源修复）。
+ *
+ * ## ⚠️ 这是 IAM 域扫码登录的**必经收尾**，不是可选项
+ *
+ * IAM 域（`/api/iam/v1/auth/mp/qrcode`）签发的 JWT 拿到 web 域
+ * （`/api/web/auth/v1` / `/api/web/llm/v2` / `/api/web/points/v1`）
+ * 一概被拒：`HTTP 400 {"code":200901,"message":"iam_confirm_required"}`。
+ * 不解除的话 user_info / model_catalog / points / chat **全部不可用**
+ * ——表现为「页面显示登录成功，但应用里什么都没有」（实测 2026-11-19，
+ * 用真实落库凭据逐端点复现；用 `docs/test-raccoon-downstream.mjs`）。
+ *
+ * ## 官方解法（参考 docs/src 抓包实证 2026-11-13）
+ *
+ * 官网 web 前端进账号页时会自动
+ * `POST /api/web/auth/v1/iam/confirm`，body
+ * `{"registration_attribution":{"registration_source":"web"}}` → `{"code":0}`。
+ * 确认后 web 域各端点立即放行（实测 confirm → user_info 200 →
+ * model_catalog 200（10 模型）→ points/balance 200）。
+ *
+ * ⚠️ 确认是**服务端账号级一次性标记**（幂等）：成功后持久生效，后续会话
+ * 不再需要。老账号（修复前登录、从未 confirm）由适配器在 chat 遇到 200901
+ * 时自愈（见 `raccoon-adapter.ts`）。
+ *
+ * @returns 确认是否成功（信封 code 0）。失败**不抛错**——调用方按尽力而为处理。
+ */
+export async function confirmRaccoonIam(
+  product: RaccoonProduct,
+  credential: RaccoonCredential,
+  fetcher: typeof fetch = fetch,
+): Promise<boolean> {
+  const { envelope } = await postJson(
+    `${product.apiBase}${product.authApiPrefix}/iam/confirm`,
+    { registration_attribution: { registration_source: 'web' } },
+    fetcher,
+    raccoonHeaders(credential),
+  )
+  return envelope.code === 0
+}
+
+/**
  * 下发短信验证码。
  *
  * ⚠️ 手机号必须 AES-128-CFB 加密（否则 `100003 params_encryted_error`）。

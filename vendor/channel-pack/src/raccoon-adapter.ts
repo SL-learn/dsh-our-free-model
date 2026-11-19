@@ -36,6 +36,7 @@ import { RemoteCatalogGate } from './remote-catalog-gate.js'
 import { settingsNamespaceFor } from './settings-compat.js'
 import { nextUtc8DayStartMs } from './model-queue.js'
 import { isRaccoonExpired, type RaccoonCredential } from './raccoon.js'
+import { confirmRaccoonIam } from './raccoon-oauth.js'
 import {
   RACCOON,
   RACCOON_DEFAULT_EFFORT,
@@ -493,14 +494,28 @@ export class RaccoonAdapter extends LlmAdapter {
           response = await send()
         }
         if (!response.ok) {
-          const errorText = await response.text().catch(() => '')
-          let quota = response.status === 402
-          try { quota ||= isQuotaError(JSON.parse(errorText)) } catch {}
-          throw new LlmError(
-            `raccoon: ${errorDetail(errorText)}`,
-            quota ? 'QUOTA_EXCEEDED' : httpErrorCode(response.status),
-            { status: response.status },
-          )
+          let errorText = await response.text().catch(() => '')
+          // ⚠️ IAM 未确认自愈（200901 `iam_confirm_required`）：IAM 域扫码登录
+          // 签发的 JWT 在 web 域一概 400（实测 2026-11-19）。老账号（修复前
+          // 登录、从未 confirm）第一次 chat 就会撞上；这里补一次
+          // `POST iam/confirm`（官方解法，幂等且服务端持久生效）后重发。
+          // ⚠️ 只在**尚未产出任何 token** 时做——重发会重新计数 SSE 块。
+          if (errorText.includes('iam_confirm_required') && !emitted) {
+            const confirmed = await confirmRaccoonIam(this.product, credential, this.fetchImpl)
+            if (confirmed) {
+              response = await send()
+              errorText = response.ok ? '' : await response.text().catch(() => '')
+            }
+          }
+          if (!response.ok) {
+            let quota = response.status === 402
+            try { quota ||= isQuotaError(JSON.parse(errorText)) } catch {}
+            throw new LlmError(
+              `raccoon: ${errorDetail(errorText)}`,
+              quota ? 'QUOTA_EXCEEDED' : httpErrorCode(response.status),
+              { status: response.status },
+            )
+          }
         }
         for await (const chunk of consumeOpenAiSse(response, { signal: options.signal }, {
           label: 'raccoon',

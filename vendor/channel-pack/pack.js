@@ -41503,6 +41503,264 @@ function raccoonHeaders(credential, opts = {}) {
   return headers;
 }
 
+// vendor/channel-pack/src/raccoon-debug-log.ts
+import { appendFileSync, mkdirSync as mkdirSync4 } from "node:fs";
+import { homedir as homedir2 } from "node:os";
+import { join as join4 } from "node:path";
+var MAX_BODY_LENGTH = 1200;
+function resolveLogDir() {
+  const fromEnv = process.env.OFM_HOME?.trim() || process.env.DSH_HOME?.trim();
+  if (fromEnv !== void 0 && fromEnv.length > 0) return fromEnv;
+  return join4(homedir2(), ".our-free-model");
+}
+function scrubTokens(text) {
+  return text.replace(
+    /("(?:access_token|refresh_token|id_token|token|office_identity)"\s*:\s*")([^"]{0,12})[^"]*(")/g,
+    "$1$2\u2026$3"
+  );
+}
+function scrubBody(text) {
+  const masked = scrubTokens(text);
+  return masked.length > MAX_BODY_LENGTH ? `${masked.slice(0, MAX_BODY_LENGTH)}\u2026(\u622A\u65AD)` : masked;
+}
+function appendRaccoonDebugLog(event) {
+  try {
+    const dir = resolveLogDir();
+    mkdirSync4(dir, { recursive: true });
+    const line2 = `${JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), ...event })}
+`;
+    appendFileSync(join4(dir, "raccoon-login-debug.log"), line2, "utf-8");
+  } catch {
+  }
+}
+
+// vendor/channel-pack/src/raccoon-oauth.ts
+import { randomBytes as randomBytes5 } from "node:crypto";
+function parseEnvelope(payload, status) {
+  const record = typeof payload === "object" && payload !== null && !Array.isArray(payload) ? payload : {};
+  const code = typeof record.code === "number" ? record.code : record.code === "OK" ? 0 : typeof record.code === "string" && record.code.length > 0 ? record.code : status >= 400 ? status : 0;
+  const message2 = typeof record.message === "string" ? record.message : "";
+  const details = typeof record.details === "string" ? record.details : "";
+  const data = typeof record.data === "object" && record.data !== null && !Array.isArray(record.data) ? record.data : void 0;
+  return { code, message: message2, details, data };
+}
+function envelopeError(envelope, fallback2) {
+  const parts = [envelope.message, envelope.details].filter((s) => s.length > 0);
+  const text = parts.length > 0 ? parts.join(": ") : fallback2;
+  return new Error(`raccoon: ${text}`);
+}
+async function postJson(url, body, fetcher, headers = {}) {
+  let response;
+  try {
+    response = await fetcher(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS)
+    });
+  } catch (error) {
+    appendRaccoonDebugLog({ event: "http-error", url, error: String(error) });
+    throw new Error(
+      `raccoon: \u8BF7\u6C42\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+  let parsed;
+  try {
+    parsed = await response.json();
+  } catch {
+    appendRaccoonDebugLog({ event: "http-non-json", url, httpStatus: response.status });
+    throw new Error(`raccoon: \u54CD\u5E94\u4E0D\u662F JSON\uFF08HTTP ${response.status}\uFF09`);
+  }
+  appendRaccoonDebugLog({
+    event: "http",
+    url,
+    httpStatus: response.status,
+    body: scrubBody(JSON.stringify(parsed))
+  });
+  return { envelope: parseEnvelope(parsed, response.status), status: response.status };
+}
+function generateQrCode() {
+  return randomBytes5(16).toString("hex");
+}
+async function requestRaccoonQrSession(product, fetcher = fetch) {
+  const { envelope, status } = await postJson(
+    `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode`,
+    {},
+    fetcher
+  );
+  if (envelope.code !== 0 || envelope.data === void 0) {
+    throw envelopeError(envelope, `\u7533\u8BF7\u626B\u7801\u4E8C\u7EF4\u7801\u5931\u8D25\uFF08HTTP ${status}\uFF09`);
+  }
+  const code = typeof envelope.data.qrcode_code === "string" ? envelope.data.qrcode_code : "";
+  const scanPath = typeof envelope.data.scan_path === "string" ? envelope.data.scan_path : "";
+  if (code.length === 0 || !scanPath.startsWith("/")) {
+    throw new Error("raccoon: \u626B\u7801\u4E8C\u7EF4\u7801\u54CD\u5E94\u4E0D\u5408\u6CD5\uFF08qrcode_code / scan_path \u7F3A\u5931\uFF09");
+  }
+  const expiresIn = typeof envelope.data.expires_in === "number" && envelope.data.expires_in > 0 ? envelope.data.expires_in * 1e3 : 5 * 60 * 1e3;
+  return { code, scanPath, expiresMs: expiresIn };
+}
+function buildQrImageUrl(product, code, scanPath = "/login/mp") {
+  const params = new URLSearchParams({
+    code,
+    appname: "\u5546\u6C64\u5C0F\u6D63\u718A\u5B98\u7F51",
+    source: "platform"
+  });
+  return `${product.apiBase}${scanPath}?${params.toString()}`;
+}
+async function pollRaccoonQrLogin(product, code, fetcher = fetch) {
+  let envelope;
+  try {
+    const result = await postJson(
+      `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode/login`,
+      { qrcode_code: code },
+      fetcher
+    );
+    envelope = result.envelope;
+  } catch (error) {
+    appendRaccoonDebugLog({ event: "poll-network-suppressed", error: String(error) });
+    return { status: "pending" };
+  }
+  if (envelope.code !== 0 || envelope.data === void 0) {
+    appendRaccoonDebugLog({
+      event: "poll-biz-failure-suppressed",
+      code: envelope.code,
+      message: envelope.message,
+      details: envelope.details
+    });
+    return { status: "pending" };
+  }
+  const raw = envelope.data.status;
+  const status = typeof raw === "string" ? raw : "";
+  const expiredAt = typeof envelope.data.expired_at === "string" ? envelope.data.expired_at : void 0;
+  if (status === RACCOON_QR_STATUS.canceled) return { status: "canceled" };
+  if (status === RACCOON_QR_STATUS.expired) return { status: "expired" };
+  if (status === RACCOON_QR_STATUS.logging) {
+    return { status: "logging", ...expiredAt !== void 0 ? { expiredAt } : {} };
+  }
+  if (status === RACCOON_QR_STATUS.success) {
+    const accessToken = typeof envelope.data.access_token === "string" ? envelope.data.access_token : "";
+    const refreshToken = typeof envelope.data.refresh_token === "string" ? envelope.data.refresh_token : "";
+    if (accessToken.length === 0) {
+      appendRaccoonDebugLog({
+        event: "poll-success-missing-token",
+        dataKeys: Object.keys(envelope.data).sort().join(",")
+      });
+      return { status: "pending" };
+    }
+    const expMs = decodeJwtExpMs(accessToken);
+    return {
+      status: "success",
+      accessToken,
+      refreshToken,
+      ...expMs !== void 0 ? { expiresAt: String(expMs) } : {}
+    };
+  }
+  return { status: "pending" };
+}
+async function confirmRaccoonIam(product, credential, fetcher = fetch) {
+  const { envelope } = await postJson(
+    `${product.apiBase}${product.authApiPrefix}/iam/confirm`,
+    { registration_attribution: { registration_source: "web" } },
+    fetcher,
+    raccoonHeaders(credential)
+  );
+  return envelope.code === 0;
+}
+async function sendRaccoonSmsCode(product, phone, captchaParam, fetcher = fetch) {
+  const { envelope } = await postJson(
+    `${product.apiBase}${product.authApiPrefix}/send_sms`,
+    {
+      captcha_param: captchaParam,
+      nation_code: "86",
+      phone: encryptRaccoonPhone(phone)
+    },
+    fetcher
+  );
+  if (envelope.code !== 0) {
+    if (envelope.code === 100006) {
+      throw new Error("raccoon: \u56FE\u5F62\u9A8C\u8BC1\u7801\u6821\u9A8C\u5931\u8D25\uFF0C\u8BF7\u91CD\u65B0\u5B8C\u6210\u6ED1\u5757\u9A8C\u8BC1");
+    }
+    throw envelopeError(envelope, "\u4E0B\u53D1\u77ED\u4FE1\u9A8C\u8BC1\u7801\u5931\u8D25");
+  }
+}
+async function loginRaccoonWithSmsCode(product, phone, smsCode, fetcher = fetch) {
+  const { envelope } = await postJson(
+    `${product.apiBase}${product.authApiPrefix}/login_with_sms`,
+    {
+      nation_code: "86",
+      phone: encryptRaccoonPhone(phone),
+      sms_code: smsCode
+    },
+    fetcher
+  );
+  if (envelope.code !== 0) throw envelopeError(envelope, "\u77ED\u4FE1\u767B\u5F55\u5931\u8D25");
+  return credentialFromEnvelope(envelope);
+}
+function credentialFromEnvelope(envelope) {
+  const data = envelope.data ?? {};
+  const accessToken = typeof data.access_token === "string" ? data.access_token : "";
+  const refreshToken = typeof data.refresh_token === "string" ? data.refresh_token : "";
+  if (accessToken.length === 0) {
+    throw new Error("raccoon: \u767B\u5F55\u54CD\u5E94\u7F3A\u5C11 access_token");
+  }
+  const expMs = decodeJwtExpMs(accessToken);
+  const officeIdentity = typeof data.office_identity === "string" ? data.office_identity : "";
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    ...expMs !== void 0 ? { expires_at: String(expMs) } : {},
+    ...officeIdentity.length > 0 ? { office_identity: officeIdentity } : {}
+  };
+}
+async function refreshRaccoonCredential(product, credential, fetcher = fetch) {
+  const { envelope, status } = await postJson(
+    `${product.apiBase}${product.authApiPrefix}/refresh`,
+    { refresh_token: credential.refresh_token },
+    fetcher
+  );
+  if (status === 401 || envelope.code === 200003) {
+    throw new Error("raccoon: \u767B\u5F55\u6001\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
+  }
+  if (envelope.code !== 0) throw envelopeError(envelope, "\u7EED\u671F\u5931\u8D25");
+  const data = envelope.data ?? {};
+  const accessToken = typeof data.access_token === "string" ? data.access_token : "";
+  if (accessToken.length === 0) {
+    throw new Error("raccoon: \u7EED\u671F\u54CD\u5E94\u7F3A\u5C11 access_token");
+  }
+  const nextRefresh = typeof data.refresh_token === "string" && data.refresh_token.length > 0 ? data.refresh_token : credential.refresh_token;
+  const expMs = decodeJwtExpMs(accessToken);
+  return {
+    ...credential,
+    access_token: accessToken,
+    refresh_token: nextRefresh,
+    ...expMs !== void 0 ? { expires_at: String(expMs) } : {}
+  };
+}
+async function fetchRaccoonUserInfo(product, credential, fetcher = fetch) {
+  try {
+    const response = await fetcher(`${product.apiBase}${product.authApiPrefix}/user_info`, {
+      method: "GET",
+      headers: raccoonHeaders(credential),
+      signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS)
+    });
+    if (!response.ok) return {};
+    const envelope = parseEnvelope(await response.json(), response.status);
+    if (envelope.code !== 0 || envelope.data === void 0) return {};
+    const userId = typeof envelope.data.id === "string" ? envelope.data.id : "";
+    const nickname = typeof envelope.data.name === "string" ? envelope.data.name : "";
+    const officeIdentity = typeof envelope.data.office_identity === "string" ? envelope.data.office_identity : "";
+    const phone = typeof envelope.data.phone === "string" ? envelope.data.phone : "";
+    return {
+      ...userId.length > 0 ? { userId } : {},
+      ...nickname.length > 0 ? { nickname } : {},
+      ...officeIdentity.length > 0 ? { officeIdentity } : {},
+      ...phone.length > 0 ? { phone } : {}
+    };
+  } catch {
+    return {};
+  }
+}
+
 // vendor/channel-pack/src/raccoon-product.ts
 var RACCOON_EFFORT_ON = "on";
 var RACCOON_EFFORT_OFF = "off";
@@ -41844,17 +42102,26 @@ var RaccoonAdapter = class extends LlmAdapter6 {
           response = await send();
         }
         if (!response.ok) {
-          const errorText = await response.text().catch(() => "");
-          let quota = response.status === 402;
-          try {
-            quota ||= isQuotaError(JSON.parse(errorText));
-          } catch {
+          let errorText = await response.text().catch(() => "");
+          if (errorText.includes("iam_confirm_required") && !emitted) {
+            const confirmed = await confirmRaccoonIam(this.product, credential, this.fetchImpl);
+            if (confirmed) {
+              response = await send();
+              errorText = response.ok ? "" : await response.text().catch(() => "");
+            }
           }
-          throw new LlmError11(
-            `raccoon: ${errorDetail2(errorText)}`,
-            quota ? "QUOTA_EXCEEDED" : httpErrorCode2(response.status),
-            { status: response.status }
-          );
+          if (!response.ok) {
+            let quota = response.status === 402;
+            try {
+              quota ||= isQuotaError(JSON.parse(errorText));
+            } catch {
+            }
+            throw new LlmError11(
+              `raccoon: ${errorDetail2(errorText)}`,
+              quota ? "QUOTA_EXCEEDED" : httpErrorCode2(response.status),
+              { status: response.status }
+            );
+          }
         }
         for await (const chunk of consumeOpenAiSse(response, { signal: options.signal }, {
           label: "raccoon",
@@ -45896,7 +46163,7 @@ import { credentialRef as credentialRef7 } from "@deepseek-ai/dsh-credentials";
 // vendor/channel-pack/src/raccoon-credits.ts
 var RACCOON_LOGIN_REWARD_POINTS = 3e3;
 var RACCOON_LOGIN_REWARD_EVENT_NAME = "\u684C\u9762\u7AEF\u767B\u5F55\u5956\u52B1";
-function parseEnvelope(payload, status) {
+function parseEnvelope2(payload, status) {
   const record = typeof payload === "object" && payload !== null && !Array.isArray(payload) ? payload : {};
   const code = typeof record.code === "number" ? record.code : status >= 400 ? status : 0;
   const message2 = typeof record.message === "string" && record.message.length > 0 ? record.message : typeof record.details === "string" ? record.details : "";
@@ -45918,7 +46185,7 @@ async function requestJson(url, credential, product, init, fetcher) {
       signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS)
     });
     const parsed = await response.json();
-    return parseEnvelope(parsed, response.status);
+    return parseEnvelope2(parsed, response.status);
   } catch (error) {
     return {
       ok: false,
@@ -46018,255 +46285,6 @@ async function fetchRaccoonOnboardingStatus(product, credential, fetcher = fetch
     break;
   }
   return { claimed, points };
-}
-
-// vendor/channel-pack/src/raccoon-debug-log.ts
-import { appendFileSync, mkdirSync as mkdirSync4 } from "node:fs";
-import { homedir as homedir2 } from "node:os";
-import { join as join4 } from "node:path";
-var MAX_BODY_LENGTH = 1200;
-function resolveLogDir() {
-  const fromEnv = process.env.OFM_HOME?.trim() || process.env.DSH_HOME?.trim();
-  if (fromEnv !== void 0 && fromEnv.length > 0) return fromEnv;
-  return join4(homedir2(), ".our-free-model");
-}
-function scrubTokens(text) {
-  return text.replace(
-    /("(?:access_token|refresh_token|id_token|token|office_identity)"\s*:\s*")([^"]{0,12})[^"]*(")/g,
-    "$1$2\u2026$3"
-  );
-}
-function scrubBody(text) {
-  const masked = scrubTokens(text);
-  return masked.length > MAX_BODY_LENGTH ? `${masked.slice(0, MAX_BODY_LENGTH)}\u2026(\u622A\u65AD)` : masked;
-}
-function appendRaccoonDebugLog(event) {
-  try {
-    const dir = resolveLogDir();
-    mkdirSync4(dir, { recursive: true });
-    const line2 = `${JSON.stringify({ ts: (/* @__PURE__ */ new Date()).toISOString(), ...event })}
-`;
-    appendFileSync(join4(dir, "raccoon-login-debug.log"), line2, "utf-8");
-  } catch {
-  }
-}
-
-// vendor/channel-pack/src/raccoon-oauth.ts
-import { randomBytes as randomBytes5 } from "node:crypto";
-function parseEnvelope2(payload, status) {
-  const record = typeof payload === "object" && payload !== null && !Array.isArray(payload) ? payload : {};
-  const code = typeof record.code === "number" ? record.code : record.code === "OK" ? 0 : typeof record.code === "string" && record.code.length > 0 ? record.code : status >= 400 ? status : 0;
-  const message2 = typeof record.message === "string" ? record.message : "";
-  const details = typeof record.details === "string" ? record.details : "";
-  const data = typeof record.data === "object" && record.data !== null && !Array.isArray(record.data) ? record.data : void 0;
-  return { code, message: message2, details, data };
-}
-function envelopeError(envelope, fallback2) {
-  const parts = [envelope.message, envelope.details].filter((s) => s.length > 0);
-  const text = parts.length > 0 ? parts.join(": ") : fallback2;
-  return new Error(`raccoon: ${text}`);
-}
-async function postJson(url, body, fetcher, headers = {}) {
-  let response;
-  try {
-    response = await fetcher(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS)
-    });
-  } catch (error) {
-    appendRaccoonDebugLog({ event: "http-error", url, error: String(error) });
-    throw new Error(
-      `raccoon: \u8BF7\u6C42\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-  let parsed;
-  try {
-    parsed = await response.json();
-  } catch {
-    appendRaccoonDebugLog({ event: "http-non-json", url, httpStatus: response.status });
-    throw new Error(`raccoon: \u54CD\u5E94\u4E0D\u662F JSON\uFF08HTTP ${response.status}\uFF09`);
-  }
-  appendRaccoonDebugLog({
-    event: "http",
-    url,
-    httpStatus: response.status,
-    body: scrubBody(JSON.stringify(parsed))
-  });
-  return { envelope: parseEnvelope2(parsed, response.status), status: response.status };
-}
-function generateQrCode() {
-  return randomBytes5(16).toString("hex");
-}
-async function requestRaccoonQrSession(product, fetcher = fetch) {
-  const { envelope, status } = await postJson(
-    `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode`,
-    {},
-    fetcher
-  );
-  if (envelope.code !== 0 || envelope.data === void 0) {
-    throw envelopeError(envelope, `\u7533\u8BF7\u626B\u7801\u4E8C\u7EF4\u7801\u5931\u8D25\uFF08HTTP ${status}\uFF09`);
-  }
-  const code = typeof envelope.data.qrcode_code === "string" ? envelope.data.qrcode_code : "";
-  const scanPath = typeof envelope.data.scan_path === "string" ? envelope.data.scan_path : "";
-  if (code.length === 0 || !scanPath.startsWith("/")) {
-    throw new Error("raccoon: \u626B\u7801\u4E8C\u7EF4\u7801\u54CD\u5E94\u4E0D\u5408\u6CD5\uFF08qrcode_code / scan_path \u7F3A\u5931\uFF09");
-  }
-  const expiresIn = typeof envelope.data.expires_in === "number" && envelope.data.expires_in > 0 ? envelope.data.expires_in * 1e3 : 5 * 60 * 1e3;
-  return { code, scanPath, expiresMs: expiresIn };
-}
-function buildQrImageUrl(product, code, scanPath = "/login/mp") {
-  const params = new URLSearchParams({
-    code,
-    appname: "\u5546\u6C64\u5C0F\u6D63\u718A\u5B98\u7F51",
-    source: "platform"
-  });
-  return `${product.apiBase}${scanPath}?${params.toString()}`;
-}
-async function pollRaccoonQrLogin(product, code, fetcher = fetch) {
-  let envelope;
-  try {
-    const result = await postJson(
-      `${product.apiBase}${RACCOON_IAM_PREFIX}/auth/mp/qrcode/login`,
-      { qrcode_code: code },
-      fetcher
-    );
-    envelope = result.envelope;
-  } catch (error) {
-    appendRaccoonDebugLog({ event: "poll-network-suppressed", error: String(error) });
-    return { status: "pending" };
-  }
-  if (envelope.code !== 0 || envelope.data === void 0) {
-    appendRaccoonDebugLog({
-      event: "poll-biz-failure-suppressed",
-      code: envelope.code,
-      message: envelope.message,
-      details: envelope.details
-    });
-    return { status: "pending" };
-  }
-  const raw = envelope.data.status;
-  const status = typeof raw === "string" ? raw : "";
-  const expiredAt = typeof envelope.data.expired_at === "string" ? envelope.data.expired_at : void 0;
-  if (status === RACCOON_QR_STATUS.canceled) return { status: "canceled" };
-  if (status === RACCOON_QR_STATUS.expired) return { status: "expired" };
-  if (status === RACCOON_QR_STATUS.logging) {
-    return { status: "logging", ...expiredAt !== void 0 ? { expiredAt } : {} };
-  }
-  if (status === RACCOON_QR_STATUS.success) {
-    const accessToken = typeof envelope.data.access_token === "string" ? envelope.data.access_token : "";
-    const refreshToken = typeof envelope.data.refresh_token === "string" ? envelope.data.refresh_token : "";
-    if (accessToken.length === 0) {
-      appendRaccoonDebugLog({
-        event: "poll-success-missing-token",
-        dataKeys: Object.keys(envelope.data).sort().join(",")
-      });
-      return { status: "pending" };
-    }
-    const expMs = decodeJwtExpMs(accessToken);
-    return {
-      status: "success",
-      accessToken,
-      refreshToken,
-      ...expMs !== void 0 ? { expiresAt: String(expMs) } : {}
-    };
-  }
-  return { status: "pending" };
-}
-async function sendRaccoonSmsCode(product, phone, captchaParam, fetcher = fetch) {
-  const { envelope } = await postJson(
-    `${product.apiBase}${product.authApiPrefix}/send_sms`,
-    {
-      captcha_param: captchaParam,
-      nation_code: "86",
-      phone: encryptRaccoonPhone(phone)
-    },
-    fetcher
-  );
-  if (envelope.code !== 0) {
-    if (envelope.code === 100006) {
-      throw new Error("raccoon: \u56FE\u5F62\u9A8C\u8BC1\u7801\u6821\u9A8C\u5931\u8D25\uFF0C\u8BF7\u91CD\u65B0\u5B8C\u6210\u6ED1\u5757\u9A8C\u8BC1");
-    }
-    throw envelopeError(envelope, "\u4E0B\u53D1\u77ED\u4FE1\u9A8C\u8BC1\u7801\u5931\u8D25");
-  }
-}
-async function loginRaccoonWithSmsCode(product, phone, smsCode, fetcher = fetch) {
-  const { envelope } = await postJson(
-    `${product.apiBase}${product.authApiPrefix}/login_with_sms`,
-    {
-      nation_code: "86",
-      phone: encryptRaccoonPhone(phone),
-      sms_code: smsCode
-    },
-    fetcher
-  );
-  if (envelope.code !== 0) throw envelopeError(envelope, "\u77ED\u4FE1\u767B\u5F55\u5931\u8D25");
-  return credentialFromEnvelope(envelope);
-}
-function credentialFromEnvelope(envelope) {
-  const data = envelope.data ?? {};
-  const accessToken = typeof data.access_token === "string" ? data.access_token : "";
-  const refreshToken = typeof data.refresh_token === "string" ? data.refresh_token : "";
-  if (accessToken.length === 0) {
-    throw new Error("raccoon: \u767B\u5F55\u54CD\u5E94\u7F3A\u5C11 access_token");
-  }
-  const expMs = decodeJwtExpMs(accessToken);
-  const officeIdentity = typeof data.office_identity === "string" ? data.office_identity : "";
-  return {
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    ...expMs !== void 0 ? { expires_at: String(expMs) } : {},
-    ...officeIdentity.length > 0 ? { office_identity: officeIdentity } : {}
-  };
-}
-async function refreshRaccoonCredential(product, credential, fetcher = fetch) {
-  const { envelope, status } = await postJson(
-    `${product.apiBase}${product.authApiPrefix}/refresh`,
-    { refresh_token: credential.refresh_token },
-    fetcher
-  );
-  if (status === 401 || envelope.code === 200003) {
-    throw new Error("raccoon: \u767B\u5F55\u6001\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55");
-  }
-  if (envelope.code !== 0) throw envelopeError(envelope, "\u7EED\u671F\u5931\u8D25");
-  const data = envelope.data ?? {};
-  const accessToken = typeof data.access_token === "string" ? data.access_token : "";
-  if (accessToken.length === 0) {
-    throw new Error("raccoon: \u7EED\u671F\u54CD\u5E94\u7F3A\u5C11 access_token");
-  }
-  const nextRefresh = typeof data.refresh_token === "string" && data.refresh_token.length > 0 ? data.refresh_token : credential.refresh_token;
-  const expMs = decodeJwtExpMs(accessToken);
-  return {
-    ...credential,
-    access_token: accessToken,
-    refresh_token: nextRefresh,
-    ...expMs !== void 0 ? { expires_at: String(expMs) } : {}
-  };
-}
-async function fetchRaccoonUserInfo(product, credential, fetcher = fetch) {
-  try {
-    const response = await fetcher(`${product.apiBase}${product.authApiPrefix}/user_info`, {
-      method: "GET",
-      headers: raccoonHeaders(credential),
-      signal: AbortSignal.timeout(RACCOON_REQUEST_TIMEOUT_MS)
-    });
-    if (!response.ok) return {};
-    const envelope = parseEnvelope2(await response.json(), response.status);
-    if (envelope.code !== 0 || envelope.data === void 0) return {};
-    const userId = typeof envelope.data.id === "string" ? envelope.data.id : "";
-    const nickname = typeof envelope.data.name === "string" ? envelope.data.name : "";
-    const officeIdentity = typeof envelope.data.office_identity === "string" ? envelope.data.office_identity : "";
-    const phone = typeof envelope.data.phone === "string" ? envelope.data.phone : "";
-    return {
-      ...userId.length > 0 ? { userId } : {},
-      ...nickname.length > 0 ? { nickname } : {},
-      ...officeIdentity.length > 0 ? { officeIdentity } : {},
-      ...phone.length > 0 ? { phone } : {}
-    };
-  } catch {
-    return {};
-  }
 }
 
 // vendor/channel-pack/src/raccoon-login-page.ts
@@ -47200,6 +47218,12 @@ var RaccoonAuth = class extends Service6 {
    */
   async persistLogin(credential, flowOptions = {}) {
     const refName = flowOptions.refName ?? this.credentialRefName;
+    const confirmed = await confirmRaccoonIam(this.product, credential, this.fetchImpl);
+    if (!confirmed) {
+      this.ctx.logger?.warn?.(
+        "[raccoon] IAM \u786E\u8BA4\u5931\u8D25\uFF08200901 \u672A\u89E3\u9664\uFF09\uFF1A\u540E\u7EED user_info / \u79EF\u5206 / \u6A21\u578B\u76EE\u5F55\u53EF\u80FD\u4E0D\u53EF\u7528"
+      );
+    }
     let enriched = credential;
     if (credential.nickname === void 0 || credential.user_id === void 0 || credential.phone === void 0) {
       const info = await fetchRaccoonUserInfo(this.product, credential, this.fetchImpl);

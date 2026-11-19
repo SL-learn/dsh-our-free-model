@@ -38,6 +38,7 @@ import {
   fetchRaccoonOnboardingStatus,
 } from './raccoon-credits.js'
 import {
+  confirmRaccoonIam,
   fetchRaccoonUserInfo,
   refreshRaccoonCredential,
 } from './raccoon-oauth.js'
@@ -239,6 +240,19 @@ export class RaccoonAuth extends Service {
     flowOptions: { refName?: string } = {},
   ): Promise<RaccoonLoginResult> {
     const refName = flowOptions.refName ?? this.credentialRefName
+
+    // ⚠️ **必须先解除 IAM 确认要求（200901）**——IAM 域扫码登录签发的 JWT
+    // 在 web 域一概 400 `iam_confirm_required`（实测 2026-11-19）：不做这一步，
+    // 下面的 user_info 补全、登录奖励领取、以及之后的 model_catalog / chat
+    // 全部不可用，表现为「页面显示登录成功，应用里什么都没有」。
+    // 官方解法是官网前端进账号页时的自动动作 `POST iam/confirm`
+    //（docs/src 抓包实证 2026-11-13）；幂等，成功后服务端持久生效。
+    const confirmed = await confirmRaccoonIam(this.product, credential, this.fetchImpl)
+    if (!confirmed) {
+      this.ctx.logger?.warn?.(
+        '[raccoon] IAM 确认失败（200901 未解除）：后续 user_info / 积分 / 模型目录可能不可用',
+      )
+    }
 
     // 尽力补全用户信息（id / 昵称 / 身份 / 手机号）：失败不影响登录。
     let enriched: RaccoonCredential = credential

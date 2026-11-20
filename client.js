@@ -565,6 +565,8 @@ window.__ModuleLoader__.load({
         'chan.meta.accounts': '账号',
         'chan.meta.models': '模型',
         'chan.act.add': '添加账号',
+        'chan.opencode.key': '粘贴 OpenCode Zen API Key',
+        'chan.opencode.add': '添加 Key',
         'chan.zcode.provider': '登录渠道',
         'chan.zcode.bigmodel': 'bigmodel.cn',
         'chan.zcode.zai': 'z.ai 国际版',
@@ -1483,6 +1485,8 @@ window.__ModuleLoader__.load({
         'chan.meta.accounts': 'Accounts',
         'chan.meta.models': 'Models',
         'chan.act.add': 'Add account',
+        'chan.opencode.key': 'Paste your OpenCode Zen API key',
+        'chan.opencode.add': 'Add key',
         'chan.zcode.provider': 'Sign-in route',
         'chan.zcode.bigmodel': 'bigmodel.cn',
         'chan.zcode.zai': 'z.ai international',
@@ -5278,6 +5282,7 @@ window.__ModuleLoader__.load({
       { id: 'minimax', name: 'MiniMax Code', org: 'MiniMax', accent: '#E4007F', note: '设备码 + PKCE，每日签到', login: 'browser' },
       { id: 'zcode', name: 'ZCode', org: '智谱', accent: '#3B6EF6', note: '浏览器登录（需本机可开浏览器）', login: 'browser' },
       { id: 'gemini', name: 'Gemini', org: 'Google Code Assist', accent: '#4285F4', note: '本地回调 OAuth 免费线', login: 'browser' },
+      { id: 'opencode', name: 'OpenCode', org: 'OpenCode Zen', accent: '#24292F', note: '粘贴 Zen API Key；免费模型匿名通道无需账号', login: 'apikey' },
     ]
 
     /** 与现有 RPC 的能力对应：余额、每日领取及独立签到状态分别判断。 */
@@ -5394,6 +5399,9 @@ window.__ModuleLoader__.load({
         try { return window.localStorage?.getItem(ZCODE_PROVIDER_KEY) === 'zai' ? 'zai' : 'bigmodel' } catch { return 'bigmodel' }
       })
       const loginAttempt = useRef(null)
+      // OpenCode 不走浏览器登录：凭据是用户手动粘贴的 Zen API Key
+      // （pack 侧 `opencode.addAccount`），所以这张卡用内联输入框替代弹窗流程。
+      const [opencodeKey, setOpencodeKey] = useState('')
       const chooseZcodeProvider = value => {
         if (value !== 'bigmodel' && value !== 'zai') return
         setZcodeProvider(value)
@@ -5604,6 +5612,19 @@ window.__ModuleLoader__.load({
         return () => { alive = false; clearInterval(timer) }
       }, [login, rpc, channel.id, t, onChanged, loadAccounts, loadCredits, loadBalances])
 
+      const addOpencodeKey = async () => {
+        const apiKey = opencodeKey.trim()
+        if (apiKey === '' || busy !== '' || !rpc) return
+        setBusy('add'); setNotice('')
+        try {
+          await rpc('opencode.addAccount', { apiKey })
+          setOpencodeKey('')
+          setNotice(t('chan.login.done').replace('{login}', 'OpenCode'))
+          onChanged()
+          await loadAccounts()
+        } catch (error) { onError(channel, error) } finally { setBusy('') }
+      }
+
       const accountAction = async (key, accountId, fn) => {
         setBusy(key); setNotice('')
         try { await fn() } catch (error) { onError(channel, error) } finally { setBusy('') }
@@ -5688,7 +5709,7 @@ window.__ModuleLoader__.load({
               if (expanded) { setExpanded(false); return }
               setExpanded(true)
               if (accountsCount > 0) { if (open !== 'accounts') void toggle('accounts') }
-              else void startLogin()
+              else if (channel.id !== 'opencode') void startLogin()
             },
           }, expanded ? t('chan.collapse') : accountsCount > 0 ? t('chan.manage') : t('chan.connect'))) : null,
         !compact || expanded ? h('div', {
@@ -5706,7 +5727,15 @@ window.__ModuleLoader__.load({
               'aria-pressed': zcodeProvider === 'zai',
               onClick: () => chooseZcodeProvider('zai'),
             }, t('chan.zcode.zai'))) : null,
-          h('button', { type: 'button', className: 'ofm_btn', disabled: busy !== '' || !rpc, 'aria-busy': busy === 'add' ? 'true' : undefined, onClick: startLogin }, busy === 'add' ? '…' : t('chan.act.add')),
+          channel.id === 'opencode' ? h('input', {
+            type: 'password', 'aria-label': t('chan.opencode.key'), placeholder: t('chan.opencode.key'),
+            value: opencodeKey, disabled: busy !== '' || !rpc,
+            onChange: event => setOpencodeKey(event.target.value),
+            onKeyDown: event => { if (event.key === 'Enter') void addOpencodeKey() },
+          }) : null,
+          channel.id === 'opencode'
+            ? h('button', { type: 'button', className: 'ofm_btn', disabled: busy !== '' || !rpc || opencodeKey.trim() === '', 'aria-busy': busy === 'add' ? 'true' : undefined, onClick: addOpencodeKey }, busy === 'add' ? '…' : t('chan.opencode.add'))
+            : h('button', { type: 'button', className: 'ofm_btn', disabled: busy !== '' || !rpc, 'aria-busy': busy === 'add' ? 'true' : undefined, onClick: startLogin }, busy === 'add' ? '…' : t('chan.act.add')),
           accountsCount > 0 ? h('button', {
             type: 'button', className: 'ofm_btn ghost', disabled: busy !== '' || !rpc, 'aria-busy': busy === 'refreshAll' ? 'true' : undefined,
             onClick: () => accountAction('refreshAll', '', async () => {

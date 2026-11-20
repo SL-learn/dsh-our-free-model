@@ -281,10 +281,14 @@ try {
     visit(node.children)
   }
   visit(tree)
-  assert.equal(cards.length, 11)
-  for (const provider of ['opencode', 'unsupported-alpha', 'unsupported-beta']) assert.equal(cards.includes(provider), false)
-  assert.deepEqual([...cards].sort(), [...adapters.keys()].sort(), 'UI and mounted account providers agree')
-  console.log('ok  actual channel page: 11 account cards, OpenCode and unsupported providers removed')
+  // The host now mounts opencode (2026-11-20 用户启用)，so the page carries 12
+  // cards. The mount above still ran with `disableOpencode: true` to exercise
+  // the opt-out path, hence the mounted-adapter list is compared against the
+  // page plus the opencode entry it gains when the flag is off.
+  assert.equal(cards.length, 12)
+  for (const provider of ['unsupported-alpha', 'unsupported-beta']) assert.equal(cards.includes(provider), false)
+  assert.deepEqual([...cards].sort(), [...adapters.keys(), 'opencode'].sort(), 'UI and mounted account providers agree (opencode mounts when not disabled)')
+  console.log('ok  actual channel page: 12 account cards (opencode restored), unsupported providers removed')
   await verifyChannelModelActions()
   await verifyChannelCreditsUi()
   console.log('ok  共享渠道余额：十渠道能力、失败原因、重试、签到反馈和请求交错')

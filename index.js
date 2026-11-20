@@ -1143,12 +1143,13 @@ export function apply(ctx, config) {
     // release manifest stays inside its file cap.
     void import('./vendor/channel-pack/pack.js').then(pack => {
       if (stopped) return
+      // OpenCode 账号接入保持启用（用户要求 2026-11-20）： pack 自带默认匿名
+      // 通道 + 手动粘贴 Zen API Key 的账号槽，与 OFM 独立匿名车道并存。
       pack.apply(scoped, {
-        disableOpencode: true,
         outlet: { active: egressActive, fetch: egressFetch },
       })
       channelPack = { state: 'ready', error: '' }
-      logger.info?.('our-free-model: free-channel pack mounted (10 account providers)')
+      logger.info?.('our-free-model: free-channel pack mounted (11 account providers)')
     }).catch(error => {
       if (stopped) return
       channelPack = { state: 'failed', error: String(error?.message ?? error).slice(0, 300) }

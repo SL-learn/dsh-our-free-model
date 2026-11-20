@@ -153,5 +153,5 @@ parentPort.on('message', async message => {
   } finally { controllers.delete(id) }
 })
 
-apply(ctx, { disableOpencode: true })
+apply(ctx, {})
 send({ type: 'ready', providers: [...adapters.keys()] })

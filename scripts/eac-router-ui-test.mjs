@@ -146,7 +146,7 @@ try {
   const channelIds = await page.evaluate(() => window.channelIds)
   await count('[data-channel]', channelIds.length)
   assert.equal(await page.getByRole('heading', { name: 'EAC router', exact: true }).count(), 1)
-  assert.ok(!channelIds.some(id => /codebuddy|workbuddy|opencode/i.test(id)), 'removed account channels stay absent')
+  assert.ok(!channelIds.some(id => /codebuddy|workbuddy/i.test(id)), 'removed account channels stay absent')
   await text(channel('qoder').locator('.ofm_chanstate'), '已连接')
   await text(channel('gemini').locator('.ofm_chanstate'), '已关闭')
   for (const id of channelIds.filter(id => !['qoder', 'gemini'].includes(id))) {

@@ -42,15 +42,18 @@ export function stageDesktopService(destination, { requireWorkspace = false } = 
   copy('packages/desktop/service-host.mjs')
   for (const name of ['qoder-auth-wasm.wasm', 'LICENSE', 'NOTICE.md']) copy(`vendor/channel-pack/${name}`)
   // The model workspace runs the same pinned engine the plugin ships, so the
-  // desktop build carries that binary and its manifest. `src/magpie-engine.js`
-  // resolves `../vendor/magpie/` from its own directory, which inside this
-  // staged tree is `resources/vendor/magpie/`.
-  for (const name of ['engine.json', 'LICENSE', 'NOTICE.md']) copy(`vendor/magpie/${name}`, `../vendor/magpie/${name}`)
+  // desktop build carries that binary and its manifest. ⚠️ `src/magpie-engine.js`
+  // resolves `../vendor/magpie/` **from its own directory** — the staged module
+  // is `service/src/magpie-engine.js`, so the vendor must land at
+  // `service/vendor/magpie/`（与 channel-pack 同级）。
+  // 之前放到 `../vendor/magpie/`（service 外面一层）导致安装版报
+  // "Magpie engine binary is unavailable"（2026-11-20 真机事故）。
+  for (const name of ['engine.json', 'LICENSE', 'NOTICE.md']) copy(`vendor/magpie/${name}`, `vendor/magpie/${name}`)
   const target = `${process.platform}-${process.arch}`
   const binaries = JSON.parse(fs.readFileSync(path.join(repositoryRoot, 'vendor/magpie/engine.json'), 'utf8')).binaries ?? {}
   const binary = binaries[target]
   if (binary && typeof binary.path === 'string') {
-    copy(`vendor/magpie/${binary.path}`, `../vendor/magpie/${binary.path}`)
+    copy(`vendor/magpie/${binary.path}`, `vendor/magpie/${binary.path}`)
   } else if (requireWorkspace) {
     // A real installer without the engine ships a workspace page that can never
     // start, so packaging refuses. Staging alone (tests, source inspection) may

@@ -23,7 +23,11 @@ export function stageDesktopService(destination, { requireWorkspace = false } = 
       else if (entry.isFile() && allowed(child)) copy(child)
     }
   }
-  tree('src', file => /\.(js|json)$/.test(file))
+  // ⚠️ `.part` 必须一起进包：桌面安装版没有 vendor/magpie/bin 的引擎可执行文件，
+  // 运行时靠 materializeEngine 从 `service/src/engine-parts/*.part` 物化引擎
+  // （engine-payload.js）。漏掉分片 = 模型工作台报
+  // "Magpie engine binary is unavailable"（2026-11-20 真机事故）。
+  tree('src', file => /\.(js|json|part)$/.test(file))
   for (const name of ['cli', 'service', 'management', 'desktop-update', 'login-terminal', 'open-external', 'eac', 'workbench', 'providers', 'library', 'client-terminal', 'routing', 'feedback']) copy(`packages/standalone/${name}.mjs`)
   tree('packages/standalone/channels', file => file.endsWith('.mjs'))
   const web = 'packages/standalone/web'

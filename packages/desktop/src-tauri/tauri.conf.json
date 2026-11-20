@@ -42,7 +42,8 @@
     },
     "resources": {
       "resources/service/": "service/",
-      "resources/runtime/": "runtime/"
+      "resources/runtime/": "runtime/",
+      "resources/vendor/": "vendor/"
     }
   }
 }

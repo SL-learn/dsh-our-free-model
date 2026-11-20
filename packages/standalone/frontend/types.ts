@@ -11,7 +11,7 @@ export interface Model {
   reasoning?: boolean
   contextWindow?: number
   maxOutput?: number
-  availabilitySource?: 'listing' | 'probe' | 'manual'
+  availabilitySource?: 'listing' | 'probe' | 'manual' | 'usage'
   detail?: string
   probedAt?: number
   latencyMs?: number

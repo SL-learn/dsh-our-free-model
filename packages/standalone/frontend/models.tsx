@@ -122,6 +122,17 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     }).catch(host.error)
   }
 
+  // 一键隐藏全部实测/调用不可用的模型（写入 hiddenModelIds，可随时在列表里恢复）。
+  const unusable = summary.catalog.filter(model =>
+    (model.availability === 'unavailable' || model.availability === 'region-blocked') && model.hiddenByUser !== true)
+  const hideUnusable = () => {
+    if (unusable.length === 0) return
+    const scope = unusable.length === 1 ? unusable[0].name : `${unusable.length} 个模型`
+    if (typeof window !== 'undefined' && !window.confirm(
+      `隐藏 ${scope}？它们将被排除出推理路由（清单里仍可见，随时可单独恢复）。`)) return
+    void saveVisibility({ hiddenModelIds: [...new Set([...(summary.settings.hiddenModelIds ?? []), ...unusable.map(model => model.id)])] })
+  }
+
   const saveVisibility = async (patch: Partial<ServiceSettings>) => {
     if (visibilityPending.current || !activeRef.current) return
     visibilityPending.current = true
@@ -153,6 +164,12 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
           onClick={() => { void run('probe') }}>
           {operation === 'probe' ? <LoaderCircle size={15} className="spinning" /> : <CircleCheck size={15} />}
           {operation === 'probe' ? '正在探测' : '探测可用性'}
+        </Button>
+        <Button variant="outline" disabled={visibilitySaving || unusable.length === 0}
+          title="把实测/调用不可用的模型排除出推理路由，可随时单独恢复"
+          onClick={hideUnusable}>
+          {visibilitySaving ? <LoaderCircle size={15} className="spinning" /> : <EyeOff size={15} />}
+          隐藏不可用{unusable.length > 0 && `（${number(unusable.length)}）`}
         </Button>
       </div>
     </header>
@@ -217,8 +234,11 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
             const model = models[item.index]
             const state = model.availabilitySource === 'listing' ? 'listed' : model.availability ?? 'unknown'
             const manual = model.availabilitySource === 'manual'
+            const usage = model.availabilitySource === 'usage'
             const failed = manual && state === 'unknown'
-            const availabilityName = failed ? '实测失败' : manual && state === 'available' ? '实测可用' : availabilityNames[state] ?? '未知状态'
+            const availabilityName = failed ? '实测失败' : manual && state === 'available' ? '实测可用'
+              : usage && state === 'available' ? '调用可用' : usage && state === 'unavailable' ? '连续调用失败'
+                : availabilityNames[state] ?? '未知状态'
             const disabledReason = !summary.settings.enabled ? '推理服务已暂停' : !model.routable && !model.hiddenByUser ? '模型尚未公开，请检查渠道账号或模型设置' : operation ? '请等待当前操作完成' : ''
             return <div role="row" aria-rowindex={item.index + 2} key={item.key} data-index={item.index} data-model-id={model.id}
               className="model-table-row" ref={virtual.measureElement} style={{ transform: `translateY(${item.start}px)` }}
@@ -232,7 +252,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 <span title={model.maxOutput ? `${model.maxOutput} Token` : undefined}>{capacity(model.maxOutput)} <small>输出</small></span></div>
               <div role="cell" className="model-state"><Badge tone={state === 'available' ? 'success' : failed || ['unavailable', 'throttled', 'region-blocked'].includes(state) ? 'warning' : 'neutral'}>
                 {availabilityName}</Badge>
-                {manual && state !== 'available' && model.detail && <small title={model.detail}
+                {(manual || usage) && state !== 'available' && model.detail && <small title={model.detail}
                   style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.detail}</small>}
                 {!model.routable && <small>{model.hiddenByUser ? visibility.hidden : '未公开'}</small>}
                 {model.ttftMs != null && <small>首响应 {number(model.ttftMs)} ms</small>}</div>

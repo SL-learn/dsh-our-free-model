@@ -91,7 +91,12 @@ export async function runModelTest(createStream, { signal, timeoutMs = MODEL_TES
 /** Keep manual samples apart from the automatic round so an older probe cannot erase them. */
 export function modelAvailability(id, snapshot, listed = false) {
   // 旧出口的测量仍保留在磁盘，但不再作为当前出口的可用性判定。
-  const probeRow = listed ? undefined : snapshot?.results?.[id]
+  const row = snapshot?.results?.[id]
+  // 渠道模型不经车道探测（listed=true 会排除 probe 结果），但真实调用的
+  // 被动沉淀（source:'usage'，2026-11-20）对它们同样成立，必须采纳——否则
+  // 渠道模型在清单页永远「未探测」，用户无从批量清理不可用渠道模型。
+  const probeRow = row === undefined || row.source === 'usage'
+    ? row : (listed ? undefined : row)
   const manualRow = snapshot?.manualResults?.[id]
   const probe = probeRow?.stale === true ? undefined : probeRow
   const manual = manualRow?.stale === true ? undefined : manualRow
@@ -101,8 +106,9 @@ export function modelAvailability(id, snapshot, listed = false) {
   const measured = manual && (!probe || manual.at >= (probe.startedAt ?? probe.at)) ? manual : probe
   return {
     availabilitySource: measured === manual && manual ? 'manual'
-      : measured?.source === 'passive' ? 'passive'
-        : listed ? 'listing' : 'probe',
+      : measured?.source === 'usage' ? 'usage'
+        : measured?.source === 'passive' ? 'passive'
+          : listed ? 'listing' : 'probe',
     availability: measured?.state ?? 'unknown',
     detail: measured?.detail ?? '', probedAt: measured?.at ?? 0,
     ttftMs: measured?.ttftMs, latencyMs: measured?.latencyMs,

@@ -27,7 +27,7 @@ function publicModelRows(snapshot) {
     };
   });
 }
-function createForwardCompletion({ adapter, state, signal }) {
+function createForwardCompletion({ adapter, state, signal, onOutcome }) {
   return async (request, onChunk) => {
     if (signal?.aborted) throw Object.assign(new Error("model runtime is stopped"), { statusCode: 503 });
     const snapshot = state();
@@ -45,6 +45,7 @@ function createForwardCompletion({ adapter, state, signal }) {
     const temperature = Number.isFinite(request.temperature) ? request.temperature : Number.isFinite(openAi.temperature) ? openAi.temperature : void 0;
     const reasoningEffort = typeof request.reasoningEffort === "string" ? request.reasoningEffort : typeof openAi.reasoning_effort === "string" ? openAi.reasoning_effort : void 0;
     const toolChoice = request.toolChoice === void 0 ? openAi.tool_choice : request.toolChoice;
+    const sessionId = `forward:${String(openAi.user ?? openAi.conversation ?? request.sessionId ?? "shared")}`;
     const options = {
       provider: ROUTE_MAIN,
       model: entry.id,
@@ -54,12 +55,34 @@ function createForwardCompletion({ adapter, state, signal }) {
       ...maxTokens === void 0 ? {} : { maxTokens },
       ...reasoningEffort === void 0 ? {} : { reasoningEffort },
       ...toolChoice === void 0 ? {} : { toolChoice },
-      sessionId: `forward:${String(openAi.user ?? openAi.conversation ?? request.sessionId ?? "shared")}`,
+      sessionId,
       signal: request.signal && signal ? AbortSignal.any([request.signal, signal]) : request.signal ?? signal
     };
-    for await (const chunk of adapter.stream(options, entry, snapshot)) {
-      handler(chunk);
-      foldForwardOutcome(outcome, chunk);
+    // 调用驱动的可用性：每次真实转发的成败/速度免费沉淀进 availability
+    // （渠道模型此前完全没有判定来源，清单页恒为「未探测」）。用户取消不算
+    // 失败；车道级熔断（免费配额窗口）也不算——那是整条车道的墙，不是单个
+    // 模型不可用，noteFreeLaneOutcome 的车道状态已另行处理。
+    const startedAt = Date.now();
+    let firstTokenAt;
+    if (typeof onOutcome === "function") {
+      try {
+        for await (const chunk of adapter.stream(options, entry, snapshot)) {
+          if (firstTokenAt === void 0 && (chunk.type === "text-delta" || chunk.type === "reasoning-delta" || chunk.type === "usage")) firstTokenAt = Date.now();
+          handler(chunk);
+          foldForwardOutcome(outcome, chunk);
+        }
+        onOutcome(entry, { ok: true, ttftMs: firstTokenAt === void 0 ? void 0 : firstTokenAt - startedAt, latencyMs: Date.now() - startedAt });
+      } catch (error) {
+        const aborted = error?.code === CODE.aborted || request.signal?.aborted === true;
+        const laneWall = error?.laneQuota === true;
+        if (!aborted && !laneWall) onOutcome(entry, { ok: false, error, latencyMs: Date.now() - startedAt });
+        throw error;
+      }
+    } else {
+      for await (const chunk of adapter.stream(options, entry, snapshot)) {
+        handler(chunk);
+        foldForwardOutcome(outcome, chunk);
+      }
     }
     if (outcome.truncated === true) {
       outcome.toolCalls = outcome.toolCalls.filter((call) => {
@@ -368,6 +391,38 @@ function createModelRuntime({
     }
     if (code === CODE.region) recordPassiveResult(entry.id, STATE.regionBlocked);
   }
+  // ── 调用驱动的可用性（全车道）──
+  // 真实用户调用成功/失败时免费沉淀可用性与速度（2026-11-20 用户需求：
+  // 不要为了探测额外消耗 token）。免费车道已有 noteFreeLaneOutcome；这里把
+  // 渠道/Kilo/EAC/聚合等其余车道补齐，成功还记录 ttft/延迟供清单页展示。
+  // 防误伤：硬失败要**连续 2 次**才标 unavailable（进程内计数，成功清零，
+  // 重启归零偏保守）；限流与地区限制单次即标，因为它们的语义本来就是暂态。
+  const usageFailures = new Map();
+  function noteUsageOutcome(entry, { ok = false, error, ttftMs, latencyMs } = {}) {
+    if (disposed || !entry || !entry.id) return;
+    const extra = {};
+    if (ok === true) {
+      if (Number.isFinite(ttftMs)) extra.ttftMs = Math.round(ttftMs);
+      if (Number.isFinite(latencyMs)) extra.latencyMs = Math.round(latencyMs);
+      usageFailures.delete(entry.id);
+      recordPassiveResult(entry.id, STATE.available, extra);
+      return;
+    }
+    const code = error?.code;
+    if (code === CODE.region) {
+      usageFailures.delete(entry.id);
+      recordPassiveResult(entry.id, STATE.regionBlocked, { detail: String(error?.message ?? "").slice(0, 200) });
+      return;
+    }
+    if (code === CODE.quota || Number.isFinite(Number(error?.providerRetryAfterMs))) {
+      usageFailures.delete(entry.id);
+      recordPassiveResult(entry.id, STATE.throttled, { detail: String(error?.message ?? "").slice(0, 200) });
+      return;
+    }
+    const strikes = (usageFailures.get(entry.id) ?? 0) + 1;
+    usageFailures.set(entry.id, strikes);
+    if (strikes >= 2) recordPassiveResult(entry.id, STATE.unavailable, { detail: String(error?.message ?? error).slice(0, 200) });
+  }
   const adapter = new FreeModelAdapter({
     state,
     resolveImage,
@@ -645,6 +700,7 @@ function createModelRuntime({
     complete: createForwardCompletion({
       adapter,
       signal: lifetime.signal,
+      onOutcome: noteUsageOutcome,
       state: () => {
         const snapshot = state();
         return { ...snapshot, membership: computeMembership(snapshot.catalog, availability.get(), {

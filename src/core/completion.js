@@ -30,7 +30,7 @@ export function publicModelRows(snapshot) {
 }
 
 /** 固定本次请求的模型和配置快照，两个入口使用同一条推理链路。 */
-export function createForwardCompletion({ adapter, state, signal }) {
+export function createForwardCompletion({ adapter, state, signal, onOutcome }) {
   return async (request, onChunk) => {
     if (signal?.aborted) throw Object.assign(new Error('model runtime is stopped'), { statusCode: 503 })
     const snapshot = state()
@@ -71,10 +71,32 @@ export function createForwardCompletion({ adapter, state, signal }) {
       sessionId: `forward:${String(openAi.user ?? openAi.conversation ?? request.sessionId ?? 'shared')}`,
       signal: request.signal && signal ? AbortSignal.any([request.signal, signal]) : request.signal ?? signal,
     }
-    for await (const chunk of adapter.stream(options, entry, snapshot)) {
-      handler(chunk)
-      foldForwardOutcome(outcome, chunk)
+    const started = Date.now()
+    let firstFrameAt = 0
+    let thrown
+    try {
+      for await (const chunk of adapter.stream(options, entry, snapshot)) {
+        handler(chunk)
+        // 首响应帧（文本/思考 delta）：调用沉淀的 ttft 来源。
+        if (firstFrameAt === 0 && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta')
+          && typeof chunk.text === 'string' && chunk.text !== '') firstFrameAt = Date.now()
+        foldForwardOutcome(outcome, chunk)
+      }
+    } catch (error) {
+      // 适配器抛错（网络/取消等）也要进沉淀，否则连败计数永远凑不满。
+      thrown = error
     }
+    if (typeof onOutcome === 'function' && thrown?.code !== 'ABORTED') {
+      try {
+        onOutcome(entry, {
+          ok: thrown === undefined && outcome.error === undefined,
+          error: thrown ?? outcome.error,
+          ttftMs: firstFrameAt === 0 ? undefined : firstFrameAt - started,
+          latencyMs: Date.now() - started,
+        })
+      } catch { /* 可用性沉淀失败不影响调用结果 */ }
+    }
+    if (thrown !== undefined) throw thrown
     if (outcome.truncated === true) {
       outcome.toolCalls = outcome.toolCalls.filter(call => {
         try { JSON.parse(call.arguments === '' ? '{}' : call.arguments); return true } catch { return false }

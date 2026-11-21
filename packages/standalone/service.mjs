@@ -295,7 +295,42 @@ export async function startStandalone({
       get catalog() { return [...core.catalog, ...channels.publicModelRows().map(row => ({ ...row, contextWindow: row.context_window, maxOutput: row.max_tokens }))] },
       state: () => ({ ...core.state(), catalog: [...core.catalog, ...channels.publicModelRows()] }),
       publicModelRows: () => [...core.publicModelRows(), ...channels.publicModelRows()],
-      complete: (request, onChunk) => channels.handles(request.model) ? channels.complete(request, onChunk) : core.complete(request, onChunk),
+      complete: (request, onChunk) => {
+        if (!channels.handles(request.model)) return core.complete(request, onChunk)
+        // 渠道模型的用户调用也自动沉淀可用性（2026-11-21 用户要求"调用过也形成
+        // 结果"）：与核心车道同一套连败计数/ttft 沉淀，清单页显示「调用可用 /
+        // 连续调用失败」。限流/地区类错误单次即标，避免把暂态误判成模型损坏。
+        const started = Date.now()
+        let first = 0
+        const record = error => {
+          try {
+            const status = Number(error?.statusCode ?? error?.status ?? 0)
+            const text = String(error?.message ?? error ?? '')
+            const code = status === 403 && /region|country/i.test(text) ? 'REGION_BLOCKED'
+              : status === 402 || status === 429 || /usage[ _-]limit|rate[ _-]limit|insufficient|quota/i.test(text) ? 'RATE_LIMIT'
+                : undefined
+            core.noteUsageOutcome({ id: request.model }, {
+              ok: error === undefined,
+              error: error === undefined ? undefined : { message: text.slice(0, 200), ...(code === undefined ? {} : { code }) },
+              ttftMs: first ? first - started : undefined,
+              latencyMs: Date.now() - started,
+            })
+          } catch { /* 沉淀失败不影响调用本身 */ }
+        }
+        return channels.complete(request, chunk => {
+          if (first === 0 && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta')
+            && typeof chunk.text === 'string' && chunk.text !== '') first = Date.now()
+          onChunk?.(chunk)
+        }).then(outcome => {
+          record(outcome?.error)
+          return outcome
+        }, error => {
+          // 渠道引擎以抛错收尾（账号轮换全部受限、网络失败等）也要进沉淀，
+          // 否则连败计数凑不满、清单永远不更新。
+          record(error)
+          throw error
+        })
+      },
       // 渠道模型（`provider/model`）不在核心 catalog 里，core.testModel 对它们
       // 恒 404（用户在清单页点「测试」只能看到 Unknown model，2026-11-21 实测）。
       // 与 complete 同款分流：渠道模型走渠道引擎跑同一条 "OK" 最小探针。

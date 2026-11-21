@@ -3,15 +3,11 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from '@tanstack/rea
 import { Boxes, Check, CircleAlert, CircleCheck, Copy, Eye, EyeOff, LoaderCircle, Play, RefreshCw, Search, SlidersHorizontal, Square, X } from 'lucide-react'
 import { providers } from 'ofm-provider-list'
 import { Badge, Button, Input } from './components/ui'
-import { filterModels } from './models-data.mjs'
+import { filterModels, modelStateView, stateOptions } from './models-data.mjs'
 import { visibilityCopy } from './visibility-data.mjs'
 import type { Host, Model, ModelTestResult, ServiceSettings, Summary } from './types'
 import './models.css'
 
-const availabilityNames: Record<string, string> = {
-  available: '已探测可用', listed: '清单已收录', unknown: '未探测',
-  unavailable: '不可用', throttled: '限流中', 'region-blocked': '地区受限',
-}
 // 手动测试失败的归因展示名（与服务端 classifyModelFailure 的取值对齐；
 // 放前端本地是因为 src/model-test.js 依赖 node 侧模块，不能进浏览器包）。
 const failureKindNames: Record<string, string> = {
@@ -24,7 +20,7 @@ const channelName = (id: string) => sourceNames[id]
 const number = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
 const capacity = (value?: number) => value && Number.isFinite(value) && value > 0
   ? value >= 1000 ? `${Number((value / 1000).toFixed(1))}K` : number(value) : '未知'
-const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all', failure: 'all' }
+const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all' }
 type Operation = 'refresh' | 'probe' | 'test'
 type TestState = { model: Model; state: 'pending' | 'success' | 'error' | 'cancelled'; result?: ModelTestResult; error?: string; kind?: string }
 
@@ -222,16 +218,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
         <option value="all">全部能力</option><option value="text">纯文本</option><option value="vision">支持视觉</option><option value="reasoning">支持思考</option>
       </select>
       <select aria-label="筛选可用状态" value={filters.availability} onChange={event => changeFilters({ availability: event.target.value })}>
-        <option value="all">全部状态</option>{Object.entries(availabilityNames).map(([id, name]) => <option value={id} key={id}>{name}</option>)}
-      </select>
-      <select aria-label="筛选失败归因" value={filters.failure} onChange={event => changeFilters({ failure: event.target.value })}>
-        <option value="all">全部归因</option>
-        <option value="model-error">模型异常（实测失败）</option>
-        <option value="quota">额度不足</option>
-        <option value="rate-limit">限流中</option>
-        <option value="region">地区受限</option>
-        <option value="auth">鉴权失败</option>
-        <option value="transport">网络异常</option>
+        <option value="all">全部状态</option>{stateOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
       </select>
     </div>
     <div className="model-list-toolbar">
@@ -277,26 +264,11 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
         <div className="model-virtual-content" style={{ height: virtual.getTotalSize() }}>
           {virtual.getVirtualItems().map(item => {
             const model = models[item.index]
-            const state = model.availabilitySource === 'listing' ? 'listed' : model.availability ?? 'unknown'
-            const manual = model.availabilitySource === 'manual'
-            const usage = model.availabilitySource === 'usage'
-            // 实测失败细分（2026-11-21）：手动测试失败时按 failureKind 归因展示；
-            // 额度/限流/地区/鉴权/网络是环境问题（中性色），只有模型异常保持警示。
-            const envFailure = manual && state === 'unknown' && model.failureKind !== undefined && model.failureKind !== 'model-error'
-            const failed = manual && state === 'unknown' && !envFailure
-            const availabilityName = envFailure ? (failureKindNames[model.failureKind ?? ''] ?? '实测失败')
-              : failed ? '实测失败' : manual && state === 'available' ? '实测可用'
-              : usage && state === 'available' ? '调用可用' : usage && state === 'unavailable' ? '连续调用失败'
-                : availabilityNames[state] ?? '未知状态'
+            // 徽章文案/颜色/筛选三处共用 models-data.mjs 的 modelStateView（2026-11-21 重构）。
+            const view = modelStateView(model)
+            const state = view.state
+            const envFailure = ['quota', 'auth', 'transport'].includes(state)
             const disabledReason = !summary.settings.enabled ? '推理服务已暂停' : !model.routable && !model.hiddenByUser ? '模型尚未公开，请检查渠道账号或模型设置' : operation ? '请等待当前操作完成' : ''
-            // 徽章色阶（2026-11-21 重设计，与归因体系一致）：
-            // 绿=可用 · 红=模型真断（不可用/实测异常） · 橙=条件性受限（限流/地区）
-            // · 蓝=环境/账号问题（额度/鉴权/网络，需处理但不代表损坏） · 灰=未知/未探测。
-            const stateTone: 'neutral' | 'success' | 'warning' | 'blue' | 'danger' =
-              state === 'available' ? 'success'
-                : envFailure ? 'blue'
-                  : failed || state === 'unavailable' ? 'danger'
-                    : ['throttled', 'region-blocked'].includes(state) ? 'warning' : 'neutral'
             return <div role="row" aria-rowindex={item.index + 2} key={item.key} data-index={item.index} data-model-id={model.id}
               data-hidden={model.hiddenByUser === true || undefined}
               className="model-table-row" ref={virtual.measureElement} style={{ transform: `translateY(${item.start}px)` }}
@@ -308,9 +280,9 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 <Badge>{model.vision ? '视觉' : '纯文本'}</Badge>{model.reasoning && <Badge tone="blue">思考</Badge>}</div></div>
               <div role="cell" className="model-limits"><span title={model.contextWindow ? `${model.contextWindow} Token` : undefined}>{capacity(model.contextWindow)} <small>上下文</small></span>
                 <span title={model.maxOutput ? `${model.maxOutput} Token` : undefined}>{capacity(model.maxOutput)} <small>输出</small></span></div>
-              <div role="cell" className="model-state"><Badge tone={stateTone}>
-                {availabilityName}</Badge>
-                {(manual || usage) && state !== 'available' && model.detail && <small title={model.detail}
+              <div role="cell" className="model-state"><Badge tone={view.tone}>
+                {view.label}</Badge>
+                {(model.availabilitySource === 'manual' || model.availabilitySource === 'usage') && state !== 'available' && model.detail && <small title={model.detail}
                   style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.detail}</small>}
                 {envFailure && <small>环境问题，不代表模型损坏</small>}
                 {!model.routable && <small>{model.hiddenByUser ? visibility.hidden : '未公开'}</small>}

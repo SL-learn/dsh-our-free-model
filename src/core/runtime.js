@@ -531,6 +531,53 @@ export function createModelRuntime({
     }
   }
 
+  // ── 调用驱动的可用性（2026-11-21 用户要求"调用过也自动形成结果"）──
+  // 真实推理调用（OpenAI 转发、渠道分流）的成功/失败自动沉淀为清单可用状态，
+  // 用户不需要专门点「测试」。防误伤：硬失败要**连续 2 次**才标 unavailable
+  // （成功清零，重启归零偏保守）；限流与地区限制单次即标（语义本来就是暂态）。
+  // 写 source:'usage'——modelAvailability 对 listed（渠道）模型只保留 usage
+  // 行，这样渠道模型的调用沉淀才能在清单页生效。
+  const usageFailures = new Map()
+  function noteUsageOutcome(entry, { ok = false, error, ttftMs, latencyMs } = {}) {
+    if (disposed || !entry || !entry.id) return
+    const write = (resultState, extra = {}) => {
+      // ⚠️ 写**全新行**，不保留旧结果的字段（尤其 startedAt）：modelAvailability
+      // 的新旧比较用 `startedAt ?? at`，残留旧探测的 startedAt 会让新调用结果
+      // 被「更早」的时间戳压制，表现为清单页永远显示旧状态（2026-11-21 实测踩坑）。
+      availability.edit(value => ({
+        ...value,
+        results: {
+          ...value.results,
+          [entry.id]: { state: resultState, source: 'usage', at: Date.now(), ...extra },
+        },
+      }))
+      availability.flush()
+    }
+    if (ok === true) {
+      const extra = {}
+      if (Number.isFinite(ttftMs)) extra.ttftMs = Math.round(ttftMs)
+      if (Number.isFinite(latencyMs)) extra.latencyMs = Math.round(latencyMs)
+      usageFailures.delete(entry.id)
+      write(STATE.available, extra)
+      return
+    }
+    const code = String(error?.code ?? '')
+    const detail = String(error?.message ?? error ?? '').slice(0, 200)
+    if (code === 'REGION_BLOCKED') {
+      usageFailures.delete(entry.id)
+      write(STATE.regionBlocked, { detail })
+      return
+    }
+    if (code === 'RATE_LIMIT' || code === 'QUOTA_EXHAUSTED' || Number.isFinite(Number(error?.providerRetryAfterMs))) {
+      usageFailures.delete(entry.id)
+      write(STATE.throttled, { detail })
+      return
+    }
+    const strikes = (usageFailures.get(entry.id) ?? 0) + 1
+    usageFailures.set(entry.id, strikes)
+    if (strikes >= 2) write(STATE.unavailable, { detail })
+  }
+
   return {
     testModel,
     // 渠道模型的手动测试在 service.mjs 的分流里跑（core catalog 不含渠道条目），
@@ -543,10 +590,13 @@ export function createModelRuntime({
       emitTopology()
       return !availability.writeFailed
     },
+    // 供 service.mjs 的渠道分流记录渠道模型的用户调用结果（同一套连败计数）。
+    noteUsageOutcome,
     state, adapter, refreshCatalog, refreshSealedLane, refreshAvailability, watchEgress, fetchListing,
     laneGate, clearLaneBreaker,
     complete: createForwardCompletion({
       adapter, signal: lifetime.signal,
+      onOutcome: noteUsageOutcome,
       state: () => {
         const snapshot = state()
         // Hiding advertisements must not invalidate requests using a saved id.

@@ -18,6 +18,11 @@ fs.writeFileSync(sentinelPath, sentinel)
 process.env.DSH_HOME = dshHome
 
 const model = 'mimo-v2.6-flash-free'
+// 渠道包（opencode 等）启用后会在 catalog 视图里追加 `provider/model` 行；
+// 只断言本套件关心的核心/匿名/Kilo 行，渠道行由 channel-pack 自己的套件覆盖。
+const coreRowIds = () => service.runtime.catalog
+  .filter(entry => entry.channel === undefined || entry.channel === 'anonymous' || entry.channel === 'kilo')
+  .map(entry => entry.id)
 const kiloModel = 'nvidia/nemotron-3.5-lightning:free'
 let listingCalls = 0
 let kiloCalls = 0
@@ -219,7 +224,7 @@ try {
     assert.equal(listingCalls, 1)
     assert.equal(kiloCalls, 1)
     assert.equal(turns.length, 0, 'default startup must not spend availability probe requests')
-    assert.deepEqual(service.runtime.catalog.map(entry => entry.id), [model, kiloModel])
+    assert.deepEqual(coreRowIds(), [model, kiloModel])
   })
   await check('a probe request is not swallowed by an in-flight listing-only refresh', async () => {
     holdListing = new Promise(resolve => { unhold = resolve })
@@ -297,14 +302,14 @@ try {
     service = await startStandalone({ dataDir, refresh: false, logger: { warn() {} } })
     assert.equal(service.port, previousPort)
     assert.equal(JSON.parse(fs.readFileSync(service.keyFile)).forwardKey, key)
-    assert.deepEqual(service.runtime.catalog.map(entry => entry.id), [model, kiloModel])
+    assert.deepEqual(coreRowIds(), [model, kiloModel])
     assert.equal(listingCalls, calls)
     assert.equal(fs.readFileSync(sentinelPath, 'utf8'), sentinel)
   })
   await check('an empty Kilo pool clears its cached models and stops routing them', async () => {
     kiloListing = { data: [] }
     await service.runtime.refreshCatalog({ probe: false })
-    assert.deepEqual(service.runtime.catalog.map(entry => entry.id), [model])
+    assert.deepEqual(coreRowIds(), [model])
     await assert.rejects(service.runtime.complete({ model: kiloModel, openAi: {} }), { statusCode: 404 })
   })
   await check('stopping during a listing prevents late writes and more channel requests', async () => {

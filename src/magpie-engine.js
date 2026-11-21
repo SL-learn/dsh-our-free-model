@@ -369,11 +369,14 @@ const engineAppearanceCSS = `
 :root[data-ofm-engine] :is(.row,.editor,.sheet,.dialog,.pop) { border-radius:8px }
 :root[data-ofm-engine] :is(button,input,textarea,select) { font-family:var(--ui-font,var(--font)); }
 /* Floating page tools measure this anchor, even with external controls. */
-:root[data-ofm-external-controls] .top > .actions {
+:root[data-ofm-external-controls] .top > .actions,
+:root[data-ofm-embedded] .top > .actions {
   position:absolute; right:0; top:0; display:flex!important;
   width:0; height:0; min-height:0!important; overflow:hidden;
   visibility:hidden; pointer-events:none;
 }
+/* Same fallback for the brand row: the theme message may never arrive. */
+:root[data-ofm-embedded] .top > .brand { display:none!important }
 :root[data-ofm-external-controls] #side #prefs { display:none!important }
 :root[data-ofm-external-controls] body:not(.side-nav) > .top {
   display:block!important; height:auto!important; min-height:0!important;
@@ -447,6 +450,13 @@ const engineAppearanceCSS = `
 function engineAppearanceBridge() {
   const root = document.documentElement
   root.setAttribute('data-ofm-engine', '')
+  // 兜底：只要嵌在宿主 iframe 里就先隐藏上游的窗口按钮。正常流程宿主会随后
+  // 发 ofm:engine-theme 挂 data-ofm-external-controls；但真机 WebView2 出现过
+  // 消息未到达（标题栏按钮显示）的情况（2026-11-20），不能让假标题栏出现。
+  if (window.parent !== window) {
+    root.setAttribute('data-ofm-embedded', '')
+    try { window.parent.postMessage({ type: 'ofm:engine-ready' }, window.location.origin) } catch {}
+  }
   let variables = new Set()
   let scheme
   window.addEventListener('message', event => {

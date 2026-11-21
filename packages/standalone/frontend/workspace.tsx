@@ -38,6 +38,18 @@ export function Workspace({ active }: { active: boolean }) {
       externalControls: true,
     }, window.location.origin)
   }
+  // 真机 WebView2 出现过 onLoad 时机丢失消息（假标题栏出现，2026-11-20）。
+  // 引擎侧也会在就绪时回发 ofm:engine-ready，这里收到后立即补发；另外在
+  // onLoad 后的短窗口内重发几次，覆盖慢启动的引擎页。
+  useEffect(() => {
+    if (!active || state !== 'ready') return
+    const onReady = (event: MessageEvent) => {
+      if (event.source !== frame.current?.contentWindow) return
+      if (event.data?.type === 'ofm:engine-ready') syncTheme()
+    }
+    window.addEventListener('message', onReady)
+    return () => window.removeEventListener('message', onReady)
+  }, [active, state])
 
   useEffect(() => {
     if (!active || state !== 'ready') return
@@ -120,7 +132,7 @@ export function Workspace({ active }: { active: boolean }) {
         ? <iframe ref={frame} className="ws-frame" title="模型工作台"
             src="/api/management/engine/ui/?mode=window&view=providers"
             allow="clipboard-write" referrerPolicy="same-origin"
-            onLoad={syncTheme} />
+            onLoad={() => { [0, 600, 2000].forEach(delay => setTimeout(syncTheme, delay)) }} />
         : <div className="ws-empty" role="status">
             <span>{state === 'starting' ? '正在启动模型工作台…' : '模型工作台未能启动'}</span>
             {state === 'error' && <Button onClick={() => { started.current = false; setGeneration(n => n + 1) }}>重试</Button>}

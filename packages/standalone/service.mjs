@@ -285,6 +285,10 @@ export async function startStandalone({
       sealedCredential: eac.credential,
       subscriptionRuntime: combinedSubscriptionRuntime,
       extensionRuntime: extensions,
+      // 变更推送（2026-11-21 用户反馈「测试结果未及时刷新」）：此前 onTopology
+      // 是默认空函数——落表后的 emit 从未到达前端，清单页只能等 15 秒轮询。
+      // 经 management 的 SSE 流推给页面，立即触发 loadData()。
+      onTopology: () => management?.broadcast?.('topology'),
     })
     channels = await createChannelRuntime({ dataDir, logger, stats: stores.stats })
     const core = runtime
@@ -381,12 +385,17 @@ export async function startStandalone({
           throw failure
         }
         const latencyMs = Date.now() - started
+        // 成功同样要落 manualResults（2026-11-21 用户反馈「测试结果未能及时写入」）：
+        // 此前只有失败落表，成功的渠道测试在清单页永远看不到「实测可用」，
+        // 状态字段停在旧值直到下一次真实调用。失败路径已在 record() 落表。
+        const ttftMs = first ? first - started : undefined
+        core.noteManualResult(model, { state: 'available', source: 'manual', at: started, ttftMs, latencyMs })
         return {
           model, effort: effort ?? 'balanced', ok: true,
           totalMs: latencyMs, latencyMs,
-          ttftMs: first ? first - started : undefined,
+          ttftMs,
           outputTokens: outcome.usage?.completion_tokens, reasoningTokens: outcome.usage?.completion_tokens_details?.reasoning_tokens,
-          sample: outcome.text?.slice(0, 40), text: outcome.text, persisted: false,
+          sample: outcome.text?.slice(0, 40), text: outcome.text, persisted: true,
         }
       },
       async refreshCatalog(options) {

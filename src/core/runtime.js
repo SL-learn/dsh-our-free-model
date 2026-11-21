@@ -199,6 +199,8 @@ export function createModelRuntime({
       },
     }))
     availability.flush()
+    // 与调用沉淀同款：写盘后立即 emit，前端不等 15 秒轮询。
+    emitTopology()
   }
   function noteFreeLaneOutcome({ entry, ok, error } = {}) {
     if (disposed || !entry || entry.channel) return
@@ -552,6 +554,9 @@ export function createModelRuntime({
         },
       }))
       availability.flush()
+      // 立即通知前端（2026-11-21 用户反馈「测试/调用结果未及时刷新 UI」）：
+      // 此前只写盘不 emit，清单页要等 15 秒轮询才看到新状态。
+      emitTopology()
     }
     if (ok === true) {
       const extra = {}

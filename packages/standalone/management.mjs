@@ -101,6 +101,9 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
   let bootstrap = { token: crypto.randomBytes(32).toString('base64url'), until: Date.now() + BOOTSTRAP_MS }
   const sessions = new Map()
   const privilegedSessions = new Set()
+  // 变更推送（SSE）客户端（2026-11-21）：测试/调用沉淀落表后 emitTopology
+  // 推到这里，前端立即刷新清单，不再等 15 秒轮询。
+  const sseClients = new Set()
   let cookieName
   let closed = false
   let terminalOpening = false
@@ -490,6 +493,22 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
       json(res, 200, desktopUpdate.download())
     } else if (method === 'GET' && pathname === `${PREFIX}/summary`) {
       json(res, 200, summary())
+    } else if (method === 'GET' && pathname === `${PREFIX}/events`) {
+      // 变更推送流（SSE）：emitTopology → broadcast('topology') → 前端 loadData。
+      // 会话校验已在 route() 入口完成；EventSource 同源自动携带会话 Cookie。
+      res.writeHead(200, {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-cache',
+        connection: 'keep-alive',
+        'x-accel-buffering': 'no',
+      })
+      res.write(': connected\n\n')
+      const client = { res }
+      sseClients.add(client)
+      // 心跳保活：代理/空闲超时会掐断静默连接；注释行不触发前端事件。
+      const heartbeat = setInterval(() => { try { res.write(': ping\n\n') } catch { /* 关闭由 close 事件清理 */ } }, 25_000)
+      heartbeat.unref?.()
+      res.once('close', () => { clearInterval(heartbeat); sseClients.delete(client) })
     } else if (method === 'GET' && pathname === `${PREFIX}/stats`) {
       json(res, 200, buildStats(stores.stats.get(), runtime.catalog))
     } else if (method === 'GET' && pathname === `${PREFIX}/engine/status`) {
@@ -723,7 +742,17 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
     } else throw fail(404, '管理接口不存在')
   }
 
+  /** 向所有 SSE 客户端广播一次变更；写失败（连接已死）即摘除该客户端。 */
+  const broadcast = (event, data = {}) => {
+    if (sseClients.size === 0) return
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+    for (const client of sseClients) {
+      try { client.res.write(payload) } catch { sseClients.delete(client) }
+    }
+  }
+
   return {
+    broadcast,
     setPort(port) { cookieName = `ofm_management_${port}` },
     get bootstrapFragment() { return bootstrap === null ? '' : `#login=${bootstrap.token}` },
     async handleRequest(req, res) {
@@ -762,6 +791,12 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
       }
       return true
     },
-    dispose() { desktopUpdate.close(); closed = true; bootstrap = null; sessions.clear(); privilegedSessions.clear(); return workbench?.dispose() },
+    dispose() {
+      closed = true
+      for (const client of sseClients) { try { client.res.end() } catch { /* 已断开 */ } }
+      sseClients.clear()
+      desktopUpdate.close(); bootstrap = null; sessions.clear(); privilegedSessions.clear()
+      return workbench?.dispose()
+    },
   }
 }

@@ -83,6 +83,17 @@ function App() {
   useEffect(() => { const onUnauthorized = () => enterLogin('管理会话已失效，请重新登录'); window.addEventListener('ofm:unauthorized', onUnauthorized); return () => window.removeEventListener('ofm:unauthorized', onUnauthorized) }, [])
   useEffect(() => { const token = new URLSearchParams(location.hash.slice(1)).get('login'); if (token) history.replaceState(null, '', location.pathname + location.search); void (async () => { try { if (token) await request('/session', { bootstrapToken: token }); await loadData() } catch (reason) { enterLogin((reason as any)?.status === 401 && !token ? '' : messageOf(reason)) } })() }, [])
   useEffect(() => { if (mode !== 'ready') return; const timer = window.setInterval(() => { if (!document.hidden) void loadData().catch(reason => setError(messageOf(reason))) }, 15000); return () => window.clearInterval(timer) }, [mode])
+  // 服务端变更推送（SSE，2026-11-21）：测试/调用结果落表后 emitTopology 推
+  // 'topology' 事件 → 立即刷新摘要，不再等 15 秒轮询。EventSource 同源自动
+  // 携带管理会话 Cookie；出错（会话失效/断开）时关闭，轮询继续兜底，
+  // 不自动重连避免 401 风暴。
+  useEffect(() => {
+    if (mode !== 'ready') return
+    const source = new EventSource('/api/management/events')
+    source.addEventListener('topology', () => { void loadData().catch(reason => setError(messageOf(reason))) })
+    source.onerror = () => source.close()
+    return () => source.close()
+  }, [mode])
   useEffect(() => {
     if (mode !== 'ready') return
     let alive = true

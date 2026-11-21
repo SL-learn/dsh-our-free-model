@@ -95,16 +95,45 @@ try {
     assert.equal(url.hostname, '127.0.0.1'); assert.equal(Number(url.port), ready.port)
     assert.ok(url.hash.startsWith('#login='))
   })
+  let sessionCookie
   await check('一次性登录入口创建会话后可请求管理 API，令牌不写进测试输出', async () => {
     const url = new URL(ready.managementUrl)
     const response = await fetch(`${url.origin}/api/management/session`, { method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ bootstrapToken: new URLSearchParams(url.hash.slice(1)).get('login') }) })
     assert.equal(response.status, 200)
+    sessionCookie = response.headers.get('set-cookie').split(';')[0]
     const summary = await fetch(`${url.origin}/api/management/summary`, { headers: { cookie: response.headers.get('set-cookie').split(';')[0] } })
     assert.equal(summary.status, 200)
     const duplicate = await fetch(`${url.origin}/api/management/session`, { method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ bootstrapToken: new URLSearchParams(url.hash.slice(1)).get('login') }) })
     assert.equal(duplicate.status, 401)
+  })
+  await check('SSE 变更推送：测试落表后 topology 事件到达前端流', async () => {
+    const url = new URL(ready.managementUrl)
+    // 复用 check 3 的会话 Cookie——bootstrap token 一次性，重复登录必 401。
+    assert.ok(sessionCookie, '前序用例应已建立管理会话')
+    const cookie = sessionCookie
+    const stream = await fetch(`${url.origin}/api/management/events`, { headers: { cookie } })
+    assert.equal(stream.status, 200)
+    assert.ok(String(stream.headers.get('content-type')).includes('text/event-stream'))
+    const summary = await (await fetch(`${url.origin}/api/management/summary`, { headers: { cookie } })).json()
+    const modelId = summary.catalog?.[0]?.id
+    assert.ok(modelId, '目录里应有可测试的模型')
+    // 离线预载下测试必然失败 → 失败落 manualResults + emitTopology → SSE 推事件。
+    // 请求本身等待上游超时，不 await 完成只要它触发落表；结果断言靠 SSE 流。
+    void fetch(`${url.origin}/api/management/models/test`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' },
+      body: JSON.stringify({ model: modelId }) }).catch(() => {})
+    const reader = stream.body.getReader()
+    const decoder = new TextDecoder()
+    let text = ''
+    try {
+      const deadline = Date.now() + 30000
+      while (Date.now() < deadline && !text.includes('event: topology')) {
+        const chunk = await Promise.race([reader.read(), new Promise(resolve => setTimeout(() => resolve({}), 2000))])
+        if (chunk?.value) text += decoder.decode(chunk.value, { stream: true })
+      }
+      assert.ok(text.includes('event: topology'), `应收到 topology 事件，实际：${JSON.stringify(text.slice(0, 200))}`)
+    } finally { await reader.cancel().catch(() => {}) }
   })
   await check('已有服务的数据锁不被删除，重复启动明确报错并保留原服务', async () => {
     const before = fs.readFileSync(path.join(dataDir, 'service.lock'))

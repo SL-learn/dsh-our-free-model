@@ -4,9 +4,10 @@
  * 统一的展示状态视图（2026-11-21 重构）：徽章文案、颜色、筛选共用这一份，
  * 保证「清单页看到的」和「筛选选中的」永远是同一套语义。
  *
- * 状态体系（与归因打通）：
+ * 状态体系（与归因打通）；「未探测」= 无任何测量，渠道清单收录但从未测过
+ * 的模型同样算未探测（与 ofm-shared-client 的语义一致）——否则渠道模型
+ * 无测量时会挤进一个与「未探测」重叠的「清单已收录」态，让筛选出现空档：
  * - available   可用（探测 / 实测 / 调用成功）        绿
- * - listed      清单已收录                            灰
  * - unknown     未探测（无任何测量）                  灰
  * - unavailable 不可用（探测 / 连续调用失败）          红
  * - throttled   限流中（探测 / 手测 / 调用限流）      橙
@@ -18,8 +19,11 @@
  * - transport   网络异常（未定性）                    蓝
  */
 export function modelStateView(model) {
-  const state = model.availabilitySource === 'listing' ? 'listed' : model.availability ?? 'unknown'
   const source = model.availabilitySource
+  // listing 来源没有任何真实测量：一律按「未探测」展示（渠道清单收录但从未
+  // 测过的模型算未探测，与 ofm-shared-client 的语义一致）；旧摘要残留的
+  // available 等也不能冒充测量成功（见 standalone-model-row-test 的防回归）。
+  const state = source === 'listing' ? 'unknown' : (model.availability ?? 'unknown')
   if (source === 'manual' && state === 'unknown') {
     const kind = model.failureKind ?? 'model-error'
     if (kind === 'quota') return { state: 'quota', label: '额度不足', tone: 'blue' }
@@ -32,11 +36,11 @@ export function modelStateView(model) {
   if (source === 'usage' && state === 'available') return { state: 'available', label: '调用可用', tone: 'success' }
   if (source === 'usage' && state === 'unavailable') return { state: 'unavailable', label: '连续调用失败', tone: 'danger' }
   const names = {
-    available: '已探测可用', listed: '清单已收录', unknown: '未探测',
+    available: '已探测可用', unknown: '未探测',
     unavailable: '不可用', throttled: '限流中', 'region-blocked': '地区受限',
   }
   const tones = {
-    available: 'success', listed: 'neutral', unknown: 'neutral',
+    available: 'success', unknown: 'neutral',
     unavailable: 'danger', throttled: 'warning', 'region-blocked': 'warning',
   }
   return { state, label: names[state] ?? '未知状态', tone: tones[state] ?? 'neutral' }
@@ -45,7 +49,6 @@ export function modelStateView(model) {
 /** 「可用状态」下拉的选项（全部状态 + 归因并入后的各态）。 */
 export const stateOptions = [
   ['available', '可用（探测 / 实测 / 调用）'],
-  ['listed', '清单已收录'],
   ['unknown', '未探测'],
   ['unavailable', '不可用'],
   ['throttled', '限流中'],

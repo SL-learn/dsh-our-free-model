@@ -95,7 +95,7 @@ assert.deepEqual(empty.samples, [])
 const catalog = Array.from({ length: 1000 }, (_, index) => ({
   id: `provider/model-${index}`, name: `测试模型 ${index}`, channel: index % 2 ? 'lobsterai' : 'kilo',
   vision: index % 3 === 0, reasoning: index % 5 === 0, routable: index % 7 !== 0,
-  availability: index % 2 ? 'listed' : 'available',
+  availability: index % 2 ? 'unknown' : 'available',
 }))
 const baseline = structuredClone(catalog)
 assert.equal(filterModels(catalog, {}).length, 1000)
@@ -103,9 +103,9 @@ assert.equal(filterModels(catalog, { search: '  PROVIDER/MODEL-999  ' })[0].id, 
 assert.equal(filterModels(catalog, { search: '测试模型 999' }).length, 1)
 assert.equal(filterModels(catalog, { channel: 'eac' }).length, 0)
 assert.ok(filterModels(catalog, { capability: 'text' }).every(model => !model.vision))
-const combined = filterModels(catalog, { channel: 'lobsterai', capability: 'reasoning', availability: 'listed', access: 'routable' })
+const combined = filterModels(catalog, { channel: 'lobsterai', capability: 'reasoning', availability: 'unknown', access: 'routable' })
 assert.ok(combined.length > 0)
-assert.ok(combined.every(model => model.channel === 'lobsterai' && model.reasoning && model.routable && model.availability === 'listed'))
+assert.ok(combined.every(model => model.channel === 'lobsterai' && model.reasoning && model.routable && model.availability === 'unknown'))
 assert.equal(filterModels(catalog, { channel: 'lobsterai', availability: 'available' }).length, 0)
 assert.equal(filterModels(catalog, { access: 'hidden' }).length + filterModels(catalog, { access: 'routable' }).length, catalog.length)
 assert.equal(filterModels([{ id: 'unknown', name: '未知状态', routable: false }], { availability: 'unknown' }).length, 1)

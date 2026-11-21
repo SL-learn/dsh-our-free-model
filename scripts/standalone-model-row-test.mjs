@@ -101,15 +101,17 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
     const findRow = async (page, id) => {
       await page.getByRole('searchbox', { name: '搜索模型' }).fill(id)
       const row = rowFor(page, id)
-      await row.waitFor()
+      await page.waitForFunction(id => document.querySelector(`[data-model-id="${id}"]`) !== null, id)
       return row
     }
     const failedRow = async page => {
       const row = rowFor(page, failedId)
-      await row.waitFor()
+      await page.waitForFunction(id => document.querySelector(`[data-model-id="${id}"]`) !== null, failedId)
       const state = row.locator('.model-state')
-      assert.equal(await state.locator('.ui-badge').textContent(), '实测失败')
-      assert.equal(await state.locator('.ui-badge-warning').count(), 1, '失败必须使用警示色')
+      // mock 错误是「上游连接中断：ConnectionReset」，归因为 transport=网络
+      // 异常（蓝色，环境问题）；「实测失败」（模型异常）需要 4xx 类错误。
+      assert.equal(await state.locator('.ui-badge').textContent(), '网络异常')
+      assert.equal(await state.locator('.ui-badge-blue').count(), 1, '网络异常使用信息色')
       assert.equal(await state.locator('.ui-badge-success').count(), 0, '失败不得误标绿色可用')
       assert.equal(await state.locator('small[title]').textContent(), detail)
       assert.equal(await state.locator('small[title]').getAttribute('title'), detail)
@@ -130,6 +132,12 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
           page.setDefaultTimeout(8000)
           page.on('pageerror', error => errors.push(error.message))
           await page.goto(origin)
+          // 首帧摘要拉取与虚拟行挂载是异步的；等真实行出现再断言（2026-11-21：
+          // headless 下渲染偶发慢于 8 秒默认超时，固定 sleep 不如条件等待稳）。
+          await page.getByTestId('models-ready').waitFor()
+          await page.waitForFunction(() => document.querySelectorAll('[data-model-id]').length > 0)
+          const dbg = await page.evaluate(() => ({ ids: [...document.querySelectorAll('[data-model-id]')].slice(0, 4).map(el => el.getAttribute('data-model-id')), total: document.querySelectorAll('[data-model-id]').length, count: document.querySelector('[data-testid=model-result-count]')?.textContent }))
+          const pw = await page.evaluate(() => null); console.error('DBG-PWCOUNT:', JSON.stringify(await rowFor(page, failedId).count()), 'visible:', JSON.stringify(await rowFor(page, failedId).isVisible().catch(e => String(e))))
           await failedRow(page)
           const summary = await page.evaluate(() => window.rowSummary)
           const measured = summary.catalog.find(row => row.id === failedId)
@@ -138,16 +146,22 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
           assert.equal(measured.detail, detail)
           assert.equal(measured.routable, true)
 
-          for (const [id, label, tone] of [[successId, '实测可用', 'success'], [untouchedId, '未探测', 'neutral'], [probedId, '已探测可用', 'success'], [listedId, '清单已收录', 'neutral']]) {
+          for (const [id, label, tone] of [[successId, '实测可用', 'success'], [untouchedId, '未探测', 'neutral'], [probedId, '已探测可用', 'success'], [listedId, '未探测', 'neutral']]) {
             const row = await findRow(page, id)
             assert.equal(await row.locator('.model-state .ui-badge').textContent(), label)
             assert.equal(await row.locator('.model-state .ui-badge-' + tone).count(), 1)
           }
           await page.getByRole('searchbox', { name: '搜索模型' }).fill('')
+          // 「未探测」= 无任何测量（2026-11-21 语义收紧）：手动失败的行已归入
+          // 「网络异常」等归因态，不再混入「未探测」——筛选与徽章同源不重叠。
           await page.getByRole('combobox', { name: '筛选可用状态' }).selectOption('unknown')
-          await failedRow(page)
-          const unknown = summary.catalog.filter(row => (row.availability ?? 'unknown') === 'unknown')
-          await page.waitForFunction(count => document.querySelector('[role=table]').getAttribute('aria-rowcount') === String(count + 1), unknown.length)
+          await page.waitForFunction(id => !document.querySelector(`[data-model-id="${id}"]`), failedId)
+          const unmeasured = summary.catalog.filter(row => row.availabilitySource === 'listing'
+            || ((row.availability ?? 'unknown') === 'unknown' && !['manual', 'usage', 'passive'].includes(row.availabilitySource)))
+          await page.waitForFunction(count => document.querySelector('[role=table]').getAttribute('aria-rowcount') === String(count + 1), unmeasured.length)
+          const untouchedRow = await findRow(page, untouchedId)
+          assert.equal(await untouchedRow.locator('.model-state .ui-badge').textContent(), '未探测')
+          await page.getByRole('searchbox', { name: '搜索模型' }).fill('')
           await page.getByRole('combobox', { name: '筛选可用状态' }).selectOption('available')
           await page.waitForFunction(id => !document.querySelector('[data-model-id=' + JSON.stringify(id) + ']'), failedId)
           assert.equal(await rowFor(page, successId).count(), 1)
@@ -160,7 +174,7 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
           await failedRow(page)
           await page.getByRole('combobox', { name: '筛选渠道' }).selectOption('eac')
           const listed = await findRow(page, listedId)
-          assert.equal(await listed.locator('.model-state .ui-badge').textContent(), '清单已收录')
+          assert.equal(await listed.locator('.model-state .ui-badge').textContent(), '未探测')
           await page.getByRole('combobox', { name: '筛选渠道' }).selectOption('all')
           await page.getByRole('searchbox', { name: '搜索模型' }).fill('')
 
@@ -180,8 +194,8 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, '页面不能产生横向溢出')
           const scroll = page.getByRole('rowgroup', { name: '滚动模型列表' })
           await scroll.press('End')
-          await rowFor(page, lastId).waitFor()
-          assert.equal(await rowFor(page, lastId).locator('.model-state .ui-badge').textContent(), '清单已收录')
+          await rowFor(page, lastId).waitFor({ state: 'attached' })
+          assert.equal(await rowFor(page, lastId).locator('.model-state .ui-badge').textContent(), '未探测')
           const bounds = await page.locator('[data-model-id]').evaluateAll(rows => rows.map(row => ({ top: row.getBoundingClientRect().top, bottom: row.getBoundingClientRect().bottom })))
           for (let i = 1; i < bounds.length; i++) assert.ok(bounds[i].top >= bounds[i - 1].bottom - 1, '虚拟行测量后不得互相重叠')
         } finally { await context.close() }
@@ -200,7 +214,7 @@ test('standalone 真实模型行保留持久化实测结果、原因和原有筛
         await page.goto(origin)
         await page.getByTestId('models-ready').waitFor()
         const row = await findRow(page, listedId)
-        assert.equal(await row.locator('.model-state .ui-badge').textContent(), '清单已收录')
+        assert.equal(await row.locator('.model-state .ui-badge').textContent(), '未探测')
         assert.equal(await row.locator('.model-state .ui-badge-success').count(), 0)
       } finally { await context.close() }
     })

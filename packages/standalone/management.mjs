@@ -195,7 +195,10 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
         routable: routable.has(entry.id),
         hiddenByUser: isModelHidden(entry, state.settings),
         hiddenByGroup: isModelHidden(entry, { ...state.settings, hiddenModelIds: [] }),
-        ...measured, availability: measured.availabilitySource === 'listing' ? 'listed' : measured.availability,
+        // 「未探测」= 无任何测量（渠道或核心一视同仁，与 ofm-shared-client 的
+        // 既有语义一致）。不再把渠道无测量武断地标成「清单已收录」——那会让
+        // 「未探测」筛选常年为空，筛选器失去意义；渠道归属由 channel 列展示。
+        ...measured, availability: measured.availability,
       }) }),
     }
   }

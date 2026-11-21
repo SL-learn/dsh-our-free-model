@@ -17,6 +17,10 @@ function operation(host) {
   const activeRef = { current: true }
   const context = {
     host, pending, activeRef, AbortController, Error,
+    // 滚动锚点依赖（测试失败路径的立即刷新与视口保持）：vm 里没有 DOM，
+    // scrollRef.current 恒 null 即可跳过记录；scrollAnchor 提供消费容器。
+    scrollRef: { current: null },
+    scrollAnchor: { current: undefined },
     setTest: value => { state.test = typeof value === 'function' ? value(state.test) : value },
     setOperation: value => { state.operation = value },
     setError: value => { state.error = value },
@@ -46,7 +50,9 @@ export async function verifyModelOperation() {
   await testFailed.run('test', model)
   assert.equal(testFailed.state.test.state, 'error')
   assert.equal(testFailed.state.test.error, '推理失败')
-  assert.equal(refreshed, false)
+  // 失败已在服务端沉淀（manualResults / 归因落表），前端必须立即刷新让行
+  // 徽章与筛选马上跟上，不再等 15 秒轮询（2026-11-21 用户反馈）。
+  assert.equal(refreshed, true)
   assert.equal(testFailed.state.operation, undefined)
 
   const succeeded = operation({ testModel: async () => result, refresh: async () => {} })

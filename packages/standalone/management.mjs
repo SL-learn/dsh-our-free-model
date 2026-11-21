@@ -258,6 +258,15 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
 
     const method = req.method ?? 'GET'
     const reply = (statusCode, payload, headers) => json(res, statusCode, payload, headers)
+    if (method === 'GET' && pathname === `${PREFIX}/login/paths`) {
+      // 登录前的前端需要真实数据目录来拼“手动获取令牌”命令（数据目录可被
+      // 自定义，不能再假设用户目录）。只暴露路径本身，不含任何敏感信息；
+      // 与 login/terminal 一样要求本机同源。
+      if (req.headers['sec-fetch-site'] !== 'same-origin') {
+        throw fail(403, '请从本机登录页面获取路径')
+      }
+      return reply(200, { dataDir: info().dataDir })
+    }
     if (method === 'POST' && pathname === `${PREFIX}/login/terminal`) {
       // 此入口发生在登录前，必须有浏览器的同源 Origin，拒绝跨站和无来源调用。
       if (req.headers.origin !== new URL(`http://${req.headers.host}`).origin ||

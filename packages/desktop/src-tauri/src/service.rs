@@ -73,6 +73,9 @@ impl ServiceProcess {
             .arg(&data_dir)
             .env_remove("NODE_OPTIONS")
             .env_remove("NODE_PATH")
+            // 打包内的部分依赖（渠道调试日志等）在未显式配置时回落到用户目录，
+            // 统一改指数据目录，保证运行数据不再散落在安装目录之外。
+            .env("OFM_HOME", &data_dir)
             .env("OFM_DESKTOP_VERSION", env!("CARGO_PKG_VERSION"))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

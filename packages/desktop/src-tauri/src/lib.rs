@@ -3,9 +3,13 @@ mod service;
 mod update;
 
 use service::ServiceProcess;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Mutex,
+use std::{
+    fs,
+    path::Path,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Mutex,
+    },
 };
 use tauri::{
     ipc::CapabilityBuilder,
@@ -64,6 +68,39 @@ fn titlebar_script(origin: &str) -> String {
     )
 }
 
+/// 旧版本把运行数据放在用户目录（~/.our-free-model）。桌面版现在把数据放
+/// 在安装目录下的 data，与程序同生共死、不再污染用户目录。若历史目录存在而
+/// 新目录尚未初始化（无 settings.json），把数据整体搬过来；不删除旧目录，保
+/// 留用户回退余地。service.lock 属于退出中的进程，跳过。已存在的目标条目跳
+/// 过，使中断后的重试保持幂等。
+fn migrate_legacy_data_dir(data_dir: &Path) -> Result<(), String> {
+    if data_dir.join("settings.json").exists() { return Ok(()); }
+    let Some(home) = dirs::home_dir() else { return Ok(()) };
+    let legacy = home.join(".our-free-model");
+    if !legacy.is_dir() { return Ok(()); }
+    fs::create_dir_all(data_dir).map_err(|_| "无法创建数据目录")?;
+    let entries = fs::read_dir(&legacy).map_err(|_| "无法读取历史数据目录")?;
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        if name == "service.lock" || data_dir.join(&name).exists() { continue; }
+        copy_tree(&entry.path(), &data_dir.join(&name))
+            .map_err(|_| "迁移历史数据目录失败，请检查安装目录的写入权限")?;
+    }
+    Ok(())
+}
+
+fn copy_tree(source: &Path, target: &Path) -> std::io::Result<()> {
+    if fs::symlink_metadata(source)?.is_dir() {
+        fs::create_dir_all(target)?;
+        for entry in fs::read_dir(source)?.flatten() {
+            copy_tree(&entry.path(), &target.join(entry.file_name()))?;
+        }
+    } else {
+        fs::copy(source, target)?;
+    }
+    Ok(())
+}
+
 fn start_service(app: &tauri::AppHandle) -> Result<String, String> {
     let resources = if cfg!(debug_assertions) {
         std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")
@@ -79,10 +116,17 @@ fn start_service(app: &tauri::AppHandle) -> Result<String, String> {
     if !node.is_file() || !host.is_file() {
         return Err("安装资源不完整，请重新安装桌面程序".into());
     }
-    let data_dir = std::env::var_os("OFM_HOME")
-        .map(std::path::PathBuf::from)
-        .or_else(|| dirs::home_dir().map(|home| home.join(".our-free-model")))
-        .ok_or("无法确定服务数据目录")?;
+    // 数据目录与程序同住：默认取安装目录下的 data；OFM_HOME 仅作为显式逃生
+    // 口保留。首次升级时把用户目录里的旧数据一次性搬进来。
+    let data_dir = match std::env::var_os("OFM_HOME") {
+        Some(home) => std::path::PathBuf::from(home),
+        None => std::env::current_exe()
+            .map_err(|_| "无法定位程序目录")?
+            .parent()
+            .ok_or("无法定位程序目录")?
+            .join("data"),
+    };
+    migrate_legacy_data_dir(&data_dir)?;
     let state = app.state::<ServiceState>();
     // 与退出共用锁：退出必须等正在启动的子进程完成交接后再清理。
     let mut guard = state.process.lock().map_err(|_| "服务状态不可用")?;

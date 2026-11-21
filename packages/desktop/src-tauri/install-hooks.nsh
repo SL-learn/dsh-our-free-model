@@ -25,5 +25,7 @@ ofmJsSweepDone:
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
-  CreateDirectory "$PROFILE\.our-free-model"
+  ; 运行数据（配置、账号等）现在存放在安装目录下的 data，不再使用用户目录。
+  ; 历史数据由桌面程序首次启动时从 ~/.our-free-model 一次性迁移。
+  CreateDirectory "$INSTDIR\data"
 !macroend

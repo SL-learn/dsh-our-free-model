@@ -75,11 +75,10 @@ async function acquireServiceLock(dataDir) {
       let owner
       try { owner = JSON.parse(previous) } catch { throw error }
       if (owner?.product !== PRODUCT || !Number.isSafeInteger(owner.pid) || owner.pid <= 0) throw error
-      // 只有 ESRCH 能证明进程已经退出；无权限、PID 复用等情况均保留原锁。
-      let exited = false
-      try { process.kill(owner.pid, 0) }
-      catch (probeError) { exited = probeError.code === 'ESRCH' }
-      if (!exited) throw error
+      // 进程锁（named pipe）成功即证明没有存活实例声明这个数据目录：若锁持有
+      // 者还活着，它进程内的 pipe 监听会让上一步 EADDRINUSE。因此这里的残留
+      // 锁只能来自已退出的实例；Windows 的 PID 复用会让存活探测误报“仍在运
+      // 行”，以 pipe 结果为准，直接回收。
       const current = fs.lstatSync(lockFile)
       if (current.dev !== previousStat.dev || current.ino !== previousStat.ino ||
           fs.readFileSync(lockFile, 'utf8') !== previous) throw error

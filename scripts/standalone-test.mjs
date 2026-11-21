@@ -169,18 +169,16 @@ try {
     await recovered.close()
   })
   if (process.platform === 'win32' || process.platform === 'linux') {
-    await check('没有权限检查进程时保留锁，不把 EPERM 当成进程退出', async () => {
-      const directory = path.join(scratch, 'permission-lock')
+    await check('残留锁的 PID 已被无关进程复用时以进程锁为准回收，避免永久占用误报', async () => {
+      const directory = path.join(scratch, 'recycled-pid-lock')
       const lockFile = path.join(directory, 'service.lock')
       fs.mkdirSync(directory)
+      // 进程锁（named pipe）成功即证明没有存活实例声明这个数据目录；锁里的
+      // pid 哪怕指向一个活着的无关进程（Windows PID 复用），也必须回收。
       const original = JSON.stringify({ pid: process.pid, product: 'our-free-model-standalone' })
       fs.writeFileSync(lockFile, original)
-      const nativeKill = process.kill
-      process.kill = () => { throw Object.assign(new Error('permission denied'), { code: 'EPERM' }) }
-      try {
-        await assert.rejects(startStandalone({ dataDir: directory, port: 0, refresh: false }), { code: 'EEXIST' })
-        assert.equal(fs.readFileSync(lockFile, 'utf8'), original)
-      } finally { process.kill = nativeKill }
+      const recovered = await startStandalone({ dataDir: directory, port: 0, refresh: false, logger: { warn() {} } })
+      await recovered.close()
     })
   }
   await check('the listener starts while its upstream listing is held', async () => {

@@ -27,6 +27,8 @@ npm run start:standalone -- --port 18900 --data-dir F:\ofm-data
 ## 数据与鉴权
 
 - 默认目录：`~/.our-free-model`；环境变量 `OFM_HOME` 或 `--data-dir` 可以覆盖。
+- 桌面版的数据目录在安装目录下的 `data`（由桌面壳启动时通过 `--data-dir` 传入），
+  并在首次启动时把用户目录里的旧数据一次性迁移过来；命令行方式仍用上面的默认目录。
 - 不读取 `DSH_HOME`，不导入 DSH 的配置或凭据。
 - 账号凭据保存在 `channel-credentials.json`，账号池、积分与账本位于 `channel-pack/`；
   EAC 授权保存在 `eac-user.json`，均属于当前独立数据目录。

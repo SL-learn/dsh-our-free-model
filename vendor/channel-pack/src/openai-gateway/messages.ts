@@ -329,7 +329,10 @@ async function convertMessage(
   if (!raw || typeof raw !== 'object') throw new OpenAiGatewayError('messages entries must be objects')
   const value = raw as OpenAiChatMessage
   const role = value.role
-  if (role === 'system') {
+  if (role === 'system' || role === 'developer') {
+    // OpenAI 新式 developer role 语义等同 system（2026-11-21 实测：客户端带
+    // developer 消息调用渠道模型 400 "unsupported message role: developer"，
+    // 而测试探针只有 user role 所以"测试可用"——入站统一按 system 接收）。
     return createGatewayMessage('system', [{
       type: 'text',
       text: textFromContent(value.content),

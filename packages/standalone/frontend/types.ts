@@ -13,7 +13,7 @@ export interface Model {
   maxOutput?: number
   availabilitySource?: 'listing' | 'probe' | 'manual' | 'usage'
   /** 手动测试失败时的归因（model-error/quota/rate-limit/region/auth/transport），批量隐藏只认 model-error。 */
-  failureKind?: 'model-error' | 'quota' | 'rate-limit' | 'region' | 'auth' | 'transport' | 'slow'
+  failureKind?: 'model-error' | 'quota' | 'rate-limit' | 'region' | 'auth' | 'transport' | 'slow' | 'retired'
   detail?: string
   probedAt?: number
   latencyMs?: number

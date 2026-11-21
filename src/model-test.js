@@ -49,9 +49,9 @@ export function classifyModelFailure(error) {
     || code === 'PERMISSION_DENIED' || status === 401
     || /unauthorized|invalid (api )?key|鉴权|登录/.test(text)) return 'auth'
   // 模型退役/下架（2026-11-21 实测：EAC DeepSeek 报 "reached its end of life
-  // ... no longer available"）：模型本体已从上游消失，是「模型真断」而不是
-  // 环境问题——不能掉进兜底 transport 让用户误以为换网能恢复。
-  if (/end[- ]of[- ]life|no longer available|has been (?:deprecated|retired|removed)|decommissioned|discontinued|下架|已退役/.test(text)) return 'model-error'
+  // ... no longer available"）：模型本体已从上游消失。独立成「已退役」档，
+  // 与其它失败（额度/鉴权/网络）区分开——用户要求筛选里能直接挑出退役模型。
+  if (/end[- ]of[- ]life|no longer available|has been (?:deprecated|retired|removed)|decommissioned|discontinued|下架|已退役/.test(text)) return 'retired'
   if (code === 'TRANSPORT' || code === 'TIMEOUT' || code === 'SERVER' || status >= 500
     || /fetch failed|econn|etimedout|enotfound|proxy|socket|网络|超时/.test(text)) return 'transport'
   if (status >= 400 && status < 500) return 'model-error'
@@ -69,6 +69,7 @@ export const failureKindNames = {
   auth: '鉴权失败',
   transport: '网络异常',
   slow: '响应超慢',
+  retired: '已退役',
 }
 
 /** Only a nonempty, normally finished tool-free answer establishes a successful text test. */

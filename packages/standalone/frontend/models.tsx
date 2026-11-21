@@ -12,7 +12,7 @@ import './models.css'
 // 放前端本地是因为 src/model-test.js 依赖 node 侧模块，不能进浏览器包）。
 const failureKindNames: Record<string, string> = {
   'model-error': '模型异常', quota: '额度不足', 'rate-limit': '限流中',
-  region: '地区受限', auth: '鉴权失败', transport: '网络异常', slow: '响应超慢',
+  region: '地区受限', auth: '鉴权失败', transport: '网络异常', slow: '响应超慢', retired: '已退役',
 }
 const sourceNames: Record<string, string> = { anonymous: '匿名模型', kilo: 'Kilo 免费池', eac: 'EAC 协付' }
 const channelName = (id: string) => sourceNames[id]
@@ -163,10 +163,12 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     model.availabilitySource === 'manual' && model.failureKind === 'model-error' && model.hiddenByUser !== true)
   const testBrokenSlow = summary.catalog.filter(model =>
     model.availabilitySource === 'manual' && model.failureKind === 'slow' && model.hiddenByUser !== true)
-  const testBroken = [...testBrokenError, ...testBrokenSlow]
+  const testBrokenRetired = summary.catalog.filter(model =>
+    model.availabilitySource === 'manual' && model.failureKind === 'retired' && model.hiddenByUser !== true)
+  const testBroken = [...testBrokenError, ...testBrokenSlow, ...testBrokenRetired]
   const envLimited = summary.catalog.filter(model =>
     model.availabilitySource === 'manual' && model.failureKind !== undefined
-    && !['model-error', 'slow'].includes(model.failureKind)
+    && !['model-error', 'slow', 'retired'].includes(model.failureKind)
     && model.availability !== 'throttled' && model.hiddenByUser !== true)
   const unusable = [...probeBroken, ...testBroken]
   const hideUnusable = () => {
@@ -175,6 +177,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     const breakdown = [
       probeBroken.length > 0 && `探测不可用 ${probeBroken.length} 个`,
       testBrokenError.length > 0 && `实测确认模型异常 ${testBrokenError.length} 个`,
+      testBrokenRetired.length > 0 && `已退役下架 ${testBrokenRetired.length} 个`,
       testBrokenSlow.length > 0 && `响应超慢 ${testBrokenSlow.length} 个`,
     ].filter(Boolean).join('、')
     const suffix = envLimited.length > 0
@@ -270,9 +273,10 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       {test.state === 'pending' && elapsed >= 30 && <p className="model-test-hint" role="status">测试是 16 token 的最小请求，通常几十秒内返回；长时间无响应多半是上游挂起，可取消后重试（服务端会在 120–150 秒自动中止）。</p>}
       {test.state === 'success' && <><pre>{test.result?.text}</pre>{test.result?.persisted === false && <p role="status">测试已成功，但结果未能保存；请检查数据目录权限或重新测试。</p>}</>}
       {test.state === 'error' && <p>{test.error}
+        {test.kind === 'retired' && <span className="model-test-hint">（归因：已退役）模型已从上游退役下架，不再可用；计入「隐藏不可用」。</span>}
         {test.kind === 'slow' && <span className="model-test-hint">（归因：响应超慢）上游长时间无响应，一般不可用；已计入「隐藏不可用」。</span>}
         {test.kind === 'model-error' && <span className="model-test-hint">（归因：模型异常）模型疑似真断，可计入「隐藏不可用」。</span>}
-        {test.kind && !['model-error', 'slow'].includes(test.kind) && <span className="model-test-hint">
+        {test.kind && !['model-error', 'slow', 'retired'].includes(test.kind) && <span className="model-test-hint">
           （归因：{failureKindNames[test.kind] ?? test.kind}）这是环境/账号问题，不代表模型损坏；不会计入「隐藏不可用」。</span>}
       </p>}
     </section>}
@@ -312,6 +316,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                   style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.detail}</small>}
                 {envFailure && <small>环境问题，不代表模型损坏</small>}
                 {state === 'slow' && <small>长时间无响应，一般不可用；计入「隐藏不可用」</small>}
+                {state === 'retired' && <small>模型已从上游退役下架，计入「隐藏不可用」</small>}
                 {!model.routable && <small>{model.hiddenByUser ? visibility.hidden : '未公开'}</small>}
                 {model.ttftMs != null && <small>首响应 {number(model.ttftMs)} ms</small>}</div>
               <div role="cell" className="model-row-actions">

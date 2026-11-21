@@ -13,6 +13,7 @@
  * - throttled   限流中（探测 / 手测 / 调用限流）      橙
  * - region-blocked 地区受限                           橙
  * - test-failed 实测失败·模型异常                     红（可批量隐藏）
+ * - retired     已退役（上游下架）                    红（可批量隐藏）
  * - slow        响应超慢（长时间无响应）              橙（可批量隐藏）
  * - quota       额度不足（环境问题）                  蓝
  * - auth        鉴权失败（环境问题）                  蓝
@@ -30,6 +31,7 @@ export function modelStateView(model) {
     if (kind === 'auth') return { state: 'auth', label: '鉴权失败', tone: 'blue' }
     if (kind === 'transport') return { state: 'transport', label: '网络异常', tone: 'blue' }
     if (kind === 'slow') return { state: 'slow', label: '响应超慢', tone: 'warning' }
+    if (kind === 'retired') return { state: 'retired', label: '已退役', tone: 'danger' }
     return { state: 'test-failed', label: '实测失败', tone: 'danger' }
   }
   if (source === 'manual' && state === 'available') return { state: 'available', label: '实测可用', tone: 'success' }
@@ -54,6 +56,7 @@ export const stateOptions = [
   ['throttled', '限流中'],
   ['region-blocked', '地区受限'],
   ['test-failed', '实测失败（模型异常）'],
+  ['retired', '已退役（上游下架）'],
   ['slow', '响应超慢（长时间无响应）'],
   ['quota', '额度不足'],
   ['auth', '鉴权失败'],

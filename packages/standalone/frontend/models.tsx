@@ -390,10 +390,12 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 {model.ttftMs != null && <small>首响应 {number(model.ttftMs)} ms</small>}</div>
               <div role="cell" className="model-row-actions">
                 {/* 隐藏/复制收进同一个带边框的迷你分段组：与「测试」按钮一致的
-                    视觉层级（2026-11-21 用户反馈裸图标样式不合理）。隐藏开关只对
-                    公开车道模型有意义（hiddenModelIds 不作用于渠道模型），复制恒可用。 */}
+                    视觉层级（2026-11-21 用户反馈裸图标样式不合理）。hiddenModelIds
+                    按 id 对所有渠道生效（store.isModelHidden 不分渠道），所以眼睛
+                    按钮对全部车道渲染——此前白名单漏了 magpie，引擎车道行没有
+                    隐藏按钮（2026-11-21 用户反馈）。复制恒可用。 */}
                 <div className="model-row-mini">
-                  {['anonymous', 'kilo', 'eac', 'aggregate', 'combo'].includes(model.channel) && <Button variant="ghost"
+                  <Button variant="ghost"
                     disabled={visibilitySaving || model.hiddenByGroup === true}
                     title={model.hiddenByGroup ? visibility.groupHidden : model.hiddenByUser ? visibility.show : visibility.hide}
                     aria-label={`${model.hiddenByUser ? visibility.show : visibility.hide}：${model.id}`}
@@ -403,7 +405,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                     {/* 图标表达**当前状态**而非动作（2026-11-21 用户反馈分不清）：
                         已隐藏 = 琥珀色斜眼 + 整行压暗；可见 = 睁眼。 */}
                     {model.hiddenByUser ? <EyeOff size={15} className="md-eye-off-hidden" /> : <Eye size={15} className="md-eye-on-visible" />}
-                  </Button>}
+                  </Button>
                   <Button variant="ghost" title={`复制 ${model.id}`} aria-label={`复制模型 ID：${model.id}`} onClick={() => copyModelId(model)}
                     className={copied === model.id ? 'md-copy-done' : ''}>
                     {copied === model.id ? <Check size={15} /> : <Copy size={15} />}

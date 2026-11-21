@@ -68,10 +68,55 @@ export const stateOptions = [
   ['transport', '网络异常'],
 ]
 
-export function filterModels(catalog, { search = '', channel = 'all', capability = 'all', availability = 'all', access = 'all' }) {
+// ── 来源类别（2026-11-21 用户要求"自己的 Key/账号与公共池在清单里能分清"）──
+// 四类：我的 Key（聚合渠道/扩展，用户自有 API Key）、我的账号（EAC router
+// 浏览器登录渠道）、组合（本地合成，路由到其他行）、公共池（免登录共享凭据）。
+// 映射是**显示层事实**，只认渠道 id；未知渠道一律归公共池并记一次警告——
+// 宁可少标，不可把公共池误标成"我的"。
+/** @type {Record<string, string>} 渠道来源类别 → 显示名 */
+export const SOURCE_CLASS_NAMES = {
+  'own-key': '我的 Key', 'own-account': '我的账号', combo: '组合', shared: '公共池',
+}
+/** @type {Record<string, string>} 渠道 id → 来源类别 */
+const SOURCE_CHANNEL_MAP = {
+  aggregate: 'own-key', extension: 'own-key',
+  codearts: 'own-account', trae: 'own-account', raccoon: 'own-account', loomy: 'own-account',
+  minimax: 'own-account', cline: 'own-account', qoder: 'own-account', qodercn: 'own-account',
+  opencode: 'own-account', zcode: 'own-account', lobsterai: 'own-account', buddy: 'own-account',
+  gemini: 'own-account',
+  anonymous: 'shared', kilo: 'shared', eac: 'shared', magpie: 'shared',
+  combo: 'combo',
+}
+const warnedChannels = new Set()
+/** @param {string|undefined} channel @returns {string} 来源类别 id */
+export function sourceClassOf(channel) {
+  const mapped = SOURCE_CHANNEL_MAP[channel]
+  if (mapped !== undefined) return mapped
+  if (typeof channel === 'string' && channel !== '' && !warnedChannels.has(channel)) {
+    warnedChannels.add(channel)
+    try { console.warn(`[models] 未知渠道 "${channel}" 按公共池展示；若是新登录渠道请更新 SOURCE_CHANNEL_MAP`) } catch { /* 非浏览器环境跳过 */ }
+  }
+  return 'shared'
+}
+
+/** 渠道下拉的分组顺序与标题（按来源类别）。 */
+export const SOURCE_GROUP_ORDER = [
+  ['own-key', '我的 Key（聚合渠道）'],
+  ['own-account', '我的账号（EAC router）'],
+  ['combo', '组合'],
+  ['shared', '公共池（免登录共享）'],
+]
+
+export function filterModels(catalog, { search = '', channel = 'all', capability = 'all', availability = 'all', access = 'all', source = 'all' }) {
   const query = search.trim().toLocaleLowerCase()
+  const matchesSource = model => {
+    if (source === 'all') return true
+    const cls = sourceClassOf(model.channel)
+    return source === 'own' ? cls === 'own-key' || cls === 'own-account' : cls === source
+  }
   return catalog.filter(model =>
     (channel === 'all' || model.channel === channel)
+    && matchesSource(model)
     && (capability === 'all' || (capability === 'vision' ? model.vision : capability === 'reasoning' ? model.reasoning : !model.vision))
     && (availability === 'all' || modelStateView(model).state === availability)
     && (access === 'all' || (access === 'routable' ? model.routable : !model.routable))

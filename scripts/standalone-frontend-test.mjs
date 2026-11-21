@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { buildStats } from '../src/core/stats.js'
-import { filterModels, modelStateView } from '../packages/standalone/frontend/models-data.mjs'
+import { filterModels, modelStateView, sourceClassOf, SOURCE_GROUP_ORDER } from '../packages/standalone/frontend/models-data.mjs'
 import { usageDays, usageModels } from '../packages/standalone/frontend/usage-data.mjs'
 import { settingsDraft, settingsChanged, syncSettings, validateSettingsDraft } from '../packages/standalone/frontend/settings-data.mjs'
 import { verifySettingsHost } from './standalone-settings-host-test.mjs'
@@ -120,6 +120,25 @@ assert.deepEqual(modelStateView({ availabilitySource: 'usage', availability: 'un
 assert.deepEqual(modelStateView({ availabilitySource: 'manual', availability: 'unknown', failureKind: 'retired' }),
   { state: 'retired', label: '已退役', tone: 'danger' })
 assert.equal(filterModels([{ id: 'r', name: 'r', availabilitySource: 'usage', availability: 'unavailable', failureKind: 'retired' }], { availability: 'retired' }).length, 1)
+// 来源类别（2026-11-21 用户要求"自己的凭据与公共池在清单里分得清"）：映射、
+// 未知渠道兜底为公共池、source 筛选三段（own = own-key ∪ own-account）。
+assert.equal(sourceClassOf('aggregate'), 'own-key')
+assert.equal(sourceClassOf('extension'), 'own-key')
+assert.equal(sourceClassOf('lobsterai'), 'own-account')
+assert.equal(sourceClassOf('qodercn'), 'own-account')
+assert.equal(sourceClassOf('anonymous'), 'shared')
+assert.equal(sourceClassOf('kilo'), 'shared')
+assert.equal(sourceClassOf('eac'), 'shared')
+assert.equal(sourceClassOf('combo'), 'combo')
+assert.equal(sourceClassOf('brand-new-channel'), 'shared', '未知渠道一律按公共池展示')
+assert.equal(sourceClassOf(undefined), 'shared')
+assert.ok(SOURCE_GROUP_ORDER.every(([cls]) => ['own-key', 'own-account', 'combo', 'shared'].includes(cls)))
+assert.equal(filterModels(catalog, { source: 'own' }).length, 500, 'lobsterai 归我的账号，kilo 归公共池')
+assert.equal(filterModels(catalog, { source: 'own' }).every(model => model.channel === 'lobsterai'), true)
+assert.equal(filterModels(catalog, { source: 'shared' }).length, 500)
+assert.equal(filterModels(catalog, { source: 'shared' }).every(model => model.channel === 'kilo'), true)
+assert.equal(filterModels(catalog, { source: 'combo' }).length, 0)
+assert.equal(filterModels(catalog, { source: 'all' }).length, 1000)
 const usageRows = Array.from({ length: 47 }, (_, index) => ({
   model: `fixture/usage-${index}`, name: `用量模型 ${index}`, calls: index + 1, turns: index,
   input: index * 10, output: (46 - index) * 20, failedTurns: index % 4,

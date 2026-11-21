@@ -298,6 +298,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 来源徽章：区分「我的 Key / 我的账号 / 组合 / 公共池」四类凭据来源。
+   .model-source > span 是 display:block，这里必须显式压回 inline。 */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-pill);
+  background: var(--bg-2);
+  color: var(--fg-2);
+  font-size: 10.5px;
+  font-weight: 520;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.source-badge.source-own-key { color: var(--info); border-color: var(--info-line); background: var(--info-soft); }
+.source-badge.source-own-account { color: var(--ok); border-color: var(--ok-line); background: var(--ok-soft); }
+.source-badge.source-combo { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+.source-badge.source-shared { color: var(--fg-2); border-style: dashed; }
+
 .model-capabilities { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
 
 /* 容量：两行，数字等宽 */

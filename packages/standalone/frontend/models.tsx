@@ -3,7 +3,7 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from '@tanstack/rea
 import { Boxes, Check, CircleAlert, CircleCheck, Copy, Eye, EyeOff, LoaderCircle, Play, RefreshCw, Search, SlidersHorizontal, Square, X } from 'lucide-react'
 import { providers } from 'ofm-provider-list'
 import { Badge, Button, Input } from './components/ui'
-import { filterModels, modelStateView, stateOptions } from './models-data.mjs'
+import { filterModels, modelStateView, sourceClassOf, SOURCE_GROUP_ORDER as sourceGroups, SOURCE_CLASS_NAMES as sourceClassNames, stateOptions } from './models-data.mjs'
 import { visibilityCopy } from './visibility-data.mjs'
 import type { Host, Model, ModelTestResult, ServiceSettings, Summary } from './types'
 import './models.css'
@@ -20,7 +20,10 @@ const channelName = (id: string) => sourceNames[id]
 const number = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
 const capacity = (value?: number) => value && Number.isFinite(value) && value > 0
   ? value >= 1000 ? `${Number((value / 1000).toFixed(1))}K` : number(value) : '未知'
-const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all' }
+const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all', source: 'all' }
+// 来源三段/四段筛选（2026-11-21「自己的 API/账号要能和公共池区分」）：
+// 我的凭据 = 我的 Key + 我的账号；组合单独一段；公共池单独一段。
+const sourceSegments = [['all', '全部'], ['own', '我的凭据'], ['combo', '组合'], ['shared', '公共池']] as const
 type Operation = 'refresh' | 'probe' | 'test'
 type TestState = { model: Model; state: 'pending' | 'success' | 'error' | 'cancelled'; result?: ModelTestResult; error?: string; kind?: string }
 
@@ -240,8 +243,19 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     <div className="model-filters">
       <div className="model-search"><Search size={16} /><Input type="search" aria-label="搜索模型" placeholder="搜索模型名称或 ID…"
         value={filters.search} onChange={event => changeFilters({ search: event.target.value })} /></div>
+      <div className="channel-filters model-source-segments" role="group" aria-label="筛选来源">
+        {sourceSegments.map(([id, name]) =>
+          <button key={id} aria-pressed={filters.source === id} onClick={() => changeFilters({ source: id })}>{name}</button>)}
+      </div>
       <select aria-label="筛选渠道" value={filters.channel} onChange={event => changeFilters({ channel: event.target.value })}>
-        <option value="all">全部渠道</option>{channels.map(id => <option value={id} key={id}>{channelName(id)}</option>)}
+        <option value="all">全部渠道</option>
+        {sourceGroups.map(([cls, group]) => {
+          const ids = channels.filter(id => sourceClassOf(id) === cls)
+          if (ids.length === 0) return null
+          return <optgroup key={cls} label={group}>
+            {ids.map(id => <option value={id} key={id}>{channelName(id)}（{sourceClassNames[cls]}）</option>)}
+          </optgroup>
+        })}
       </select>
       <select aria-label="筛选模型能力" value={filters.capability} onChange={event => changeFilters({ capability: event.target.value })}>
         <option value="all">全部能力</option><option value="text">纯文本</option><option value="vision">支持视觉</option><option value="reasoning">支持思考</option>
@@ -307,7 +321,9 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(undefined)
               }}>
               <div role="cell" className="model-identity"><strong>{model.name}</strong><code>{model.id}</code></div>
-              <div role="cell" className="model-source"><span>{channelName(model.channel)}</span><div className="model-capabilities">
+              <div role="cell" className="model-source"><span>{channelName(model.channel)}</span>
+                <span className={`source-badge source-${sourceClassOf(model.channel)}`}>{sourceClassNames[sourceClassOf(model.channel)]}</span>
+                <div className="model-capabilities">
                 <Badge>{model.vision ? '视觉' : '纯文本'}</Badge>{model.reasoning && <Badge tone="blue">思考</Badge>}</div></div>
               <div role="cell" className="model-limits"><span title={model.contextWindow ? `${model.contextWindow} Token` : undefined}>{capacity(model.contextWindow)} <small>上下文</small></span>
                 <span title={model.maxOutput ? `${model.maxOutput} Token` : undefined}>{capacity(model.maxOutput)} <small>输出</small></span></div>

@@ -31327,17 +31327,19 @@ var OPENCODE_MODELS_DEV_TTL_MS = OPENCODE.modelsDevTtlMs;
 var OPENCODE_FALLBACK_MODELS = [
   // ── 匿名可用（chat 端点，无需 key）──
   { id: "big-pickle", name: "Big Pickle", isFree: true, contextWindow: 262144 },
-  { id: "space-bunny-free", name: "Space Bunny Free", isFree: true, contextWindow: 262144 },
-  { id: "longcat-2.5-preview-free", name: "LongCat 2.5 Preview Free", isFree: true, contextWindow: 262144 },
+  { id: "longcat-2.5-free", name: "LongCat 2.5 Free", isFree: true, contextWindow: 262144 },
   { id: "mimo-v2.6-flash-free", name: "MiMo-V2.6-Flash Free", isFree: true, contextWindow: 262144 },
-  { id: "mimo-v2.5-free", name: "MiMo-V2.5 Free", isFree: true, contextWindow: 262144 },
   { id: "deepseek-v4.1-flash-free", name: "DeepSeek V4.1 Flash Free", isFree: true, contextWindow: 2e5 },
-  { id: "glm-5.3-flash-free", name: "GLM 5.3 Flash Free", isFree: true, contextWindow: 2e5 },
+  { id: "iceman-free", name: "Iceman Free", isFree: true, contextWindow: 0 },
+  { id: "beam-free", name: "Beam Free", isFree: true, contextWindow: 0 },
+  { id: "flint-40b-free", name: "Flint 40B Free", isFree: true, contextWindow: 0 },
+  { id: "nemotron-3.5-super-vl-free", name: "Nemotron 3.5 Super VL Free", isFree: true, contextWindow: 262144 },
+  { id: "nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning Free", isFree: true, contextWindow: 262144 },
+  { id: "jev-1.13-free", name: "Jev 1.13 Free", isFree: true, contextWindow: 0 },
+  { id: "hy4-flash-free", name: "HY4 Flash Free", isFree: true, contextWindow: 0 },
+  { id: "tidepool-alpha-free", name: "Tidepool Alpha Free", isFree: true, contextWindow: 0 },
   // ⚠️ 这两个官方 docs 标注走 `/v1/models/{id}`（Gemini 风格），但**实测
   // chat 端点也通** ⇒ 按 chat 处理。**以实测为准，不以 docs 为准。**
-  { id: "nemotron-3-ultra-free", name: "Nemotron 3 Ultra Free", isFree: true, contextWindow: 262144 },
-  { id: "nemotron-3.5-lightning-free", name: "Nemotron 3.5 Lightning Free", isFree: true, contextWindow: 262144 },
-  // ── 需付费 key（chat 端点；实测匿名为 401）──
   { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash", isFree: false, contextWindow: 262144 },
   { id: "deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash", isFree: false, contextWindow: 262144 },
   { id: "glm-5.2", name: "GLM 5.2", isFree: false, contextWindow: 262144 },

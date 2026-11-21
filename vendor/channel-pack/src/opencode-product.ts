@@ -122,21 +122,42 @@ export interface OpencodeFallbackModel {
  *   清单里（models.dev 仍把它们标为免费）。它们**保留**在本表：本表是远端
  *   目录拉取失败时的兜底名册，而远端拉取成功时以远端清单为准（不在清单里的
  *   条目自然不会出现）。删掉只会让离线名册更短，不会修好任何东西。
+ *   ⚠️ 2026-11-21 复核推翻了本条决定：残留表内的下线模型会让用户点到一个
+ *   必然失败的模型（glm-5.3-flash-free 实测报「模型不存在或已停用」），
+ *   已移除，见下方 2026-11-21 复核记录。
+ *
+ * ## 2026-11-21 复核（`GET /inference/v1/models`，`Bearer public`，104 条）
+ *
+ * - **移除已下线**：`space-bunny-free`、`mimo-v2.5-free`、`glm-5.3-flash-free`、
+ *   `nemotron-3-ultra-free` 不在当次清单（glm-5.3-flash-free 用户实测报
+ *   「模型不存在或已停用」）；`longcat-2.5-preview-free` 改名为 `longcat-2.5-free`。
+ *   残留表内的下线模型会让用户点到一个必然失败的模型。
+ * - **新增免费模型**（当次清单在列，8 条）：`longcat-2.5-free`、`iceman-free`、
+ *   `beam-free`、`flint-40b-free`、`nemotron-3.5-super-vl-free`、`jev-1.13-free`、
+ *   `hy4-flash-free`、`tidepool-alpha-free`。⚠️ 当次匿名对话实测被
+ *   `429 FreeUsageLimitError` 挡住（IP 桶耗尽，Retry-After ≈ 11h），逐模型
+ *   对话验证待出口恢复后补做；在列依据 =「匿名清单在列 + id 自带 `-free`」，
+ *   与既有免费行判定口径相同。
+ * - 窗口值：Nemotron/LongCat 家族沿用既有同家族实测值（262144）；其余新行
+ *   记 0（未知哨兵，`resolveModel` 判 > 0 才下发，不编造），models.dev 恢复
+ *   可达后复核校正。
  */
 export const OPENCODE_FALLBACK_MODELS: readonly OpencodeFallbackModel[] = [
   // ── 匿名可用（chat 端点，无需 key）──
   { id: 'big-pickle', name: 'Big Pickle', isFree: true, contextWindow: 262144 },
-  { id: 'space-bunny-free', name: 'Space Bunny Free', isFree: true, contextWindow: 262144 },
-  { id: 'longcat-2.5-preview-free', name: 'LongCat 2.5 Preview Free', isFree: true, contextWindow: 262144 },
+  { id: 'longcat-2.5-free', name: 'LongCat 2.5 Free', isFree: true, contextWindow: 262144 },
   { id: 'mimo-v2.6-flash-free', name: 'MiMo-V2.6-Flash Free', isFree: true, contextWindow: 262144 },
-  { id: 'mimo-v2.5-free', name: 'MiMo-V2.5 Free', isFree: true, contextWindow: 262144 },
   { id: 'deepseek-v4.1-flash-free', name: 'DeepSeek V4.1 Flash Free', isFree: true, contextWindow: 200000 },
-  { id: 'glm-5.3-flash-free', name: 'GLM 5.3 Flash Free', isFree: true, contextWindow: 200000 },
+  { id: 'iceman-free', name: 'Iceman Free', isFree: true, contextWindow: 0 },
+  { id: 'beam-free', name: 'Beam Free', isFree: true, contextWindow: 0 },
+  { id: 'flint-40b-free', name: 'Flint 40B Free', isFree: true, contextWindow: 0 },
+  { id: 'nemotron-3.5-super-vl-free', name: 'Nemotron 3.5 Super VL Free', isFree: true, contextWindow: 262144 },
+  { id: 'nemotron-3.5-lightning-free', name: 'Nemotron 3.5 Lightning Free', isFree: true, contextWindow: 262144 },
+  { id: 'jev-1.13-free', name: 'Jev 1.13 Free', isFree: true, contextWindow: 0 },
+  { id: 'hy4-flash-free', name: 'HY4 Flash Free', isFree: true, contextWindow: 0 },
+  { id: 'tidepool-alpha-free', name: 'Tidepool Alpha Free', isFree: true, contextWindow: 0 },
   // ⚠️ 这两个官方 docs 标注走 `/v1/models/{id}`（Gemini 风格），但**实测
   // chat 端点也通** ⇒ 按 chat 处理。**以实测为准，不以 docs 为准。**
-  { id: 'nemotron-3-ultra-free', name: 'Nemotron 3 Ultra Free', isFree: true, contextWindow: 262144 },
-  { id: 'nemotron-3.5-lightning-free', name: 'Nemotron 3.5 Lightning Free', isFree: true, contextWindow: 262144 },
-  // ── 需付费 key（chat 端点；实测匿名为 401）──
   { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', isFree: false, contextWindow: 262144 },
   { id: 'deepseek-v4.1-flash', name: 'DeepSeek V4.1 Flash', isFree: false, contextWindow: 262144 },
   { id: 'glm-5.2', name: 'GLM 5.2', isFree: false, contextWindow: 262144 },

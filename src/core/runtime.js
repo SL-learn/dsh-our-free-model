@@ -563,6 +563,16 @@ export function createModelRuntime({
     }
     const code = String(error?.code ?? '')
     const detail = String(error?.message ?? error ?? '').slice(0, 200)
+    // 退役归因（2026-11-21 体检）：上游明确宣告模型下架/退役（end-of-life、
+    // no longer available、下架…）是模型终态，单次即标 unavailable 并带上
+    // failureKind:'retired'，不走连败计数——等第二次调用没有意义，模型不会
+    // 回来。与手动测试（testModel → classifyModelFailure）的语义对齐。
+    const kind = classifyModelFailure(error)
+    if (kind === 'retired') {
+      usageFailures.delete(entry.id)
+      write(STATE.unavailable, { detail, failureKind: kind })
+      return
+    }
     if (code === 'REGION_BLOCKED') {
       usageFailures.delete(entry.id)
       write(STATE.regionBlocked, { detail })

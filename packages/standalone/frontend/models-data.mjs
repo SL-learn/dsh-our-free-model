@@ -36,7 +36,12 @@ export function modelStateView(model) {
   }
   if (source === 'manual' && state === 'available') return { state: 'available', label: '实测可用', tone: 'success' }
   if (source === 'usage' && state === 'available') return { state: 'available', label: '调用可用', tone: 'success' }
-  if (source === 'usage' && state === 'unavailable') return { state: 'unavailable', label: '连续调用失败', tone: 'danger' }
+  if (source === 'usage' && state === 'unavailable') {
+    // 调用沉淀也能确认退役（2026-11-21 体检）：上游宣告 end-of-life 的调用
+    // 失败单次即终态，展示与批量隐藏都走「已退役」，不再笼统算连续失败。
+    if (model.failureKind === 'retired') return { state: 'retired', label: '已退役（调用）', tone: 'danger' }
+    return { state: 'unavailable', label: '连续调用失败', tone: 'danger' }
+  }
   const names = {
     available: '已探测可用', unknown: '未探测',
     unavailable: '不可用', throttled: '限流中', 'region-blocked': '地区受限',

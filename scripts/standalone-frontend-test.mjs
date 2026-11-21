@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { buildStats } from '../src/core/stats.js'
-import { filterModels } from '../packages/standalone/frontend/models-data.mjs'
+import { filterModels, modelStateView } from '../packages/standalone/frontend/models-data.mjs'
 import { usageDays, usageModels } from '../packages/standalone/frontend/usage-data.mjs'
 import { settingsDraft, settingsChanged, syncSettings, validateSettingsDraft } from '../packages/standalone/frontend/settings-data.mjs'
 import { verifySettingsHost } from './standalone-settings-host-test.mjs'
@@ -110,6 +110,16 @@ assert.equal(filterModels(catalog, { channel: 'lobsterai', availability: 'availa
 assert.equal(filterModels(catalog, { access: 'hidden' }).length + filterModels(catalog, { access: 'routable' }).length, catalog.length)
 assert.equal(filterModels([{ id: 'unknown', name: '未知状态', routable: false }], { availability: 'unknown' }).length, 1)
 assert.deepEqual(catalog, baseline, '视图筛选不得改变目录、公开状态或模型开关')
+// 调用沉淀的退役归因（2026-11-21 体检）：usage 行 unavailable + failureKind
+// 'retired' 走「已退役（调用）」并参与 retired 筛选/批量隐藏；其余连败仍是
+// 「连续调用失败」。
+assert.deepEqual(modelStateView({ availabilitySource: 'usage', availability: 'unavailable', failureKind: 'retired' }),
+  { state: 'retired', label: '已退役（调用）', tone: 'danger' })
+assert.deepEqual(modelStateView({ availabilitySource: 'usage', availability: 'unavailable' }),
+  { state: 'unavailable', label: '连续调用失败', tone: 'danger' })
+assert.deepEqual(modelStateView({ availabilitySource: 'manual', availability: 'unknown', failureKind: 'retired' }),
+  { state: 'retired', label: '已退役', tone: 'danger' })
+assert.equal(filterModels([{ id: 'r', name: 'r', availabilitySource: 'usage', availability: 'unavailable', failureKind: 'retired' }], { availability: 'retired' }).length, 1)
 const usageRows = Array.from({ length: 47 }, (_, index) => ({
   model: `fixture/usage-${index}`, name: `用量模型 ${index}`, calls: index + 1, turns: index,
   input: index * 10, output: (46 - index) * 20, failedTurns: index % 4,

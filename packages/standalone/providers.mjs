@@ -10,15 +10,37 @@ const modelsOf = value => {
   return [...new Set(value.map(id => id.trim()))]
 }
 
+/** A provider's stored keys: the `apiKeys` list where valid, else the legacy single `apiKey`. */
+const storedKeys = value => {
+  const raw = Array.isArray(value?.apiKeys) ? value.apiKeys : [value?.apiKey]
+  const seen = new Set()
+  const keys = []
+  for (const entry of raw) {
+    if (typeof entry !== 'string') continue
+    const key = entry.trim()
+    if (key === '' || seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+    if (keys.length >= 8) break
+  }
+  return keys
+}
+
 export function publicProviders(section) {
-  return Object.fromEntries(Object.entries(section?.providers ?? {}).map(([id, value]) => [id, {
-    enabled: value.enabled !== false,
-    hasKey: typeof value.apiKey === 'string' && value.apiKey !== '',
-    keyHint: value.apiKey ? `…${value.apiKey.slice(-4)}` : '',
-    baseUrl: value.baseUrl ?? '',
-    models: value.models ?? [], discovered: value.discovered ?? [],
-    lastTest: value.lastTest ? { ...value.lastTest, message: String(value.lastTest.message ?? '').replaceAll(value.apiKey || '\0', '[redacted]') } : undefined,
-  }]))
+  return Object.fromEntries(Object.entries(section?.providers ?? {}).map(([id, value]) => {
+    const keys = storedKeys(value)
+    return [id, {
+      enabled: value.enabled !== false,
+      hasKey: keys.length > 0,
+      keyCount: keys.length,
+      keyHint: keys.length > 0 ? `…${keys[0].slice(-4)}` : '',
+      baseUrl: value.baseUrl ?? '',
+      models: value.models ?? [], discovered: value.discovered ?? [],
+      lastTest: value.lastTest
+        ? { ...value.lastTest, message: keys.reduce((text, key) => String(text).replaceAll(key, '[redacted]'), String(value.lastTest.message ?? '')) }
+        : undefined,
+    }]
+  }))
 }
 
 export function createProviderManagement({ stores, runtime, persist }) {
@@ -55,16 +77,38 @@ export function createProviderManagement({ stores, runtime, persist }) {
     save(patch) {
       const provider = get(patch.providerId)
       if (!['apiKey', 'none'].includes(provider.auth.kind)) throw fail('此渠道请使用订阅账号导入')
-      for (const name of Object.keys(patch)) if (!['providerId', 'enabled', 'apiKey', 'baseUrl', 'models'].includes(name)) throw fail('不支持的供应商设置字段')
+      for (const name of Object.keys(patch)) if (!['providerId', 'enabled', 'apiKey', 'apiKeys', 'baseUrl', 'models'].includes(name)) throw fail('不支持的供应商设置字段')
       const previous = stores.settings.get().aggregate?.providers?.[provider.id] ?? {}
       const next = { enabled: true, ...previous, addedAt: previous.addedAt ?? Date.now() }
       if (patch.enabled !== undefined) {
         if (typeof patch.enabled !== 'boolean') throw fail('enabled 必须为布尔值')
         next.enabled = patch.enabled
       }
-      if (patch.apiKey !== undefined) {
+      if (patch.apiKeys !== undefined) {
+        // Multi-key save: the rotation pool. Order matters only as a display
+        // hint; the request path round-robins and cooldowns decide the rest.
+        if (!Array.isArray(patch.apiKeys)) throw fail('API Key 清单必须为数组')
+        if (patch.apiKeys.length > 8) throw fail('每个渠道最多保存 8 把 API Key')
+        const seen = new Set()
+        const keys = []
+        for (const value of patch.apiKeys) {
+          if (typeof value !== 'string' || value.length > 8192 || /[\0\r\n]/.test(value)) throw fail('API Key 格式无效')
+          const key = value.trim()
+          if (key === '' || seen.has(key)) continue
+          seen.add(key)
+          keys.push(key)
+        }
+        if (keys.length === 0) throw fail('请至少输入一把有效的 API Key')
+        next.apiKeys = keys
+        // Single-key readers (desktop builds, backups) keep working off `apiKey`.
+        next.apiKey = keys[0]
+      } else if (patch.apiKey !== undefined) {
         if (typeof patch.apiKey !== 'string' || patch.apiKey.length > 8192 || /[\0\r\n]/.test(patch.apiKey)) throw fail('API Key 格式无效')
         next.apiKey = patch.apiKey.trim()
+        // A legacy single-key save rewrites the pool to one entry — the old
+        // editor can only manage one key, so keeping stale extras behind an
+        // invisible pool would surprise whoever next opens the new editor.
+        next.apiKeys = [next.apiKey]
       }
       if (patch.baseUrl !== undefined) {
         if (typeof patch.baseUrl !== 'string' || patch.baseUrl.length > 2048) throw fail('API 地址无效')
@@ -78,7 +122,8 @@ export function createProviderManagement({ stores, runtime, persist }) {
       }
       if (patch.models !== undefined) next.models = modelsOf(patch.models)
       // A changed endpoint or credential invalidates the old connectivity verdict.
-      if (next.baseUrl !== previous.baseUrl || next.apiKey !== previous.apiKey) delete next.lastTest
+      const keysChanged = JSON.stringify(next.apiKeys ?? []) !== JSON.stringify(previous.apiKeys ?? [])
+      if (next.baseUrl !== previous.baseUrl || next.apiKey !== previous.apiKey || keysChanged) delete next.lastTest
       return write(provider.id, next)
     },
     remove({ providerId }) { get(providerId); return write(providerId, null) },

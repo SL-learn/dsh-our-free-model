@@ -83,6 +83,73 @@ const LISTING_TIMEOUT_MS = 15000
 const TURN_TIMEOUT_MS = 300000
 const USER_AGENT = 'dsh-our-free-model'
 
+// ── Multi-key rotation ──────────────────────────────────────────────────────
+//
+// A provider accepts several keys (the settings page stores them as an
+// `apiKeys` array). Requests round-robin across them so one key's per-minute
+// budget is not the lane's ceiling, and a key the provider just refused (429 /
+// invalid credential) sits out on a cooldown instead of taking the next turn.
+// State is in-memory on purpose: the rotation is load-spreading, not
+// accounting, and a restart starting from key 0 again costs nothing.
+
+const MAX_KEYS_PER_PROVIDER = 8
+const KEY_COOLDOWN_MS = 60_000
+const KEY_COOLDOWN_MAX_MS = 10 * 60_000
+/** providerId -> cursor over the usable key pool (round-robin). */
+const keyCursor = new Map()
+/** providerId -> Map(apiKey -> cooldownUntil) for keys the provider refused. */
+const keyCooldown = new Map()
+
+/** The provider's stored keys: the `apiKeys` list where valid, else the legacy single `apiKey`. */
+function usableKeys(setting) {
+  const raw = Array.isArray(setting?.apiKeys) ? setting.apiKeys : [setting?.apiKey]
+  const seen = new Set()
+  const keys = []
+  for (const value of raw) {
+    const key = text(value)
+    if (key === '' || key.length > 8192 || seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
+    if (keys.length >= MAX_KEYS_PER_PROVIDER) break
+  }
+  return keys
+}
+
+/**
+ * Pick one key for a request: round-robin across the keys that are not on
+ * cooldown, falling back to the full list when every key is cooling (a lane
+ * that must refuse nothing still prefers the least-recently-refused key over
+ * no attempt at all).
+ *
+ * @returns {{apiKey: string, keys: string[], total: number}} the chosen key, the pool it came from, and how many keys the provider stores
+ */
+function pickProviderKey(providerId, setting) {
+  const keys = usableKeys(setting)
+  if (keys.length === 0) return { apiKey: '', keys: [], total: 0 }
+  const now = Date.now()
+  const cooldown = keyCooldown.get(providerId)
+  const uncooled = cooldown === undefined ? keys : keys.filter(key => (cooldown.get(key) ?? 0) <= now)
+  const pool = uncooled.length > 0 ? uncooled : keys
+  const at = (keyCursor.get(providerId) ?? 0) % pool.length
+  keyCursor.set(providerId, at + 1)
+  return { apiKey: pool[at], keys: pool, total: keys.length }
+}
+
+/**
+ * Put a key on cooldown after the provider refused it, so the next request
+ * takes a different key first. `retryAfterMs` honours the provider's own
+ * Retry-After when it sent one, clamped to a sane ceiling.
+ */
+export function noteProviderKeyRejection(providerId, apiKey, retryAfterMs) {
+  const key = text(apiKey)
+  if (key === '') return
+  const cooldown = keyCooldown.get(providerId) ?? new Map()
+  const requested = Number(retryAfterMs)
+  const ms = Number.isFinite(requested) && requested > 0 ? Math.min(requested, KEY_COOLDOWN_MAX_MS) : KEY_COOLDOWN_MS
+  cooldown.set(key, Date.now() + ms)
+  keyCooldown.set(providerId, cooldown)
+}
+
 /** A trimmed non-empty string, or ''. */
 function text(value) {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : ''
@@ -161,7 +228,7 @@ function effectiveChatUrl(provider, setting) {
  */
 function authUsable(provider, setting) {
   if (provider.auth.kind === 'oauth' || provider.auth.kind === 'adc') return false
-  if (provider.auth.kind === 'apiKey') return text(setting?.apiKey) !== ''
+  if (provider.auth.kind === 'apiKey') return usableKeys(setting).length > 0
   return true
 }
 
@@ -226,7 +293,7 @@ function entryOf(provider, modelId, source) {
  * Build catalog entries for every enabled provider/model in the user's config.
  *
  * @param {object} config - the plugin settings' `aggregate` section:
- *   { enabled: boolean, providers: { [providerId]: { enabled, apiKey, baseUrl?, models?: string[], discovered?: string[], addedAt? } } }
+ *   { enabled: boolean, providers: { [providerId]: { enabled, apiKey|apiKeys: string[], baseUrl?, models?: string[], discovered?: string[], addedAt? } } }
  * @returns {Array<object>} entries shaped like other lanes' rows, plus:
  *   { id: 'provider/model', name, channel:'aggregate', providerId, modelId, format, vision, reasoning, contextWindow, maxOutput, wire: 'chat'|'messages'|'responses', source: 'static'|'discovered' }
  */
@@ -267,7 +334,7 @@ export function isAggregateEntry(entry) {
  *
  * @param {object} config - the plugin settings' `aggregate` section
  * @param {string} providerId - a registry provider id
- * @returns {{providerId:string, provider:object, apiKey:string, baseUrl:string, format:string, wire:string, chatUrl:string, modelsUrl:string|null, headers:Record<string,string>}}
+ * @returns {{providerId:string, provider:object, apiKey:string, keyCount:number, baseUrl:string, format:string, wire:string, chatUrl:string, modelsUrl:string|null, headers:Record<string,string>}}
  */
 export function resolveProvider(config, providerId) {
   const id = text(providerId)
@@ -282,7 +349,8 @@ export function resolveProvider(config, providerId) {
   if (provider.auth.kind === 'oauth' || provider.auth.kind === 'adc') {
     throw new UpstreamError(`"${provider.name}" signs in with ${provider.auth.kind}, not with an API key, so the aggregate lane does not serve it`, CODE.credential)
   }
-  const apiKey = text(setting?.apiKey)
+  const picked = pickProviderKey(provider.id, setting)
+  const apiKey = picked.apiKey
   if (provider.auth.kind === 'apiKey' && apiKey === '') {
     throw new UpstreamError(`"${provider.name}" needs an API key: paste one in the aggregate settings (the provider issues them at ${provider.auth.url})`, CODE.credential)
   }
@@ -305,6 +373,9 @@ export function resolveProvider(config, providerId) {
     providerId: provider.id,
     provider,
     apiKey,
+    // How many keys the provider stores — the retry budget a streamed post may
+    // spend when the provider refuses the turn before the first frame.
+    keyCount: picked.total,
     baseUrl,
     format: provider.format,
     wire: WIRE_BY_FORMAT[provider.format],
@@ -520,7 +591,6 @@ function modelIdsFrom(payload) {
  * @returns {Promise<{status:number}>}
  */
 export async function postAggregateStreamed({ config, providerId, modelId, body, session, signal, onData, timeoutMs = TURN_TIMEOUT_MS }) {
-  const resolved = resolveProvider(config, providerId)
   const model = text(modelId)
   let outbound = body
   if (typeof outbound === 'string' && model !== '') {
@@ -530,24 +600,45 @@ export async function postAggregateStreamed({ config, providerId, modelId, body,
   }
   const bodyText = typeof outbound === 'string' ? outbound
     : JSON.stringify({ ...outbound, ...(model === '' ? {} : { model }), stream: true })
-  return postCompatibleStreamed({
-    url: resolved.chatUrl,
-    headers: {
-      ...resolved.headers,
-      // The provider's gateway either ignores this or uses it to keep this
-      // conversation's state separate from concurrent ones on the same key —
-      // the free lane's session dimension, without its fingerprint family.
-      ...(text(session) === '' ? {} : { 'x-session-id': text(session) }),
-    },
-    body: bodyText,
-    model,
-    wire: resolved.wire,
-    signal,
-    onData,
-    timeoutMs,
-    secret: resolved.apiKey,
-    label: resolved.provider.name,
-  })
+  // A provider storing several keys gets one same-body retry per spare key
+  // when it refuses the turn — but only before any frame reached the caller:
+  // retrying after the caller has seen tokens would duplicate output. Each
+  // refusal puts the rejected key on cooldown, so the re-resolve takes the
+  // next key first; when the pool has no other key (or the provider keeps
+  // handing back the same one), the refusal propagates as before.
+  let resolved = resolveProvider(config, providerId)
+  let emitted = 0
+  const push = frame => { emitted += 1; onData(frame) }
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await postCompatibleStreamed({
+        url: resolved.chatUrl,
+        headers: {
+          ...resolved.headers,
+          // The provider's gateway either ignores this or uses it to keep this
+          // conversation's state separate from concurrent ones on the same key —
+          // the free lane's session dimension, without its fingerprint family.
+          ...(text(session) === '' ? {} : { 'x-session-id': text(session) }),
+        },
+        body: bodyText,
+        model,
+        wire: resolved.wire,
+        signal,
+        onData: push,
+        timeoutMs,
+        secret: resolved.apiKey,
+        label: resolved.provider.name,
+      })
+    } catch (error) {
+      const refused = error?.code === CODE.quota || error?.code === CODE.credential
+      if (!refused || emitted > 0 || signal?.aborted === true) throw error
+      if (attempt >= Math.max(1, Math.min(resolved.keyCount, MAX_KEYS_PER_PROVIDER))) throw error
+      noteProviderKeyRejection(providerId, resolved.apiKey, error.providerRetryAfterMs)
+      const next = resolveProvider(config, providerId)
+      if (next.apiKey === resolved.apiKey) throw error
+      resolved = next
+    }
+  }
 }
 
 /**

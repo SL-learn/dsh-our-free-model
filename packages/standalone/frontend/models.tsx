@@ -164,7 +164,8 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   const testBrokenSlow = summary.catalog.filter(model =>
     model.availabilitySource === 'manual' && model.failureKind === 'slow' && model.hiddenByUser !== true)
   const testBrokenRetired = summary.catalog.filter(model =>
-    model.availabilitySource === 'manual' && model.failureKind === 'retired' && model.hiddenByUser !== true)
+    (model.availabilitySource === 'manual' || model.availabilitySource === 'usage')
+    && model.failureKind === 'retired' && model.hiddenByUser !== true)
   const testBroken = [...testBrokenError, ...testBrokenSlow, ...testBrokenRetired]
   const envLimited = summary.catalog.filter(model =>
     model.availabilitySource === 'manual' && model.failureKind !== undefined

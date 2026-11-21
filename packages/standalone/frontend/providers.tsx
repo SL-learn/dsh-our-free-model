@@ -12,12 +12,14 @@ interface Provider {
   baseUrl: string; modelCount: number; models?: string[]; notes: string
 }
 interface Configuration {
-  enabled: boolean; hasKey: boolean; keyHint?: string; baseUrl: string; models: string[]
+  enabled: boolean; hasKey: boolean; keyCount?: number; keyHint?: string; baseUrl: string; models: string[]
   lastTest?: { ok?: boolean; at?: number } | number
 }
 interface Directory { registry: Provider[]; configured: Record<string, Configuration> }
 const connected = (provider: Provider, config?: Configuration) => !!config?.enabled && (config.hasKey || provider.authKind === 'none')
 const modelList = (text: string) => [...new Set(text.split(/[\n,]+/).map(row => row.trim()).filter(Boolean))]
+// 多把 Key 按行拆分：轮换池的展示形态与保存形态一致（每行一把，去空去重）。
+const keyList = (text: string) => [...new Set(text.split(/\n+/).map(row => row.trim()).filter(Boolean))]
 const endpoint = (url: string) => {
   try { const value = new URL(url); return value.host + value.pathname.replace(/\/$/, '') } catch { return url || '未设置 API 地址' }
 }
@@ -25,7 +27,7 @@ const endpoint = (url: string) => {
 function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   provider: Provider; configuration?: Configuration; onClose(): void; onSaved(): Promise<void>
 }) {
-  const [key, setKey] = useState('')
+  const [keysText, setKeysText] = useState('')
   const [baseUrl, setBaseUrl] = useState(configuration?.baseUrl || provider.baseUrl)
   const [models, setModels] = useState((configuration?.models ?? provider.models ?? []).join('\n'))
   const [enabled, setEnabled] = useState(configuration?.enabled ?? true)
@@ -48,13 +50,14 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
       if (action === 'save') {
         const url = new URL(baseUrl.trim())
         if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('请输入不含用户名和密码的 HTTP(S) API 地址。')
-        if (!key.trim() && !hasKey && provider.authKind !== 'none') throw new Error('请输入 API Key。')
+        const keys = keyList(keysText)
+        if (keys.length === 0 && !hasKey && provider.authKind !== 'none') throw new Error('请输入 API Key（每行一把，可保存多把自动轮换）。')
         await management('/providers/save', {
-          providerId: provider.id, ...(key.trim() ? { apiKey: key.trim() } : {}),
+          providerId: provider.id, ...(keys.length > 0 ? { apiKeys: keys } : {}),
           baseUrl: url.toString(), models: modelList(models), enabled,
         })
         if (!live.current) return
-        setHasKey(hasKey || !!key.trim()); setKey(''); setSaved(true); setDirty(false); setStatus('渠道配置已保存。')
+        setHasKey(hasKey || keys.length > 0); setKeysText(''); setSaved(true); setDirty(false); setStatus(keys.length > 1 ? `渠道配置已保存（${keys.length} 把密钥，自动轮换）。` : '渠道配置已保存。')
       } else if (action === 'test') {
         const result = await management<{ ok?: boolean; success?: boolean; lastTest?: { ok?: boolean } }>('/providers/test', { providerId: provider.id })
         if (result.success === false || result.lastTest?.ok === false) throw new Error('连接测试未通过，请检查 API 地址、密钥与模型。')
@@ -72,7 +75,7 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
       } else {
         await management('/providers/remove', { providerId: provider.id })
         if (!live.current) return
-        setKey(''); await onSaved(); onClose(); return
+        setKeysText(''); await onSaved(); onClose(); return
       }
       await onSaved()
     } catch (reason) { if (live.current) setError(failureMessage(reason)) }
@@ -80,12 +83,13 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   }
   return <WorkbenchDialog title={`${provider.name} · ${saved ? '渠道配置' : '连接渠道'}`} onClose={onClose} busy={!!busy}>
     <form className="wb-form" onSubmit={event => { event.preventDefault(); void run('save') }}>
-      <div className="wb-form-meta"><Badge tone="blue">{provider.format}</Badge><Badge>{provider.category}</Badge><span>{provider.authKind}</span></div>
+      <div className="wb-form-meta"><Badge tone="blue">{provider.format}</Badge><Badge>{provider.category}</Badge><span>{provider.authKind}</span>
+        {configuration?.keyCount !== undefined && configuration.keyCount > 0 && <span>已存 {configuration.keyCount} 把密钥</span>}</div>
       {provider.notes && <p className="wb-form-notes">{provider.notes}</p>}
       <label>API 地址<Input required type="url" value={baseUrl} disabled={!!busy} onChange={event => change(() => setBaseUrl(event.target.value))} /></label>
-      <label>API Key<Input type="password" autoComplete="new-password" spellCheck={false} value={key}
-        placeholder={hasKey ? '已保存密钥；留空保留' : '输入 API Key'} disabled={!!busy}
-        onChange={event => change(() => setKey(event.target.value))} /></label>
+      <label>API Key（可多把轮换）<textarea rows={3} spellCheck={false} autoComplete="off" value={keysText}
+        placeholder={hasKey ? `已保存密钥（留空保留）；粘贴新密钥每行一把，保存后自动轮换、命中限流自动换号` : '每行一把 API Key；保存后自动轮换，命中限流自动换号'} disabled={!!busy}
+        onChange={event => change(() => setKeysText(event.target.value))} /></label>
       <label>模型<textarea rows={5} spellCheck={false} value={models} placeholder="每行一个模型 ID" disabled={!!busy} onChange={event => change(() => setModels(event.target.value))} /></label>
       <div className="wb-form-switch"><span>启用渠道</span><Switch checked={enabled} disabled={!!busy} aria-label="启用渠道" onCheckedChange={value => change(() => setEnabled(value))} /></div>
       {error && <p className="wb-error" role="alert"><CircleAlert size={15} />{error}</p>}

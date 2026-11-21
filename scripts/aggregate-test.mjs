@@ -23,7 +23,7 @@
  */
 import assert from 'node:assert/strict'
 import http from 'node:http'
-import { AGGREGATE_CHANNEL, buildAggregateCatalog, fetchProviderModels, isAggregateEntry, postAggregateStreamed, resolveProvider, testProvider } from '../src/aggregate.js'
+import { AGGREGATE_CHANNEL, buildAggregateCatalog, fetchProviderModels, isAggregateEntry, noteProviderKeyRejection, postAggregateStreamed, resolveProvider, testProvider } from '../src/aggregate.js'
 import { UpstreamError } from '../src/http.js'
 import { toClaudeMessages } from '../src/messages.js'
 import { parseProviderModelId } from '../src/providers/index.js'
@@ -614,6 +614,114 @@ await checkAsync('fetchProviderModels stays null where there is nothing to fetch
     providers: { cerebras: { enabled: true, apiKey: 'k-refused', baseUrl: `http://127.0.0.1:${port}/cerebras` } },
   }
   assert.equal(await fetchProviderModels(refusedConfig, 'cerebras'), null)
+})
+
+// ── 6. multi-key rotation ─────────────────────────────────────────────────────
+// A provider storing several keys round-robins them per request; a key the
+// provider refused (429 / invalid credential) sits out on a cooldown; a turn
+// refused before the first frame retries on the next key with the same body.
+// 独立 provider（mistral，本文件其余测试不用）保证游标与冷却状态不受前面的
+// 测试污染，断言才可能精确到「第几把键」。
+
+const ROT_A = 'sk-rot-a'
+const ROT_B = 'sk-rot-b'
+const ROT_C = 'sk-rot-c'
+const rotConfig = {
+  enabled: true,
+  providers: {
+    // apiKeys（多键池）与 apiKey（旧单键）双形态都要能解析。
+    mistral: { enabled: true, apiKeys: [ROT_A, ROT_B, ROT_C], baseUrl: `${base}/mistral` },
+    openai_api: { enabled: true, apiKey: 'sk-openai-secret', baseUrl: `${base}/openai` },
+  },
+}
+const rotSeen = []
+const rotScript = fn => { seen.length = 0; rotSeen.length = 0; script = (req, res, record) => { rotSeen.push(record); fn(req, res, record) } }
+const rotKeys = () => rotSeen.map(record => String(record.headers.authorization ?? '').replace('Bearer ', ''))
+const okStream = (req, res) => {
+  res.writeHead(200, { 'content-type': 'text/event-stream' })
+  res.end(`data: ${CHAT_FRAMES[4]}\n\ndata: [DONE]\n\n`)
+}
+const rotTurn = () => postAggregateStreamed({
+  config: rotConfig, providerId: 'mistral', modelId: 'mistral-large-latest',
+  body: { messages: [{ role: 'user', content: 'hi' }] }, onData: () => {},
+})
+
+await checkAsync('resolveProvider round-robins across the stored keys in order', async () => {
+  rotScript(okStream)
+  await rotTurn(); await rotTurn(); await rotTurn()
+  // 三次请求三把不同的键：轮换在发，不是总打同一把。
+  assert.deepEqual(rotKeys(), [ROT_A, ROT_B, ROT_C], `keys seen: ${rotKeys().join(',')}`)
+})
+
+await checkAsync('a refused key sits out and the turn retries on the next key', async () => {
+  // A 键 429（带 Retry-After），其余正常：同一次调用内完成换键重试。
+  rotScript((req, res) => {
+    const key = String(req.headers.authorization ?? '').replace('Bearer ', '')
+    if (key === ROT_A) {
+      res.writeHead(429, { 'content-type': 'application/json', 'retry-after': '30' })
+      res.end(JSON.stringify({ error: { message: 'rate limited', type: 'rate_limit_error' } }))
+      return
+    }
+    okStream(req, res)
+  })
+  await rotTurn()
+  // 换键重试：第一发打到 A（429），第二发打到池里任一非 A 键（游标语义不钉死具体哪把）。
+  assert.equal(rotKeys().length, 2, `keys seen: ${rotKeys().join(',')}`)
+  assert.equal(rotKeys()[0], ROT_A)
+  assert.notEqual(rotKeys()[1], ROT_A)
+  // A 键进入冷却：下一次请求不再碰它（单发、成功）。
+  rotSeen.length = 0
+  await rotTurn()
+  assert.equal(rotKeys().includes(ROT_A), false, `keys seen: ${rotKeys().join(',')}`)
+  assert.equal(rotKeys().length, 1, `keys seen: ${rotKeys().join(',')}`)
+})
+
+await checkAsync('an invalid credential also rotates, and a single-key provider still surfaces the refusal', async () => {
+  // 401 同样触发换键：本轮第一发（无论落到哪把键）吃 401，其余正常——
+  // 断言「同一调用内换了一把手」即可，不钉死具体键（游标语义使然）。
+  let hit401 = false
+  rotScript((req, res) => {
+    if (!hit401) {
+      hit401 = true
+      res.writeHead(401, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ error: { message: 'invalid api key' } }))
+      return
+    }
+    okStream(req, res)
+  })
+  await rotTurn()
+  assert.equal(rotKeys().length, 2, `keys seen: ${rotKeys().join(',')}`)
+  assert.notEqual(rotKeys()[0], rotKeys()[1])
+  // 单键渠道没有备胎：401 原样抛出（INVALID_CREDENTIAL）。
+  rotScript((req, res) => {
+    const key = String(req.headers.authorization ?? '').replace('Bearer ', '')
+    if (key === 'sk-openai-secret') {
+      res.writeHead(401, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ error: { message: 'invalid api key' } }))
+      return
+    }
+    okStream(req, res)
+  })
+  const error = await postAggregateStreamed({ config: rotConfig, providerId: 'openai_api', modelId: 'gpt-4o', body: { messages: [{ role: 'user', content: 'hi' }] }, onData: () => {} }).then(() => null, reason => reason)
+  assert.equal(error?.code, 'INVALID_CREDENTIAL')
+})
+
+await checkAsync('noteProviderKeyRejection honours a short Retry-After and expires', async () => {
+  rotScript(okStream)
+  // A、B 长冷却，C 只冷却 5ms：冷却期内只发 C，过期后 C 回到池里被选中。
+  noteProviderKeyRejection('mistral', ROT_A, 60_000)
+  noteProviderKeyRejection('mistral', ROT_B, 60_000)
+  noteProviderKeyRejection('mistral', ROT_C, 5)
+  await new Promise(resolve => setTimeout(resolve, 20))
+  await rotTurn()
+  assert.deepEqual(rotKeys(), [ROT_C], `keys seen: ${rotKeys().join(',')}`)
+})
+
+await checkAsync('the catalog admits rows keyed by the apiKeys pool', async () => {
+  const rows = buildAggregateCatalog({ enabled: true, providers: { mistral: { enabled: true, apiKeys: [ROT_A], models: ['mistral-large-latest'] } } })
+  assert.equal(rows.length, 1)
+  const empty = buildAggregateCatalog({ enabled: true, providers: { mistral: { enabled: true, apiKeys: [], models: ['mistral-large-latest'] } } })
+  assert.equal(empty.length, 0)
 })
 
 // ── teardown ─────────────────────────────────────────────────────────────────

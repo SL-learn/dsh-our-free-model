@@ -77,9 +77,28 @@
 - 「已退役」独立归因与筛选（manual 测试路径）；调用沉淀退役判定为后续项
 - 孤儿锁自动回收（本轮启动时验证：残留 pid 8880 锁被自动清理）
 
+### 2026-11-21 体检后修复（同日第二批）
+
+- **调用沉淀退役判定**（问题 3）：`noteUsageOutcome`（core/runtime.js）对
+  错误文本做退役归因（classifyModelFailure），命中即**单次**标 unavailable +
+  `failureKind:'retired'`（不走连败计数——终态等第二次没有意义）；清单页
+  usage 行显示「已退役（调用）」并纳入「已退役」筛选与批量隐藏。
+- **聚合渠道多凭据 + 自动轮换**（凭据 UI）：「聚合渠道」页（用户自有 API
+  Key 的 76 家 provider）每渠道支持保存 **多把 Key**（最多 8 把，每行一把），
+  请求级 round-robin 轮换分摊配额；被上游拒绝的键（429 限流 / 401 鉴权）
+  进入冷却（Retry-After 优先，默认 60s、上限 10min），冷却期内不再选中；
+  一轮流放中被拒且**尚未出帧**时，同 body 自动换下一把键重试（已出帧不重试，
+  避免输出重复）。存储形态 `apiKeys: string[]`（旧 `apiKey` 单键继续兼容）。
+  测试：scripts/aggregate-test.mjs 轮换 5 组（顺序轮换 / 429 换键重试 /
+  401 换键重试 / 冷却过期回归 / 目录准入）。
+- **amd 渠道定位澄清**（问题 1）：amd 车道来自 magpie 引擎
+  （`magpie/cache/magpie/models.json` 的 amd provider，`AMD_API_KEY` 环境变量，
+  AMD Radeon Cloud tokenfactory），key 管理在引擎侧，OFM 的聚合渠道多键轮换
+  不覆盖该车道；凭据仍需用户在引擎侧更新。
+
 ### 后续行动候选
 
-- [ ] amd 渠道凭据更新（用户操作）
-- [ ] 调用沉淀（noteUsageOutcome）增加退役判定 → 标「已退役」
+- [ ] amd（magpie 车道）凭据更新（用户操作，引擎侧）
+- [x] 调用沉淀（noteUsageOutcome）增加退役判定 → 标「已退役」（2026-11-21）
 - [ ] 清单与渠道实际可用性同步（404/下架模型自动隐藏或标注）
 - [ ] z-ai 渠道挂起问题定位（上游 or 本地适配器）

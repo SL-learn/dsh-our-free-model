@@ -143,3 +143,10 @@ test('长时间无响应归因为 slow，而不是笼统的网络异常', () => 
   // 普通传输故障仍归 transport。
   assert.equal(classifyModelFailure(new Error('fetch failed')), 'transport')
 })
+
+test('模型退役/下架归因为模型异常，不冒充网络异常', () => {
+  assert.equal(classifyModelFailure(new Error("The model 'deepseek-ai/deepseek-v4.1-flash' has reached its end of life on 2026-11-16T08:00:00Z and is no longer available.")), 'model-error')
+  assert.equal(classifyModelFailure(new Error('This model has been deprecated and will be removed')), 'model-error')
+  // 真正的传输故障仍归 transport。
+  assert.equal(classifyModelFailure(new Error('fetch failed')), 'transport')
+})

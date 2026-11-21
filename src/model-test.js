@@ -48,6 +48,10 @@ export function classifyModelFailure(error) {
   if (code === 'INVALID_CREDENTIAL' || code === 'AUTHORIZATION_REQUIRED' || code === 'LANE_LOCKED'
     || code === 'PERMISSION_DENIED' || status === 401
     || /unauthorized|invalid (api )?key|鉴权|登录/.test(text)) return 'auth'
+  // 模型退役/下架（2026-11-21 实测：EAC DeepSeek 报 "reached its end of life
+  // ... no longer available"）：模型本体已从上游消失，是「模型真断」而不是
+  // 环境问题——不能掉进兜底 transport 让用户误以为换网能恢复。
+  if (/end[- ]of[- ]life|no longer available|has been (?:deprecated|retired|removed)|decommissioned|discontinued|下架|已退役/.test(text)) return 'model-error'
   if (code === 'TRANSPORT' || code === 'TIMEOUT' || code === 'SERVER' || status >= 500
     || /fetch failed|econn|etimedout|enotfound|proxy|socket|网络|超时/.test(text)) return 'transport'
   if (status >= 400 && status < 500) return 'model-error'

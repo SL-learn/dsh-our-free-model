@@ -659,12 +659,17 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
       const controller = new AbortController()
       const abort = () => controller.abort()
       res.once('close', abort)
+      // 兜底看门狗（2026-11-21「测试卡死」反馈）：核心车道内部有 300 秒预算、
+      // 渠道分流有 120 秒硬超时，这里再统一封顶 150 秒，保证管理请求本身
+      // 一定会返回（504），UI 不会挂住。
+      const watchdog = setTimeout(() => controller.abort(Object.assign(new Error('模型测试超时（150 秒未响应，已中止）'), { code: 'TIMEOUT' })), 150_000)
       try {
         const result = await runtime.testModel(body.model, undefined, { signal: controller.signal })
         if (!controller.signal.aborted) json(res, 200, result)
       } catch (error) {
         if (!controller.signal.aborted) throw fail(error.status === 404 ? 404 : error.code === 'TIMEOUT' ? 504 : 502, String(error.message ?? '模型测试失败'))
       } finally {
+        clearTimeout(watchdog)
         res.removeListener('close', abort)
       }
     } else throw fail(404, '管理接口不存在')

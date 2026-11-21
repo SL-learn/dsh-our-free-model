@@ -33,6 +33,15 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   const [filters, setFilters] = useState(initialFilters)
   const [operation, setOperation] = useState<Operation>()
   const [test, setTest] = useState<TestState>()
+  // 测试等待秒表（2026-11-21「卡死」反馈）：每秒跳动的数字证明页面活着——
+  // 数字在走、图标静止才是动画问题；数字也卡死则是渲染进程被挂起。
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    if (operation !== 'test') { setElapsed(0); return undefined }
+    const started = Date.now()
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000)
+    return () => clearInterval(timer)
+  }, [operation])
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState<string>()
@@ -242,10 +251,11 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     {test && <section className={`model-test-result model-test-${test.state}`} aria-label="模型测试结果" aria-live="polite">
       <div className="model-test-heading"><div><strong>
         {test.state === 'pending' ? '正在测试' : test.state === 'success' ? '测试完成' : test.state === 'cancelled' ? '测试已取消' : '测试失败'}
-      </strong><span>{test.model.name}{test.result && ` · ${number(test.result.latencyMs)} ms`}</span></div>
+      </strong><span>{test.model.name}{test.result && ` · ${number(test.result.latencyMs)} ms`}{test.state === 'pending' && elapsed > 0 && ` · 已等待 ${elapsed} 秒`}</span></div>
         {test.state === 'pending' ? <Button variant="outline" onClick={cancel}><Square size={14} />取消测试</Button>
           : <Button variant="ghost" aria-label="关闭测试结果" title="关闭测试结果" onClick={() => setTest(undefined)}><X size={15} /></Button>}
       </div>
+      {test.state === 'pending' && elapsed >= 30 && <p className="model-test-hint" role="status">测试是 16 token 的最小请求，通常几十秒内返回；长时间无响应多半是上游挂起，可取消后重试（服务端会在 120–150 秒自动中止）。</p>}
       {test.state === 'success' && <><pre>{test.result?.text}</pre>{test.result?.persisted === false && <p role="status">测试已成功，但结果未能保存；请检查数据目录权限或重新测试。</p>}</>}
       {test.state === 'error' && <p>{test.error}
         {test.kind && test.kind !== 'model-error' && <span className="model-test-hint">

@@ -320,13 +320,22 @@ export async function startStandalone({
         }
         let outcome
         try {
+          // 硬超时 120 秒（2026-11-21 用户反馈「测试卡死」）：渠道测试是 16 token 的
+          // 最小探针，慢上游 TTFT 也就几十秒；但渠道引擎的 worker 级超时是 30 分钟，
+          // 且 opencode 适配器有「fetch 到上游可能永不 settle」的实测注释、限流轮换
+          // 还可能长时间等重试窗口——没有这层兜底，测试会挂住几分钟到半小时，
+          // UI 的转圈就一直卡着。AbortSignal.timeout 会顺路传进适配器的 fetch。
+          const timeoutSignal = AbortSignal.timeout(120_000)
+          const signal = options?.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal
           outcome = await channels.complete({
             model,
             openAi: { model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }], max_tokens: 16 },
-            ...(options?.signal ? { signal: options.signal } : {}),
+            signal,
           }, chunk => { if (!first && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta' || chunk.type === 'usage')) first = Date.now() })
         } catch (error) {
-          record(error)
+          // 用户点「取消测试」不算一次失败判定（manualResults 不落行）；但
+          // 服务端 120 秒硬超时（用户信号未中止）要落，归因为 transport=未定性。
+          if (options?.signal?.aborted !== true) record(error)
           throw error
         }
         if (outcome.error !== undefined) {

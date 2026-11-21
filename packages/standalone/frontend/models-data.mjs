@@ -107,15 +107,38 @@ export const SOURCE_GROUP_ORDER = [
   ['shared', '公共池（免登录共享）'],
 ]
 
-// 聚合渠道按 provider 拆分的复合筛选值（2026-11-21 用户要求「我的聚合渠道
-// 各自分开，不要合为一个」）：渠道下拉里 aggregate 不再是一个整项，而是
-// `aggregate:<providerId>` 一项一个服务商。
+// ── 引擎车道（magpie）按 lane 拆分（2026-11-21 用户找不到 AMD 入口）──
+// magpie 引擎的车道模型（amd/…、z-ai/…）在目录里统一挂 channel:'magpie'，
+// 清单页只会显示一整块「magpie」。模型的 id 前缀就是 lane，据此拆开显示。
 export const AGGREGATE_CHANNEL_PREFIX = 'aggregate:'
+export const MAGPIE_CHANNEL_PREFIX = 'magpie:'
 
+/** lane 前缀 → 显示名；未收录的 lane 用「引擎车道 <前缀>」兜底。 */
+export const ENGINE_LANE_NAMES = {
+  amd: 'AMD Radeon',
+  'z-ai': '智谱 Z.ai',
+}
+
+/** 该模型的引擎 lane 前缀（非 magpie 渠道返回 null）。 */
+export function engineLaneOf(model) {
+  if (model.channel !== 'magpie') return null
+  const prefix = String(model.id ?? '').split('/')[0] ?? ''
+  return prefix !== '' && prefix !== 'magpie' ? prefix : null
+}
+
+export function engineLaneName(prefix) {
+  return ENGINE_LANE_NAMES[prefix] ?? `引擎车道 ${prefix}`
+}
+
+/** 渠道筛选匹配（支持两种复合值：aggregate:<providerId>、magpie:<lane>）。 */
 export function matchesChannel(model, channel) {
   if (channel === 'all') return true
   if (channel.startsWith(AGGREGATE_CHANNEL_PREFIX)) {
     return model.channel === 'aggregate' && model.providerId === channel.slice(AGGREGATE_CHANNEL_PREFIX.length)
+  }
+  if (channel.startsWith(MAGPIE_CHANNEL_PREFIX)) {
+    const lane = channel.slice(MAGPIE_CHANNEL_PREFIX.length)
+    return model.channel === 'magpie' && String(model.id ?? '').startsWith(`${lane}/`)
   }
   return model.channel === channel
 }

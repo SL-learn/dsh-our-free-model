@@ -3,7 +3,7 @@ import { defaultRangeExtractor, useVirtualizer, type Range } from '@tanstack/rea
 import { Boxes, Check, CircleAlert, CircleCheck, Copy, Eye, EyeOff, LoaderCircle, Play, RefreshCw, Search, SlidersHorizontal, Square, X } from 'lucide-react'
 import { providers } from 'ofm-provider-list'
 import { Badge, Button, Input } from './components/ui'
-import { filterModels, modelStateView, sourceClassOf, SOURCE_GROUP_ORDER as sourceGroups, SOURCE_CLASS_NAMES as sourceClassNames, stateOptions } from './models-data.mjs'
+import { filterModels, modelStateView, sourceClassOf, engineLaneOf, engineLaneName, SOURCE_GROUP_ORDER as sourceGroups, SOURCE_CLASS_NAMES as sourceClassNames, stateOptions } from './models-data.mjs'
 import { providerName } from './provider-names.mjs'
 import { visibilityCopy } from './visibility-data.mjs'
 import type { Host, Model, ModelTestResult, ServiceSettings, Summary } from './types'
@@ -15,12 +15,19 @@ const failureKindNames: Record<string, string> = {
   'model-error': '模型异常', quota: '额度不足', 'rate-limit': '限流中',
   region: '地区受限', auth: '鉴权失败', transport: '网络异常', slow: '响应超慢', retired: '已退役',
 }
-const sourceNames: Record<string, string> = { anonymous: '匿名模型', kilo: 'Kilo 免费池', eac: 'EAC 协付' }
+const sourceNames: Record<string, string> = { anonymous: '匿名模型', kilo: 'Kilo 免费池', eac: 'EAC 协付', magpie: '引擎车道' }
 const displayName = (id: string) => providerName(id, providers.find(provider => provider.id === id)?.name)
 const channelName = (id: string) => sourceNames[id] ?? displayName(id)
-/** 行内渠道名：聚合模型显示具体 provider（2026-11-21 用户要求分开看），其余用渠道名。 */
-const modelChannelLabel = (model: Model) =>
-  model.channel === 'aggregate' && model.providerId ? displayName(model.providerId) : channelName(model.channel)
+/** 行内渠道名：聚合模型显示具体 provider、引擎车道显示 lane 名（2026-11-21
+ * 用户找不到 AMD 入口——amd/* 挂在 magpie 渠道下只显示「magpie」），其余用渠道名。 */
+const modelChannelLabel = (model: Model) => {
+  if (model.channel === 'aggregate' && model.providerId) return displayName(model.providerId)
+  if (model.channel === 'magpie') {
+    const lane = engineLaneOf(model)
+    if (lane) return `${engineLaneName(lane)}（引擎车道）`
+  }
+  return channelName(model.channel)
+}
 const number = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
 const capacity = (value?: number) => value && Number.isFinite(value) && value > 0
   ? value >= 1000 ? `${Number((value / 1000).toFixed(1))}K` : number(value) : '未知'
@@ -60,8 +67,6 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   const activeRef = useRef(active)
   activeRef.current = active
   const models = useMemo<Model[]>(() => filterModels(summary.catalog, filters), [summary.catalog, filters])
-  const channels = useMemo(() => [...new Set(['anonymous', 'kilo', 'eac', ...summary.catalog.map(model => model.channel), filters.channel])]
-    .filter(id => id !== 'all' && !id.startsWith('aggregate:')), [summary.catalog, filters.channel])
   // 聚合渠道按 provider 拆分（2026-11-21 用户要求「各自渠道分开，不要合为一个」）：
   // 收录目录里实际出现的 aggregate provider，渠道下拉里一项一个服务商。
   const aggregateProviderIds = useMemo(() => {
@@ -71,6 +76,20 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     }
     return [...ids].sort((a, b) => displayName(a).localeCompare(displayName(b), 'zh-Hans-CN'))
   }, [summary.catalog])
+  // 引擎车道（magpie）按 lane 拆分（2026-11-21 用户找不到 AMD 入口）。
+  const magpieLaneIds = useMemo(() => {
+    const lanes = new Set<string>()
+    for (const model of summary.catalog) {
+      const lane = engineLaneOf(model)
+      if (lane) lanes.add(lane)
+    }
+    return [...lanes].sort((a, b) => engineLaneName(a).localeCompare(engineLaneName(b), 'zh-Hans-CN'))
+  }, [summary.catalog])
+  const channels = useMemo(() => [...new Set(['anonymous', 'kilo', 'eac', ...summary.catalog.map(model => model.channel), filters.channel])]
+    .filter(id => id !== 'all' && !id.startsWith('aggregate:') && !id.startsWith('magpie:')
+      && !(id === 'aggregate' && aggregateProviderIds.length > 0)
+      && !(id === 'magpie' && magpieLaneIds.length > 0)),
+  [summary.catalog, filters.channel, aggregateProviderIds, magpieLaneIds])
   const focusedIndex = focusedId ? models.findIndex(model => model.id === focusedId) : -1
   const rangeExtractor = useCallback((range: Range) => {
     const visible = defaultRangeExtractor(range)
@@ -272,9 +291,15 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
               entries.push(['aggregate', `${channelName('aggregate')}（${sourceClassNames[cls]}）`])
             }
           }
+          if (cls === 'shared') {
+            for (const lane of magpieLaneIds) entries.push([`magpie:${lane}`, `${engineLaneName(lane)}（引擎车道）`])
+          }
           // 当前选中的复合值不在目录时保底显示，避免下拉变空白。
           if (cls === 'own-key' && filters.channel.startsWith('aggregate:') && !entries.some(([value]) => value === filters.channel)) {
             entries.push([filters.channel, `${displayName(filters.channel.slice(10))}（${sourceClassNames[cls]}）`])
+          }
+          if (cls === 'shared' && filters.channel.startsWith('magpie:') && !entries.some(([value]) => value === filters.channel)) {
+            entries.push([filters.channel, `${engineLaneName(filters.channel.slice(7))}（引擎车道）`])
           }
           if (entries.length === 0) return null
           return <optgroup key={cls} label={group}>

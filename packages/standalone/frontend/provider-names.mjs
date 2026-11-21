@@ -63,6 +63,27 @@ const PROVIDER_ZH = {  alibaba_cloud: '阿里云百炼',
   chutes: 'Chutes',
   morph: 'Morph LLM',
   kilo: 'Kilo.ai',
+  // 小众/聚合平台：品牌名保留 + 中文注解，帮用户快速定位（注解只描述
+  // 平台形态，不发明归属关系）。
+  agnes: 'Agnes AI（印尼）',
+  cheaperinference: 'Cheaper Inference（低价推理）',
+  cline_pass: 'ClinePass（Cline 通行证）',
+  experiential: 'Experiential Labs',
+  fleetrelay_t1: 'FleetRelay Gateway（中继网关）',
+  lightning: 'Lightning AI',
+  llm7: 'LLM7.io（免费池）',
+  nararoute: 'NaraRoute（免费路由）',
+  opper: 'Opper',
+  orcarouter: 'OrcaRouter（聚合路由）',
+  poolside: 'Poolside',
+  tokenrouter: 'TokenRouter（聚合路由）',
+  wafer: 'Wafer',
+  xkiro: 'xKiro（含免费模型）',
+  zenmux: 'ZenMux（聚合平台）',
+  bazaarlink: 'BazaarLink（多厂商网关）',
+  kimchi: 'Kimchi（免费层）',
+  opencode_go: 'OpenCode Go',
+  opencode_zen: 'OpenCode Zen',
 }
 
 /**

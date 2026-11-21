@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { buildStats } from '../src/core/stats.js'
-import { filterModels, modelStateView, sourceClassOf, matchesChannel, SOURCE_GROUP_ORDER } from '../packages/standalone/frontend/models-data.mjs'
+import { filterModels, modelStateView, sourceClassOf, matchesChannel, engineLaneOf, engineLaneName, SOURCE_GROUP_ORDER } from '../packages/standalone/frontend/models-data.mjs'
 import { providerName } from '../packages/standalone/frontend/provider-names.mjs'
 import { usageDays, usageModels } from '../packages/standalone/frontend/usage-data.mjs'
 import { settingsDraft, settingsChanged, syncSettings, validateSettingsDraft } from '../packages/standalone/frontend/settings-data.mjs'
@@ -155,6 +155,27 @@ assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate' }).length, 2,
 assert.equal(filterModels(aggregateCatalog, { channel: 'kilo' }).length, 1, '普通渠道值不受复合语法影响')
 assert.equal(matchesChannel(aggregateCatalog[0], 'aggregate:deepseek'), true)
 assert.equal(matchesChannel(aggregateCatalog[1], 'aggregate:deepseek'), false)
+// 引擎车道（magpie）按 lane 拆分：id 前缀即 lane，复合值 magpie:<lane> 只命中该 lane。
+const magpieCatalog = [
+  { id: 'amd/Qwen3.8-27B', name: 'Qwen3.8 27B (AMD)', channel: 'magpie' },
+  { id: 'z-ai/glm-5.3-flash', name: 'GLM 5.3 Flash', channel: 'magpie' },
+  { id: 'kilo-auto/free', name: 'Kilo', channel: 'kilo' },
+]
+assert.equal(engineLaneOf(magpieCatalog[0]), 'amd')
+assert.equal(engineLaneOf(magpieCatalog[1]), 'z-ai')
+assert.equal(engineLaneOf(magpieCatalog[2]), null)
+assert.equal(engineLaneName('amd'), 'AMD Radeon')
+assert.equal(engineLaneName('z-ai'), '智谱 Z.ai')
+assert.match(engineLaneName('newlane'), /引擎车道 newlane/, '未收录 lane 兜底显示')
+assert.equal(filterModels(magpieCatalog, { channel: 'magpie:amd' }).length, 1)
+assert.equal(filterModels(magpieCatalog, { channel: 'magpie:amd' })[0].id, 'amd/Qwen3.8-27B')
+assert.equal(filterModels(magpieCatalog, { channel: 'magpie:z-ai' })[0].id, 'z-ai/glm-5.3-flash')
+assert.equal(filterModels(magpieCatalog, { channel: 'magpie:newlane' }).length, 0)
+assert.equal(filterModels(magpieCatalog, { channel: 'magpie' }).length, 2, '裸 magpie 值仍命中全部引擎车道行')
+// provider 中文名补全：新收录的小众平台与常用别名。
+assert.equal(providerName('llm7'), 'LLM7.io（免费池）')
+assert.equal(providerName('zenmux'), 'ZenMux（聚合平台）')
+assert.equal(providerName('nararoute'), 'NaraRoute（免费路由）')
 // provider 中文名：已知品牌返回中文，未知 id 回落注册表英文名，最后回落 id。
 assert.equal(providerName('deepseek'), 'DeepSeek（深度求索）')
 assert.equal(providerName('siliconflow'), '硅基流动 SiliconFlow')

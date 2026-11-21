@@ -40,6 +40,20 @@ export function stageDesktopService(destination, { requireWorkspace = false } = 
   for (const name of ['index.html', 'splash.html', 'assets.json', ...assets]) copy(`${web}/${name}`)
   copy('packages/standalone/package.json')
   copy('packages/desktop/service-host.mjs')
+  // 核心车道（src/eac.js）在系统代理开启时要用 undici 才能经代理出网；
+  // 安装树不带 node_modules，缺失 = sealed lane 清单全量 TRANSPORT 失败
+  // （2026-11-21 实测：系统代理 127.0.0.1:61928 时报 "an EAC proxy is
+  // configured ... but undici is unavailable in this host"）。这里把运行时
+  // 需要的 undici 文件落成 `service/node_modules/undici/`，让 Node 的裸
+  // 说明符解析（从 service/src/eac.js 向上逐级找 node_modules）原生命中。
+  // 只拷运行时文件：docs/types/scripts 不进包。
+  const undiciSource = path.join(repositoryRoot, 'node_modules/undici')
+  const undiciTarget = path.join(destination, 'node_modules/undici')
+  for (const name of ['package.json', 'index.js', 'index-fetch.js', 'LICENSE', 'README.md']) {
+    fs.mkdirSync(undiciTarget, { recursive: true })
+    fs.copyFileSync(path.join(undiciSource, name), path.join(undiciTarget, name))
+  }
+  fs.cpSync(path.join(undiciSource, 'lib'), path.join(undiciTarget, 'lib'), { recursive: true })
   for (const name of ['qoder-auth-wasm.wasm', 'LICENSE', 'NOTICE.md']) copy(`vendor/channel-pack/${name}`)
   // The model workspace runs the same pinned engine the plugin ships, so the
   // desktop build carries that binary and its manifest. ⚠️ `src/magpie-engine.js`

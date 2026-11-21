@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import { buildStats } from '../src/core/stats.js'
-import { filterModels, modelStateView, sourceClassOf, SOURCE_GROUP_ORDER } from '../packages/standalone/frontend/models-data.mjs'
+import { filterModels, modelStateView, sourceClassOf, matchesChannel, SOURCE_GROUP_ORDER } from '../packages/standalone/frontend/models-data.mjs'
+import { providerName } from '../packages/standalone/frontend/provider-names.mjs'
 import { usageDays, usageModels } from '../packages/standalone/frontend/usage-data.mjs'
 import { settingsDraft, settingsChanged, syncSettings, validateSettingsDraft } from '../packages/standalone/frontend/settings-data.mjs'
 import { verifySettingsHost } from './standalone-settings-host-test.mjs'
@@ -139,6 +140,27 @@ assert.equal(filterModels(catalog, { source: 'shared' }).length, 500)
 assert.equal(filterModels(catalog, { source: 'shared' }).every(model => model.channel === 'kilo'), true)
 assert.equal(filterModels(catalog, { source: 'combo' }).length, 0)
 assert.equal(filterModels(catalog, { source: 'all' }).length, 1000)
+// 聚合渠道按 provider 拆分（2026-11-21 用户要求「各自渠道分开」）：
+// 复合筛选值 aggregate:<providerId> 只命中该 provider 的行。
+const aggregateCatalog = [
+  { id: 'deepseek/deepseek-chat', name: 'DeepSeek Chat', channel: 'aggregate', providerId: 'deepseek' },
+  { id: 'siliconflow/Qwen', name: 'Qwen', channel: 'aggregate', providerId: 'siliconflow' },
+  { id: 'kilo-auto/free', name: 'Kilo', channel: 'kilo' },
+]
+assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate:deepseek' }).length, 1)
+assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate:deepseek' })[0].providerId, 'deepseek')
+assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate:siliconflow' })[0].id, 'siliconflow/Qwen')
+assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate:none' }).length, 0)
+assert.equal(filterModels(aggregateCatalog, { channel: 'aggregate' }).length, 2, '裸 aggregate 值仍命中全部聚合行')
+assert.equal(filterModels(aggregateCatalog, { channel: 'kilo' }).length, 1, '普通渠道值不受复合语法影响')
+assert.equal(matchesChannel(aggregateCatalog[0], 'aggregate:deepseek'), true)
+assert.equal(matchesChannel(aggregateCatalog[1], 'aggregate:deepseek'), false)
+// provider 中文名：已知品牌返回中文，未知 id 回落注册表英文名，最后回落 id。
+assert.equal(providerName('deepseek'), 'DeepSeek（深度求索）')
+assert.equal(providerName('siliconflow'), '硅基流动 SiliconFlow')
+assert.equal(providerName('alibaba_cloud'), '阿里云百炼')
+assert.ok(providerName('agnes').length > 0, '未收录的 provider 至少回落英文名或 id')
+assert.equal(providerName(''), '')
 const usageRows = Array.from({ length: 47 }, (_, index) => ({
   model: `fixture/usage-${index}`, name: `用量模型 ${index}`, calls: index + 1, turns: index,
   input: index * 10, output: (46 - index) * 20, failedTurns: index % 4,

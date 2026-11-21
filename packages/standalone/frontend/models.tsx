@@ -4,6 +4,7 @@ import { Boxes, Check, CircleAlert, CircleCheck, Copy, Eye, EyeOff, LoaderCircle
 import { providers } from 'ofm-provider-list'
 import { Badge, Button, Input } from './components/ui'
 import { filterModels, modelStateView, sourceClassOf, SOURCE_GROUP_ORDER as sourceGroups, SOURCE_CLASS_NAMES as sourceClassNames, stateOptions } from './models-data.mjs'
+import { providerName } from './provider-names.mjs'
 import { visibilityCopy } from './visibility-data.mjs'
 import type { Host, Model, ModelTestResult, ServiceSettings, Summary } from './types'
 import './models.css'
@@ -15,8 +16,11 @@ const failureKindNames: Record<string, string> = {
   region: '地区受限', auth: '鉴权失败', transport: '网络异常', slow: '响应超慢', retired: '已退役',
 }
 const sourceNames: Record<string, string> = { anonymous: '匿名模型', kilo: 'Kilo 免费池', eac: 'EAC 协付' }
-const channelName = (id: string) => sourceNames[id]
-  ?? providers.find(provider => provider.id === id)?.name ?? id
+const displayName = (id: string) => providerName(id, providers.find(provider => provider.id === id)?.name)
+const channelName = (id: string) => sourceNames[id] ?? displayName(id)
+/** 行内渠道名：聚合模型显示具体 provider（2026-11-21 用户要求分开看），其余用渠道名。 */
+const modelChannelLabel = (model: Model) =>
+  model.channel === 'aggregate' && model.providerId ? displayName(model.providerId) : channelName(model.channel)
 const number = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
 const capacity = (value?: number) => value && Number.isFinite(value) && value > 0
   ? value >= 1000 ? `${Number((value / 1000).toFixed(1))}K` : number(value) : '未知'
@@ -57,7 +61,16 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   activeRef.current = active
   const models = useMemo<Model[]>(() => filterModels(summary.catalog, filters), [summary.catalog, filters])
   const channels = useMemo(() => [...new Set(['anonymous', 'kilo', 'eac', ...summary.catalog.map(model => model.channel), filters.channel])]
-    .filter(id => id !== 'all'), [summary.catalog, filters.channel])
+    .filter(id => id !== 'all' && !id.startsWith('aggregate:')), [summary.catalog, filters.channel])
+  // 聚合渠道按 provider 拆分（2026-11-21 用户要求「各自渠道分开，不要合为一个」）：
+  // 收录目录里实际出现的 aggregate provider，渠道下拉里一项一个服务商。
+  const aggregateProviderIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const model of summary.catalog) {
+      if (model.channel === 'aggregate' && model.providerId) ids.add(model.providerId)
+    }
+    return [...ids].sort((a, b) => displayName(a).localeCompare(displayName(b), 'zh-Hans-CN'))
+  }, [summary.catalog])
   const focusedIndex = focusedId ? models.findIndex(model => model.id === focusedId) : -1
   const rangeExtractor = useCallback((range: Range) => {
     const visible = defaultRangeExtractor(range)
@@ -250,10 +263,22 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       <select aria-label="筛选渠道" value={filters.channel} onChange={event => changeFilters({ channel: event.target.value })}>
         <option value="all">全部渠道</option>
         {sourceGroups.map(([cls, group]) => {
-          const ids = channels.filter(id => sourceClassOf(id) === cls)
-          if (ids.length === 0) return null
+          const entries: Array<[string, string]> = channels
+            .filter(id => sourceClassOf(id) === cls)
+            .map(id => [id, `${channelName(id)}（${sourceClassNames[cls]}）`])
+          if (cls === 'own-key') {
+            for (const pid of aggregateProviderIds) entries.push([`aggregate:${pid}`, `${displayName(pid)}（${sourceClassNames[cls]}）`])
+            if (aggregateProviderIds.length === 0 && channels.includes('aggregate')) {
+              entries.push(['aggregate', `${channelName('aggregate')}（${sourceClassNames[cls]}）`])
+            }
+          }
+          // 当前选中的复合值不在目录时保底显示，避免下拉变空白。
+          if (cls === 'own-key' && filters.channel.startsWith('aggregate:') && !entries.some(([value]) => value === filters.channel)) {
+            entries.push([filters.channel, `${displayName(filters.channel.slice(10))}（${sourceClassNames[cls]}）`])
+          }
+          if (entries.length === 0) return null
           return <optgroup key={cls} label={group}>
-            {ids.map(id => <option value={id} key={id}>{channelName(id)}（{sourceClassNames[cls]}）</option>)}
+            {entries.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
           </optgroup>
         })}
       </select>
@@ -316,12 +341,14 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
             const disabledReason = !summary.settings.enabled ? '推理服务已暂停' : !model.routable && !model.hiddenByUser ? '模型尚未公开，请检查渠道账号或模型设置' : operation ? '请等待当前操作完成' : ''
             return <div role="row" aria-rowindex={item.index + 2} key={item.key} data-index={item.index} data-model-id={model.id}
               data-hidden={model.hiddenByUser === true || undefined}
+              data-tone={view.tone}
+              data-testing={operation === 'test' && test?.model.id === model.id ? 'true' : undefined}
               className="model-table-row" ref={virtual.measureElement} style={{ transform: `translateY(${item.start}px)` }}
               onFocusCapture={() => setFocusedId(model.id)} onBlurCapture={event => {
                 if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(undefined)
               }}>
               <div role="cell" className="model-identity"><strong>{model.name}</strong><code>{model.id}</code></div>
-              <div role="cell" className="model-source"><span>{channelName(model.channel)}</span>
+              <div role="cell" className="model-source"><span>{modelChannelLabel(model)}</span>
                 <span className={`source-badge source-${sourceClassOf(model.channel)}`}>{sourceClassNames[sourceClassOf(model.channel)]}</span>
                 <div className="model-capabilities">
                 <Badge>{model.vision ? '视觉' : '纯文本'}</Badge>{model.reasoning && <Badge tone="blue">思考</Badge>}</div></div>

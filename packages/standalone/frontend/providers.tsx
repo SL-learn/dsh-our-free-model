@@ -5,6 +5,7 @@ import { ProviderIcon } from './components/provider-icon'
 import { WorkbenchDialog } from './components/workbench-dialog'
 import { failureMessage, management, useManagementResource } from './management'
 import { useReveal } from './motion/hooks'
+import { providerName } from './provider-names.mjs'
 import type { Host } from './types'
 
 interface StoredKey { masked: string; label: string; disabled: boolean }
@@ -178,7 +179,7 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   }
   const officialUrl = provider.website || provider.credentialUrl || ''
   const keyUrl = provider.credentialUrl || provider.website || ''
-  return <WorkbenchDialog title={`${provider.name} · ${configuration ? '渠道配置' : '连接渠道'}`} onClose={onClose} busy={busy !== ''}>
+  return <WorkbenchDialog title={`${providerName(provider.id, provider.name)} · ${configuration ? '渠道配置' : '连接渠道'}`} onClose={onClose} busy={busy !== ''}>
     <form className="wb-form" onSubmit={event => { event.preventDefault(); void save() }}>
       <div className="wb-form-meta">
         <Badge tone="blue">{provider.format}</Badge><Badge>{provider.category}</Badge><span>{provider.authKind}</span>
@@ -295,7 +296,8 @@ export function Providers({ active, host }: { active: boolean; host: Host }) {
   const totalConnected = registry.filter(row => connected(row, configured[row.id])).length
   const rows = registry.filter(row => {
     const isConnected = connected(row, configured[row.id])
-    return `${row.name} ${row.id} ${row.baseUrl} ${row.category} ${row.format}`.toLowerCase().includes(search.toLowerCase().trim())
+    // 搜索同时命中中文名与英文名（2026-11-21 渠道列表加中文显示名）。
+    return `${providerName(row.id, row.name)} ${row.name} ${row.id} ${row.baseUrl} ${row.category} ${row.format}`.toLowerCase().includes(search.toLowerCase().trim())
       && (category === 'all' || row.category === category)
       && (filter === 'all' || (filter === 'connected' ? isConnected : !isConnected))
   })
@@ -315,7 +317,11 @@ export function Providers({ active, host }: { active: boolean; host: Host }) {
         const config = configured[provider.id], isConnected = connected(provider, config)
         return <div className="pd-row" key={provider.id} style={{ '--i': String(index) } as React.CSSProperties}>
           <span className={`wb-app-icon ${isConnected ? 'is-green' : ''}`}><ProviderIcon id={provider.id} name={provider.name} /></span>
-          <div className="pd-name"><strong>{provider.name}</strong><small title={config?.baseUrl || provider.baseUrl}>{endpoint(config?.baseUrl || provider.baseUrl)}</small></div>
+          <div className="pd-name">
+            <strong>{providerName(provider.id, provider.name)}</strong>
+            {providerName(provider.id, provider.name) !== provider.name && <span className="pd-name-alt">{provider.name}</span>}
+            <small title={config?.baseUrl || provider.baseUrl}>{endpoint(config?.baseUrl || provider.baseUrl)}</small>
+          </div>
           <div className="pd-protocol"><Badge>{provider.format}</Badge><small>{provider.category}</small></div>
           <span className="pd-model-count">{config?.models?.length ?? provider.modelCount ?? '未知'} <small>模型</small></span>
           {config?.keys !== undefined && config.keys.length > 1 && <span className="pd-key-count" title="参与轮换的密钥">{config.keys.filter(row => !row.disabled).length} 把密钥</span>}

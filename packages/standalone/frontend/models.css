@@ -242,11 +242,23 @@
   transition: background-color var(--dur-fast) var(--ease-snap), opacity var(--dur-fast) var(--ease-out-expo);
   min-width: 0;
 }
-/* 隐藏状态可视化（2026-11-21）：已隐藏的行整行压暗，交互时部分恢复；
+/* 隐藏状态可视化（2026-11-21）：已隐藏的行整行压暗去色，交互时部分恢复；
    图标本身也着色（斜眼=琥珀），扫一眼即知哪行处于隐藏态。 */
-.model-table-row[data-hidden="true"] { opacity: .55; }
+.model-table-row[data-hidden="true"] { opacity: .55; filter: grayscale(.55); }
 .model-table-row[data-hidden="true"]:hover,
-.model-table-row[data-hidden="true"]:focus-within { opacity: .82; }
+.model-table-row[data-hidden="true"]:focus-within { opacity: .82; filter: none; }
+/* 状态色带（2026-11-21 用户要求「不同状态显示不同颜色」）：行背景按
+   modelStateView 的 tone 染淡色——红=不可用/退役，橙=限流/地区/超慢，
+   蓝=环境类失败，绿=可用；未探测保持底色。左缘竖条沿用悬停机制。 */
+.model-table-row[data-tone="danger"] { background: var(--err-soft); }
+.model-table-row[data-tone="warning"] { background: var(--warn-soft); }
+.model-table-row[data-tone="blue"] { background: var(--info-soft); }
+.model-table-row[data-tone="success"] { background: var(--ok-soft); }
+/* 正在测试的行：蓝色底 + 左缘竖条，比徽章转圈更远就可见。 */
+.model-table-row[data-testing="true"] {
+  background: var(--info-soft);
+  box-shadow: inset 3px 0 0 var(--info);
+}
 .md-eye-off-hidden { color: var(--warn); }
 .md-eye-on-visible { color: var(--fg-2); }
 /* 悬停：整行提亮 + 左侧一道竖条滑入，比整行变色更克制 */

@@ -4,6 +4,8 @@ export interface Model {
   id: string
   name: string
   channel: string
+  /** 聚合渠道模型的 provider 归属（channel === 'aggregate' 时有值）。 */
+  providerId?: string | null
   routable: boolean
   hiddenByUser?: boolean
   hiddenByGroup?: boolean

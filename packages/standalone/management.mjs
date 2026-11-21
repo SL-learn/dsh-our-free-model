@@ -190,6 +190,8 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
         const measured = modelAvailability(entry.id, available, Boolean(entry.channel))
         return ({
         id: entry.id, name: entry.name, channel: entry.channel ?? 'anonymous',
+        // 聚合模型的 provider 归属（2026-11-21 用户要求按 provider 分开筛选展示）。
+        providerId: entry.providerId ?? null,
         vision: entry.vision === true, reasoning: entry.reasoning === true || (entry.reasoning !== null && typeof entry.reasoning === 'object'),
         contextWindow: entry.contextWindow ?? entry.context_window, maxOutput: entry.maxOutput ?? entry.max_tokens,
         routable: routable.has(entry.id),

@@ -528,6 +528,13 @@
 }
 .pd-name { min-width: 0; }
 .pd-name strong { display: block; font-size: 12.5px; font-weight: 560; overflow-wrap: anywhere; }
+/* 中文显示名下的英文原名（2026-11-21）：次级行，检索仍命中两者。 */
+.pd-name .pd-name-alt {
+  display: block;
+  font-size: 10px;
+  color: var(--fg-2);
+  overflow-wrap: anywhere;
+}
 .pd-name small {
   display: block;
   margin-top: 2px;

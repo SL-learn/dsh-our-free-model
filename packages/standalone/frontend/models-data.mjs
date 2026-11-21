@@ -107,6 +107,19 @@ export const SOURCE_GROUP_ORDER = [
   ['shared', '公共池（免登录共享）'],
 ]
 
+// 聚合渠道按 provider 拆分的复合筛选值（2026-11-21 用户要求「我的聚合渠道
+// 各自分开，不要合为一个」）：渠道下拉里 aggregate 不再是一个整项，而是
+// `aggregate:<providerId>` 一项一个服务商。
+export const AGGREGATE_CHANNEL_PREFIX = 'aggregate:'
+
+export function matchesChannel(model, channel) {
+  if (channel === 'all') return true
+  if (channel.startsWith(AGGREGATE_CHANNEL_PREFIX)) {
+    return model.channel === 'aggregate' && model.providerId === channel.slice(AGGREGATE_CHANNEL_PREFIX.length)
+  }
+  return model.channel === channel
+}
+
 export function filterModels(catalog, { search = '', channel = 'all', capability = 'all', availability = 'all', access = 'all', source = 'all' }) {
   const query = search.trim().toLocaleLowerCase()
   const matchesSource = model => {
@@ -115,7 +128,7 @@ export function filterModels(catalog, { search = '', channel = 'all', capability
     return source === 'own' ? cls === 'own-key' || cls === 'own-account' : cls === source
   }
   return catalog.filter(model =>
-    (channel === 'all' || model.channel === channel)
+    matchesChannel(model, channel)
     && matchesSource(model)
     && (capability === 'all' || (capability === 'vision' ? model.vision : capability === 'reasoning' ? model.reasoning : !model.vision))
     && (availability === 'all' || modelStateView(model).state === availability)

@@ -274,9 +274,15 @@
   transform-origin: 50% 50%;
   transition: transform var(--dur-base) var(--ease-out-expo);
 }
-.model-table-row:hover { background: var(--bg-2); }
+/* 悬停（2026-11-21 用户反馈）：改用半透明灰**叠加**而不是改 background-color
+   ——状态色带（tone）正是 background-color，此前 hover 覆盖成 --bg-2 会把
+   红/橙/蓝/绿洗掉，悬停时所有行看起来与未测试行一样。background-image
+   与底色叠加共存：状态行悬停=原色加深，中性行悬停=轻微灰提亮。 */
+.model-table-row:hover,
+.model-table-row:focus-within {
+  background-image: linear-gradient(rgba(127, 127, 127, .09), rgba(127, 127, 127, .09));
+}
 .model-table-row:hover::before { transform: scaleY(1); }
-.model-table-row:focus-within { background: var(--bg-2); }
 .model-table-row:focus-within::before { transform: scaleY(1); }
 
 /* 身份列：名称 + 等宽 id */

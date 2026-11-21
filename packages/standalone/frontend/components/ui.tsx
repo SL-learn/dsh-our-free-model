@@ -29,7 +29,7 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
   })
 
 export function Badge({ className, tone = 'neutral', dot = false, children, ...props }:
-  React.HTMLAttributes<HTMLSpanElement> & { tone?: 'neutral' | 'success' | 'warning' | 'blue'; dot?: boolean }) {
+  React.HTMLAttributes<HTMLSpanElement> & { tone?: 'neutral' | 'success' | 'warning' | 'blue' | 'danger'; dot?: boolean }) {
   return <span className={cn('ui-badge', `ui-badge-${tone}`, className)} {...props}>
     {dot && <span className="ui-badge-dot" aria-hidden="true" />}{children}
   </span>

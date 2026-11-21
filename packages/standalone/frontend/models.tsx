@@ -24,7 +24,7 @@ const channelName = (id: string) => sourceNames[id]
 const number = (value: number) => new Intl.NumberFormat('zh-CN').format(value)
 const capacity = (value?: number) => value && Number.isFinite(value) && value > 0
   ? value >= 1000 ? `${Number((value / 1000).toFixed(1))}K` : number(value) : '未知'
-const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all' }
+const initialFilters = { search: '', channel: 'all', capability: 'all', availability: 'all', access: 'all', failure: 'all' }
 type Operation = 'refresh' | 'probe' | 'test'
 type TestState = { model: Model; state: 'pending' | 'success' | 'error' | 'cancelled'; result?: ModelTestResult; error?: string; kind?: string }
 
@@ -215,6 +215,15 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       <select aria-label="筛选可用状态" value={filters.availability} onChange={event => changeFilters({ availability: event.target.value })}>
         <option value="all">全部状态</option>{Object.entries(availabilityNames).map(([id, name]) => <option value={id} key={id}>{name}</option>)}
       </select>
+      <select aria-label="筛选失败归因" value={filters.failure} onChange={event => changeFilters({ failure: event.target.value })}>
+        <option value="all">全部归因</option>
+        <option value="model-error">模型异常（实测失败）</option>
+        <option value="quota">额度不足</option>
+        <option value="rate-limit">限流中</option>
+        <option value="region">地区受限</option>
+        <option value="auth">鉴权失败</option>
+        <option value="transport">网络异常</option>
+      </select>
     </div>
     <div className="model-list-toolbar">
       <div className="channel-filters" role="group" aria-label="筛选公开范围">
@@ -270,7 +279,16 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
               : usage && state === 'available' ? '调用可用' : usage && state === 'unavailable' ? '连续调用失败'
                 : availabilityNames[state] ?? '未知状态'
             const disabledReason = !summary.settings.enabled ? '推理服务已暂停' : !model.routable && !model.hiddenByUser ? '模型尚未公开，请检查渠道账号或模型设置' : operation ? '请等待当前操作完成' : ''
+            // 徽章色阶（2026-11-21 重设计，与归因体系一致）：
+            // 绿=可用 · 红=模型真断（不可用/实测异常） · 橙=条件性受限（限流/地区）
+            // · 蓝=环境/账号问题（额度/鉴权/网络，需处理但不代表损坏） · 灰=未知/未探测。
+            const stateTone: 'neutral' | 'success' | 'warning' | 'blue' | 'danger' =
+              state === 'available' ? 'success'
+                : envFailure ? 'blue'
+                  : failed || state === 'unavailable' ? 'danger'
+                    : ['throttled', 'region-blocked'].includes(state) ? 'warning' : 'neutral'
             return <div role="row" aria-rowindex={item.index + 2} key={item.key} data-index={item.index} data-model-id={model.id}
+              data-hidden={model.hiddenByUser === true || undefined}
               className="model-table-row" ref={virtual.measureElement} style={{ transform: `translateY(${item.start}px)` }}
               onFocusCapture={() => setFocusedId(model.id)} onBlurCapture={event => {
                 if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(undefined)
@@ -280,7 +298,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 <Badge>{model.vision ? '视觉' : '纯文本'}</Badge>{model.reasoning && <Badge tone="blue">思考</Badge>}</div></div>
               <div role="cell" className="model-limits"><span title={model.contextWindow ? `${model.contextWindow} Token` : undefined}>{capacity(model.contextWindow)} <small>上下文</small></span>
                 <span title={model.maxOutput ? `${model.maxOutput} Token` : undefined}>{capacity(model.maxOutput)} <small>输出</small></span></div>
-              <div role="cell" className="model-state"><Badge tone={state === 'available' ? 'success' : envFailure ? 'neutral' : failed || ['unavailable', 'throttled', 'region-blocked'].includes(state) ? 'warning' : 'neutral'}>
+              <div role="cell" className="model-state"><Badge tone={stateTone}>
                 {availabilityName}</Badge>
                 {(manual || usage) && state !== 'available' && model.detail && <small title={model.detail}
                   style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.detail}</small>}
@@ -298,7 +316,11 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                     aria-label={`${model.hiddenByUser ? visibility.show : visibility.hide}：${model.id}`}
                     onClick={() => { const ids = summary.settings.hiddenModelIds ?? []; void saveVisibility({
                       hiddenModelIds: ids.includes(model.id) ? ids.filter(id => id !== model.id) : [...ids, model.id],
-                    }) }}>{model.hiddenByUser ? <Eye size={15} /> : <EyeOff size={15} />}</Button>}
+                    }) }}>
+                    {/* 图标表达**当前状态**而非动作（2026-11-21 用户反馈分不清）：
+                        已隐藏 = 琥珀色斜眼 + 整行压暗；可见 = 睁眼。 */}
+                    {model.hiddenByUser ? <EyeOff size={15} className="md-eye-off-hidden" /> : <Eye size={15} className="md-eye-on-visible" />}
+                  </Button>}
                   <Button variant="ghost" title={`复制 ${model.id}`} aria-label={`复制模型 ID：${model.id}`} onClick={() => copyModelId(model)}
                     className={copied === model.id ? 'md-copy-done' : ''}>
                     {copied === model.id ? <Check size={15} /> : <Copy size={15} />}

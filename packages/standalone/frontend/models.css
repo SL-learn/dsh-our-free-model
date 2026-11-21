@@ -239,9 +239,16 @@
   height: 112px;
   border-bottom: 1px solid var(--line-1);
   background: var(--bg-1);
-  transition: background-color var(--dur-fast) var(--ease-snap);
+  transition: background-color var(--dur-fast) var(--ease-snap), opacity var(--dur-fast) var(--ease-out-expo);
   min-width: 0;
 }
+/* 隐藏状态可视化（2026-11-21）：已隐藏的行整行压暗，交互时部分恢复；
+   图标本身也着色（斜眼=琥珀），扫一眼即知哪行处于隐藏态。 */
+.model-table-row[data-hidden="true"] { opacity: .55; }
+.model-table-row[data-hidden="true"]:hover,
+.model-table-row[data-hidden="true"]:focus-within { opacity: .82; }
+.md-eye-off-hidden { color: var(--warn); }
+.md-eye-on-visible { color: var(--fg-2); }
 /* 悬停：整行提亮 + 左侧一道竖条滑入，比整行变色更克制 */
 .model-table-row::before {
   content: "";

@@ -601,7 +601,8 @@ button { font: inherit; color: inherit; }
 .ui-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
 .ui-badge-success { color: var(--ok); border-color: var(--ok-line); background: var(--ok-soft); }
 .ui-badge-warning { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
-.ui-badge-blue { color: var(--fg-0); border-color: var(--line-2); background: var(--bg-3); }
+.ui-badge-blue { color: var(--info); border-color: var(--info-line); background: var(--info-soft); }
+.ui-badge-danger { color: var(--err); border-color: var(--err-line); background: var(--err-soft); }
 
 /* 输入 */
 .ui-input {

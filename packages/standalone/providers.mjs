@@ -192,7 +192,9 @@ export function createProviderManagement({ stores, runtime, persist }) {
       if (matches.length > 1) throw fail('多把密钥的指纹相同，请删除后重新按顺序添加')
       const target = matches[0]
       const meta = { ...storedKeyMeta(current) }
-      const pool = keys.filter(key => key !== target)
+      // ⚠️ 只有 remove 才把键移出轮换池；label/toggle 只是改元数据——之前
+      // 无条件过滤导致「改个备注就把密钥删了」（2026-11-21 真机踩坑）。
+      const pool = op === 'remove' ? keys.filter(key => key !== target) : keys
       if (op === 'remove') {
         delete meta[maskKey(target)]
       } else if (op === 'toggle') {

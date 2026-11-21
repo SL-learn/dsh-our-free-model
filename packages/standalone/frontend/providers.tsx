@@ -39,7 +39,10 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   const [enabled, setEnabled] = useState(configuration?.enabled ?? true)
   const [keys, setKeys] = useState<StoredKey[]>(savedKeys)
   const [newKeys, setNewKeys] = useState('')
-  const [labelDraft, setLabelDraft] = useState<Record<string, string>>({})
+  // 备注编辑是显式动作：点备注进编辑态（该行隐藏停用/删除按钮），点「保存」
+  // 才落库，点「取消」或编辑其他行即丢弃草稿——绝不因失焦/误触外部而改库。
+  const [editingLabel, setEditingLabel] = useState<string | null>(null)
+  const [labelDraft, setLabelDraft] = useState('')
   const [selected, setSelected] = useState<string[]>(configuration?.models ?? [])
   const [paid, setPaid] = useState<string[]>(configuration?.paidModels ?? [])
   const [discovered, setDiscovered] = useState<string[] | undefined>(configuration?.discovered)
@@ -92,11 +95,17 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
       if (next) setKeys(next.keys ?? [])
     }
   }
+  const startLabel = (row: StoredKey) => {
+    if (busy !== '') return
+    setEditingLabel(row.masked); setLabelDraft(row.label)
+  }
   const saveLabel = async (masked: string) => {
-    const draft = labelDraft[masked]
-    if (draft === undefined) return
-    setLabelDraft(previous => { const next = { ...previous }; delete next[masked]; return next })
-    await keyOp(masked, 'label', draft)
+    const result = await runAndRefresh('key', { providerId: provider.id, masked, op: 'label', label: labelDraft })
+    if (result !== null) {
+      const next = (result as { configured?: Record<string, Configuration> }).configured?.[provider.id]
+      if (next) setKeys(next.keys ?? [])
+      setEditingLabel(null); setLabelDraft('')
+    }
   }
 
   // ── 模型：填完 key 即可发现（未保存的 key 作为临时凭据，不落盘） ──
@@ -177,18 +186,30 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
       <fieldset className="wb-keys">
         <legend>API Key 轮换池</legend>
         {keys.length === 0 && <p className="wb-keys-empty"><KeyRound size={15} />还没有密钥；在下方粘贴，每行一把。</p>}
-        {keys.map((row, index) => <div className={`wb-keyrow ${row.disabled ? 'is-disabled' : ''}`} key={row.masked + index}>
-          <code title="掩码指纹：足够辨认账号，明文不回传">{row.masked}</code>
-          <input aria-label="密钥备注" placeholder="备注：哪个账号" value={labelDraft[row.masked] ?? row.label} disabled={busy !== ''}
-            onChange={event => setLabelDraft(previous => ({ ...previous, [row.masked]: event.target.value }))}
-            onBlur={() => { if (labelDraft[row.masked] !== undefined) void saveLabel(row.masked) }}
-            onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void saveLabel(row.masked) } }} />
-          {row.disabled && <Badge tone="neutral">已停用</Badge>}
-          <Switch checked={!row.disabled} disabled={busy !== ''} aria-label={row.disabled ? '启用这把密钥' : '停用这把密钥'}
-            onCheckedChange={value => { void keyOp(row.masked, 'toggle', !value) }} />
-          <Button type="button" variant="ghost" size="icon" className="wb-danger" title="删除这把密钥" aria-label="删除这把密钥"
-            disabled={busy !== ''} onClick={() => { void keyOp(row.masked, 'remove') }}><Trash2 size={14} /></Button>
-        </div>)}
+        {keys.map((row, index) => {
+          const editing = editingLabel === row.masked
+          return <div className={`wb-keyrow ${row.disabled ? 'is-disabled' : ''}`} key={row.masked + index}>
+            <code title="掩码指纹：足够辨认账号，明文不回传">{row.masked}</code>
+            {editing ? <input autoFocus aria-label="编辑备注" value={labelDraft} disabled={busy !== ''}
+              placeholder="备注：哪个账号"
+              onChange={event => setLabelDraft(event.target.value)}
+              onKeyDown={event => { if (event.key === 'Escape') { setEditingLabel(null); setLabelDraft('') } }} />
+              : <button type="button" className="wb-keylabel" title="点击编辑备注" disabled={busy !== ''}
+                onClick={() => startLabel(row)}>{row.label === '' ? '备注：哪个账号' : row.label}</button>}
+            {editing ? <>
+              <Button type="button" variant="outline" disabled={busy !== '' || labelDraft.trim() === ''} busy={busy === 'save'}
+                onClick={() => { void saveLabel(row.masked) }}>保存</Button>
+              <Button type="button" variant="ghost" disabled={busy !== ''} onClick={() => { setEditingLabel(null); setLabelDraft('') }}>取消</Button>
+            </>
+              : <>
+                {row.disabled && <Badge tone="neutral">已停用</Badge>}
+                <Switch checked={!row.disabled} disabled={busy !== ''} aria-label={row.disabled ? '启用这把密钥' : '停用这把密钥'}
+                  onCheckedChange={value => { void keyOp(row.masked, 'toggle', !value) }} />
+                <Button type="button" variant="ghost" size="icon" className="wb-danger" title="删除这把密钥" aria-label="删除这把密钥"
+                  disabled={busy !== ''} onClick={() => { void keyOp(row.masked, 'remove') }}><Trash2 size={14} /></Button>
+              </>}
+          </div>
+        })}
         <textarea rows={3} spellCheck={false} autoComplete="off" value={newKeys}
           placeholder="粘贴新密钥，每行一把；保存后立即进入轮换池（自动轮换、限流自动换号）"
           disabled={busy !== ''} onChange={event => setNewKeys(event.target.value)} />

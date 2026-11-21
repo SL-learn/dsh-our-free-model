@@ -752,15 +752,8 @@
   font-size: 11.5px;
   color: var(--fg-2);
 }
-.wb-keyrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-md);
-  background: var(--bg-1);
-}
+.wb-model-row + .wb-model-row { border-top: 1px solid var(--line-1); }
+.wb-model-row:hover { background: var(--bg-2); }
 .wb-keyrow.is-disabled { opacity: 0.55; }
 .wb-keyrow code {
   flex: none;
@@ -771,20 +764,41 @@
   font-size: 11px;
   color: var(--fg-1);
 }
+.wb-keylabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 3px 4px;
+  font-size: 11.5px;
+  color: var(--fg-2);
+  cursor: text;
+}
+.wb-keylabel:hover:not(:disabled) { color: var(--fg-1); }
+.wb-keyrow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+}
 .wb-keyrow input {
   flex: 1;
   min-width: 0;
-  border: 1px solid transparent;
+  width: auto;
+  border: 1px solid var(--line-1);
   border-radius: var(--r-md);
-  background: transparent;
+  background: var(--bg-1);
   padding: 3px 6px;
   font-size: 11.5px;
   color: var(--fg-1);
-}
-.wb-keyrow input:focus {
-  outline: none;
-  border-color: var(--line-1);
-  background: var(--bg-1);
 }
 .wb-models-toolbar {
   display: flex;
@@ -793,7 +807,9 @@
   gap: 6px;
 }
 .wb-models-search {
+  /* label 在 .wb-form 里默认纵向，搜索框需要横排。 */
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
   color: var(--fg-2);
@@ -808,16 +824,24 @@
   background: var(--bg-1);
 }
 .wb-model-row {
+  /* ⚠️ .wb-form label 全局是纵向布局，这里必须显式横排——否则复选框和
+     模型名各占一行（2026-11-21 真机截图实锤）。特异性 .wb-form .wb-* 高于
+     .wb-form label。 */
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
-  padding: 5px 10px;
+  padding: 4px 10px;
   font-size: 11.5px;
   cursor: pointer;
 }
-.wb-model-row + .wb-model-row { border-top: 1px solid var(--line-1); }
-.wb-model-row:hover { background: var(--bg-2); }
-.wb-model-row input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var(--accent); }
+.wb-form .wb-model-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin: 0;
+  accent-color: var(--accent);
+}
 .wb-model-id {
   flex: 1;
   min-width: 0;

@@ -81,13 +81,16 @@ export interface OpencodePoolLike {
 }
 
 /**
- * key 形状：`sk-` 前缀 + 至少 20 位。
+ * key 形状：两种官方格式之一 + 主体至少 20 位。
+ *
+ * - `sk-…`：旧版 Console key；
+ * - `oc_sk_…`：新版 Zen key（2024 起控制台默认签发，实测 models 列表 200 可用）。
  *
  * ⚠️ 这只是**形状**校验（挡手滑/占位符），**不是**有效性验证：
  * 真 key 仍要等第一次真实请求才知道。形状校验的价值是让「明显没粘贴对」
  * 在入库前就被挡下，而不是等到发消息时才 401。
  */
-const KEY_PATTERN = /^sk-[A-Za-z0-9_-]{20,}$/
+const KEY_PATTERN = /^(?:oc_sk_|sk-)[A-Za-z0-9_-]{20,}$/
 
 /** 出口 IP 查询（公开服务，仅用于「测试代理」按钮，不承载业务流量）。 */
 const EXIT_IP_URL = 'http://ip-api.com/json/?fields=status,query,country'
@@ -129,7 +132,7 @@ export async function handleOpencodeRpc(
               const req = call.payload as RpcOpencodeAddAccountRequest
               const apiKey = typeof req?.apiKey === 'string' ? req.apiKey.trim() : ''
               if (!KEY_PATTERN.test(apiKey)) {
-                return fail('API key 形状不对（应以 sk- 开头、至少 20 位；可在 https://opencode.ai/auth 生成）')
+                return fail('API key 形状不对（应以 sk- 或 oc_sk_ 开头、至少 20 位；可在 https://opencode.ai/console/signup 注册后于控制台生成）')
               }
               const { id, refName } = slotNamesOf(apiKey)
               // ⚠️ 重复 key 必须**复用**同一账号：同 key 加两次会让用户误以为是

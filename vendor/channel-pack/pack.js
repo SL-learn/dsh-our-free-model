@@ -58533,7 +58533,7 @@ async function importBackup(credentials, pool, raw) {
 // vendor/channel-pack/src/opencode-rpc.ts
 import { credentialRef as credentialRef10 } from "@deepseek-ai/dsh-credentials";
 import { randomBytes as randomBytes8 } from "node:crypto";
-var KEY_PATTERN = /^sk-[A-Za-z0-9_-]{20,}$/;
+var KEY_PATTERN = /^(?:oc_sk_|sk-)[A-Za-z0-9_-]{20,}$/;
 var EXIT_IP_URL = "http://ip-api.com/json/?fields=status,query,country";
 var TEST_TIMEOUT_MS = 1e4;
 function slotNamesOf(apiKey) {
@@ -58550,7 +58550,7 @@ async function handleOpencodeRpc(ctx, pool, method, payload) {
         const req = call.payload;
         const apiKey = typeof req?.apiKey === "string" ? req.apiKey.trim() : "";
         if (!KEY_PATTERN.test(apiKey)) {
-          return fail("API key \u5F62\u72B6\u4E0D\u5BF9\uFF08\u5E94\u4EE5 sk- \u5F00\u5934\u3001\u81F3\u5C11 20 \u4F4D\uFF1B\u53EF\u5728 https://opencode.ai/auth \u751F\u6210\uFF09");
+          return fail("API key \u5F62\u72B6\u4E0D\u5BF9\uFF08\u5E94\u4EE5 sk- \u6216 oc_sk_ \u5F00\u5934\u3001\u81F3\u5C11 20 \u4F4D\uFF1B\u53EF\u5728 https://opencode.ai/console/signup \u6CE8\u518C\u540E\u4E8E\u63A7\u5236\u53F0\u751F\u6210\uFF09");
         }
         const { id, refName } = slotNamesOf(apiKey);
         if (pool.listAccountsByProvider(OPENCODE.id).some((a) => a.id === id)) {

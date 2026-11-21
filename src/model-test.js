@@ -21,9 +21,48 @@ import { decodeWindow } from './store.js'
 import { windowTokens } from './stream.js'
 export const MODEL_TEST_TIMEOUT_MS = 300_000
 
+/**
+ * 把一次测试失败归因为「谁的问题」——这是批量隐藏的安全阀（2026-11-21 用户要求）：
+ * 只有 `model-error`（模型本身坏了）才允许被批量隐藏；额度不足、限流、地区受限、
+ * 鉴权、网络抖动都是**环境问题**，模型本体可能完全正常，混进批量隐藏就是误管。
+ *
+ * 归因依据依次是：UpstreamError 的语义 code、HTTP 状态码、消息文本。顺序很重要——
+ * 402/「usage limit」这类额度语义必须先于 429 判断（免费桶耗尽也走 429）；403 要先
+ * 试地区语义再落到鉴权。
+ */
+export function classifyModelFailure(error) {
+  const message = String(error?.message ?? error ?? '')
+  const code = String(error?.code ?? '')
+  const status = Number(error?.statusCode ?? error?.status ?? 0)
+  const text = message.toLowerCase()
+  if (code === 'REGION_BLOCKED' || (status === 403 && /region|country|geo/.test(text)) || /region-?blocked|地区受限/.test(text)) return 'region'
+  if (status === 402 || code === 'QUOTA_EXHAUSTED'
+    || /insufficient balance|usage limit|quota|credit|no token|余额|额度|充值/.test(text)) return 'quota'
+  if (status === 429 || code === 'RATE_LIMIT'
+    || /rate limit|throttl|overloaded|too many|限流|频繁/.test(text)) return 'rate-limit'
+  if (code === 'INVALID_CREDENTIAL' || code === 'AUTHORIZATION_REQUIRED' || code === 'LANE_LOCKED'
+    || code === 'PERMISSION_DENIED' || status === 401
+    || /unauthorized|invalid (api )?key|鉴权|登录/.test(text)) return 'auth'
+  if (code === 'TRANSPORT' || code === 'TIMEOUT' || code === 'SERVER' || status >= 500
+    || /fetch failed|econn|etimedout|enotfound|proxy|socket|网络|超时/.test(text)) return 'transport'
+  if (status >= 400 && status < 500) return 'model-error'
+  if (code === 'EMPTY_RESPONSE' || code === 'CLIENT_ERROR' || code === 'SERVER'
+    || /not found|不存在|did not finish|no response text|unexpected tool call/.test(text)) return 'model-error'
+  return 'transport'
+}
+
+/** 失败归因的展示名；批量隐藏的确认文案与状态徽章共用。 */
+export const failureKindNames = {
+  'model-error': '模型异常',
+  quota: '额度不足',
+  'rate-limit': '限流中',
+  region: '地区受限',
+  auth: '鉴权失败',
+  transport: '网络异常',
+}
+
 /** Only a nonempty, normally finished tool-free answer establishes a successful text test. */
-export async function measureModelTest(stream, now = Date.now) {
-  const started = now()
+export async function measureModelTest(stream, now = Date.now) {  const started = now()
   let firstFrame
   let sawReasoning = false
   let finished = false
@@ -111,6 +150,7 @@ export function modelAvailability(id, snapshot, listed = false) {
           : listed ? 'listing' : 'probe',
     availability: measured?.state ?? 'unknown',
     detail: measured?.detail ?? '', probedAt: measured?.at ?? 0,
+    failureKind: measured?.failureKind,
     ttftMs: measured?.ttftMs, latencyMs: measured?.latencyMs,
   }
 }

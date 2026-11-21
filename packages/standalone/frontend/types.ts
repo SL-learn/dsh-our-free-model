@@ -12,6 +12,8 @@ export interface Model {
   contextWindow?: number
   maxOutput?: number
   availabilitySource?: 'listing' | 'probe' | 'manual' | 'usage'
+  /** 手动测试失败时的归因（model-error/quota/rate-limit/region/auth/transport），批量隐藏只认 model-error。 */
+  failureKind?: 'model-error' | 'quota' | 'rate-limit' | 'region' | 'auth' | 'transport'
   detail?: string
   probedAt?: number
   latencyMs?: number

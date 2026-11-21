@@ -334,11 +334,36 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 3px;
+  gap: 6px;
 }
 .model-row-actions .ui-button { flex: none; }
 .model-row-actions .ui-button-ghost { width: 28px; height: 28px; padding: 0; }
 .model-row-actions .ui-button-outline { height: 28px; padding: 0 10px; font-size: 11.5px; }
+
+/* 隐藏/复制迷你分段组：一个边框包住两个图标，与「测试」按钮同一视觉层级，
+   替代此前的裸图标散排（2026-11-21 用户反馈样式不合理）。 */
+.model-row-mini {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 160ms var(--ease-out-expo);
+}
+.model-row-mini:hover { border-color: var(--line-3); }
+.model-row-mini .ui-button-ghost {
+  width: 30px;
+  height: 26px;
+  border-radius: 0;
+  color: var(--fg-2);
+}
+.model-row-mini .ui-button-ghost:hover { color: var(--fg-1); background: var(--hover, rgba(127, 127, 127, .12)); }
+.model-row-mini .ui-button-ghost:disabled { color: var(--fg-3, var(--fg-2)); opacity: .5; }
+.model-row-mini .ui-button-ghost + .ui-button-ghost { border-left: 1px solid var(--line-2); }
+.model-row-mini .md-copy-done { color: var(--ok); }
+
+/* 测试失败面板里的归因提示 */
+.model-test-hint { color: var(--fg-2); }
 
 /* 复制成功：图标弹一下并转成对勾色 */
 .md-copy-done { color: var(--ok); }

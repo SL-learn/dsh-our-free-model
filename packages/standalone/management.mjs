@@ -701,6 +701,9 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
         try { await route(req, res, pathname) } catch (error) {
           if (!res.destroyed && !res.headersSent) json(res, error.statusCode ?? 500, {
             error: error.statusCode ? error.message : '管理操作失败，请查看服务日志',
+            // 模型测试失败会带归因（model-error/quota/rate-limit/…，2026-11-21），
+            // 测试面板据此区分「模型坏了」与「额度/限流等环境问题」，避免误管。
+            ...(error.failureKind !== undefined ? { failureKind: error.failureKind } : {}),
           })
         }
       }

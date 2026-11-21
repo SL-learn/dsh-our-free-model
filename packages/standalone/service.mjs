@@ -304,14 +304,36 @@ export async function startStandalone({
         if (stores.settings.get().enabled === false) throw Object.assign(new Error('推理服务已暂停，请先在服务设置中启用'), { statusCode: 503 })
         const started = Date.now()
         let first = 0
-        const outcome = await channels.complete({
-          model,
-          openAi: { model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }], max_tokens: 16 },
-          ...(options?.signal ? { signal: options.signal } : {}),
-        }, chunk => { if (!first && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta' || chunk.type === 'usage')) first = Date.now() })
+        // 失败归因 + 落表（2026-11-21）：渠道模型的手动测试结果也要写进 core 的
+        // manualResults（经 noteManualResult），否则渠道模型永远没有「实测」状态，
+        // 用户无法区分模型真断与额度/限流等环境问题、也无法批量清理真断渠道。
+        const record = failure => {
+          const kind = classifyModelFailure(failure)
+          try { failure.failureKind = kind } catch { /* 只读宿主错误对象时跳过 */ }
+          const state = kind === 'rate-limit' ? 'throttled' : kind === 'region' ? 'region-blocked' : 'unknown'
+          core.noteManualResult(model, {
+            state, source: 'manual', at: started, detail: String(failure?.message ?? failure).slice(0, 200),
+            ...(state === 'unknown' ? { failureKind: kind } : {}),
+          })
+          return kind
+        }
+        let outcome
+        try {
+          outcome = await channels.complete({
+            model,
+            openAi: { model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }], max_tokens: 16 },
+            ...(options?.signal ? { signal: options.signal } : {}),
+          }, chunk => { if (!first && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta' || chunk.type === 'usage')) first = Date.now() })
+        } catch (error) {
+          record(error)
+          throw error
+        }
         if (outcome.error !== undefined) {
-          const message = String(outcome.error.message ?? outcome.error)
-          throw Object.assign(new Error(message.slice(0, 300)), { statusCode: 502 })
+          const raw = outcome.error
+          const message = String(raw.message ?? raw)
+          const failure = Object.assign(new Error(message), { statusCode: Number(raw.statusCode ?? raw.status ?? 502) })
+          record(failure)
+          throw failure
         }
         const latencyMs = Date.now() - started
         return {

@@ -215,7 +215,7 @@ import { buildComboCatalog, isComboEntry, normalizeCombos, pruneRotation } from 
 import { JsonStore, SETTINGS_INITIAL, STATS_INITIAL, STATS_VERSION, migrateStats, pruneDays, recordTurn, recordUsage, isModelHidden } from "./store.js";
 import { STATE, detectEgress, probeCatalog } from "./probe.js";
 import { CODE, UpstreamError, getJson } from "./http.js";
-import { runModelTest, modelAvailability } from "./model-test.js";
+import { runModelTest, modelAvailability, classifyModelFailure } from "./model-test.js";
 import { DEFAULT_LEVEL } from "./effort.js";
 import { fetchSealedListing } from "./eac.js";
 import { fetchKiloListing } from "./kilo.js";
@@ -680,7 +680,16 @@ function createModelRuntime({
       const persisted = persist({ state: STATE.available, source: "manual", at: Date.now(), ttftMs: measured.ttftMs, latencyMs: measured.totalMs });
       return { model: entry.id, effort: selectedEffort, ok: true, ...measured, persisted };
     } catch (error) {
-      if (error?.code !== CODE.aborted) persist({ state: STATE.unknown, source: "manual", at: Date.now(), detail: String(error?.message ?? error).slice(0, 200) });
+      if (error?.code !== CODE.aborted) {
+        // 失败归因（2026-11-21）：只有 model-error 才是「模型真断了」；额度/限流/
+        // 地区/鉴权/网络都是环境问题。归因写入 manualResults，让 UI 能区分展示并
+        // 把前四类排除出批量隐藏；限流映射为既有的 throttled 态、地区映射为
+        // region-blocked 态，与探测车道的语义对齐。
+        const kind = classifyModelFailure(error);
+        try { error.failureKind = kind; } catch { /* 只读宿主错误对象时跳过 */ }
+        const state2 = kind === "rate-limit" ? STATE.throttled : kind === "region" ? STATE.regionBlocked : STATE.unknown;
+        persist({ state: state2, source: "manual", at: Date.now(), detail: String(error?.message ?? error).slice(0, 200), failureKind: state2 === STATE.unknown ? kind : void 0 });
+      }
       throw error;
     } finally {
       if (latestTests.get(id) === token) latestTests.delete(id);
@@ -688,6 +697,16 @@ function createModelRuntime({
   }
   return {
     testModel,
+    // 渠道模型的手动测试在 service.mjs 的分流里跑（core catalog 不含渠道条目），
+    // 但结果必须落同一张 manualResults 表，UI 才能对渠道模型展示「实测」状态并
+    // 支持批量隐藏真断的渠道模型（2026-11-21）。
+    noteManualResult(id, row) {
+      if (disposed) return false;
+      availability.edit((value) => ({ ...value, manualResults: { ...value.manualResults, [id]: row } }));
+      availability.flush();
+      emitTopology();
+      return !availability.writeFailed;
+    },
     state,
     adapter,
     refreshCatalog,

@@ -566,6 +566,7 @@ window.__ModuleLoader__.load({
         'chan.meta.models': '模型',
         'chan.act.add': '添加账号',
         'chan.opencode.key': '粘贴 OpenCode Zen API Key',
+        'chan.opencode.nickname': '备注名（留空默认，如：Zen 主号）',
         'chan.opencode.add': '添加 Key',
         'chan.opencode.signup': '注册 / 获取 Key',
         'chan.zcode.provider': '登录渠道',
@@ -1487,6 +1488,7 @@ window.__ModuleLoader__.load({
         'chan.meta.models': 'Models',
         'chan.act.add': 'Add account',
         'chan.opencode.key': 'Paste your OpenCode Zen API key',
+        'chan.opencode.nickname': 'Nickname (optional, e.g. Zen main)',
         'chan.opencode.add': 'Add key',
         'chan.opencode.signup': 'Sign up / get a key',
         'chan.zcode.provider': 'Sign-in route',
@@ -5404,6 +5406,7 @@ window.__ModuleLoader__.load({
       // OpenCode 不走浏览器登录：凭据是用户手动粘贴的 Zen API Key
       // （pack 侧 `opencode.addAccount`），所以这张卡用内联输入框替代弹窗流程。
       const [opencodeKey, setOpencodeKey] = useState('')
+      const [opencodeNickname, setOpencodeNickname] = useState('')
       const chooseZcodeProvider = value => {
         if (value !== 'bigmodel' && value !== 'zai') return
         setZcodeProvider(value)
@@ -5619,9 +5622,11 @@ window.__ModuleLoader__.load({
         if (apiKey === '' || busy !== '' || !rpc) return
         setBusy('add'); setNotice('')
         try {
-          await rpc('opencode.addAccount', { apiKey })
+          const nickname = opencodeNickname.trim()
+          await rpc('opencode.addAccount', { apiKey, ...(nickname !== '' ? { nickname } : {}) })
           setOpencodeKey('')
-          setNotice(t('chan.login.done').replace('{login}', 'OpenCode'))
+          setOpencodeNickname('')
+          setNotice(t('chan.login.done').replace('{login}', nickname !== '' ? nickname : 'OpenCode'))
           onChanged()
           await loadAccounts()
         } catch (error) { onError(channel, error) } finally { setBusy('') }
@@ -5733,6 +5738,12 @@ window.__ModuleLoader__.load({
             type: 'password', 'aria-label': t('chan.opencode.key'), placeholder: t('chan.opencode.key'),
             value: opencodeKey, disabled: busy !== '' || !rpc,
             onChange: event => setOpencodeKey(event.target.value),
+            onKeyDown: event => { if (event.key === 'Enter') void addOpencodeKey() },
+          }) : null,
+          channel.id === 'opencode' ? h('input', {
+            type: 'text', 'aria-label': t('chan.opencode.nickname'), placeholder: t('chan.opencode.nickname'),
+            maxLength: 40, value: opencodeNickname, disabled: busy !== '' || !rpc,
+            onChange: event => setOpencodeNickname(event.target.value),
             onKeyDown: event => { if (event.key === 'Enter') void addOpencodeKey() },
           }) : null,
           channel.id === 'opencode' && channel.signup ? h('a', {

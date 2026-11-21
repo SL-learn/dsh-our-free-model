@@ -65,7 +65,7 @@ export function Settings({ summary, host, active }: { summary: Summary; host: Ho
       if (mounted.current) setSaving(false)
     }
   }
-  const toggle = (name: 'enabled' | 'exposeRegionModels' | 'streamRecovery' | 'standaloneProbe' | 'hideFreeModels' | 'hideEacModels', label: string, help: string, disabled = false) =>
+  const toggle = (name: 'enabled' | 'exposeRegionModels' | 'streamRecovery' | 'hideFreeModels' | 'hideEacModels', label: string, help: string, disabled = false) =>
     <label className="settings-field" key={name}>
       <span><strong>{label}</strong><small>{help}</small></span>
       <input type="checkbox" role="switch" name={name} className="settings-toggle" disabled={disabled}
@@ -100,7 +100,13 @@ export function Settings({ summary, host, active }: { summary: Summary; host: Ho
         </Card>
         <Card className="settings-card"><div className="settings-card-heading"><RefreshCw size={16} /><div><h2>模型刷新</h2><p>管理模型清单的周期更新与探测。</p></div></div>
           {numeric('probeIntervalMinutes', '刷新间隔（分钟）', '1–1440 分钟，保存后重新安排下一轮。', 1, 1440)}
-          {toggle('standaloneProbe', '自动探测可用性（已停用）', '自动探测已关闭：周期刷新只更新模型清单，不会发送探测请求。', true)}
+          {/* ⚠️ 此项是**固定策略**而非开关（2026-11-21 用户反馈"无法点击"）：周期探测每轮会对
+              全部模型发真实请求、烧 token，与「可用性从真实调用被动沉淀」的设计冲突，因此
+              不提供交互控件。渲染成禁用 checkbox 会误导用户以为坏了，改为静态说明。 */}
+          <p className="settings-note" role="note"><CircleAlert size={15} /><span>
+            自动探测可用性为固定关闭（不提供开关）：周期探测会对所有模型发真实请求、额外消耗 token。
+            可用性改为从真实调用自动沉淀（成功/限流/地区受限都会更新状态）；模型清单页仍可对单个模型手动「测试」。
+          </span></p>
           <p className="settings-note" role="note"><CircleAlert size={15} /><span>{summary.automaticRefresh
             ? '自动刷新已启用，保存间隔后会重新安排下一轮。'
             : '当前以 --no-refresh 启动。设置会保存，但自动任务保持暂停；手动刷新仍可用。'}</span></p>

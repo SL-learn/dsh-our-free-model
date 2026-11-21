@@ -744,6 +744,20 @@
   color: var(--fg-2);
 }
 .wb-keys textarea { min-height: 64px; max-height: 140px; }
+.wb-keyadd {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px dashed var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+}
+.wb-keyadd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .wb-keys-empty {
   display: flex;
   align-items: center;
@@ -806,8 +820,8 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.wb-models-search {
-  /* label 在 .wb-form 里默认纵向，搜索框需要横排。 */
+.wb-form .wb-models-search {
+  /* label 在 .wb-form 里默认纵向（.wb-form label 0,1,1），带前缀才横排。 */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -823,10 +837,10 @@
   border-radius: var(--r-md);
   background: var(--bg-1);
 }
-.wb-model-row {
-  /* ⚠️ .wb-form label 全局是纵向布局，这里必须显式横排——否则复选框和
-     模型名各占一行（2026-11-21 真机截图实锤）。特异性 .wb-form .wb-* 高于
-     .wb-form label。 */
+.wb-form .wb-model-row {
+  /* ⚠️ .wb-form label (0,1,1) 全局是纵向布局：选择器必须带 .wb-form 前缀
+     (0,2,0) 才能赢——纯 .wb-model-row (0,1,0) 输掉，复选框和模型名会各占
+     一行（2026-11-21 两轮真机截图实锤）。 */
   display: flex;
   flex-direction: row;
   align-items: center;

@@ -38,7 +38,11 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   const [baseUrl, setBaseUrl] = useState(configuration?.baseUrl || provider.baseUrl)
   const [enabled, setEnabled] = useState(configuration?.enabled ?? true)
   const [keys, setKeys] = useState<StoredKey[]>(savedKeys)
+  // 添加密钥是点击按钮后的展开表单（密钥 + 备注 + 保存/取消），不是常驻
+  // 文本框——常驻框既占空间，也诱导"随手一贴就入库"。
+  const [addingKey, setAddingKey] = useState(false)
   const [newKeys, setNewKeys] = useState('')
+  const [newLabel, setNewLabel] = useState('')
   // 备注编辑是显式动作：点备注进编辑态（该行隐藏停用/删除按钮），点「保存」
   // 才落库，点「取消」或编辑其他行即丢弃草稿——绝不因失焦/误触外部而改库。
   const [editingLabel, setEditingLabel] = useState<string | null>(null)
@@ -71,17 +75,22 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
     return result
   }
 
-  // ── 凭据管理：粘贴即入库（合并进轮换池），行内备注/停用/删除 ──
+  // ── 凭据管理：添加表单展开式（密钥 + 备注 + 保存/取消），行内备注/停用/删除 ──
   const parsedNew = keyList(newKeys)
+  // 与服务端 maskKey 同规则的客户端指纹（单把添加时备注直接落 keyMeta）。
+  const maskOf = (key: string) => key.length <= 14 ? `…${key.slice(-4)}` : `${key.slice(0, 6)}…${key.slice(-4)}`
   const addKeys = async () => {
     if (parsedNew.length === 0 || busy !== '') return
-    const result = await runAndRefresh('save', { providerId: provider.id, apiKeys: parsedNew })
+    const meta = parsedNew.length === 1 && newLabel.trim() !== ''
+      ? { [maskOf(parsedNew[0])]: { label: newLabel.trim() } } : undefined
+    const result = await runAndRefresh('save', { providerId: provider.id, apiKeys: parsedNew, ...(meta ? { keyMeta: meta } : {}) })
     if (result !== null) {
       const next = (result as { configured?: Record<string, Configuration> }).configured?.[provider.id]
       if (next) setKeys(next.keys ?? [])
-      setNewKeys('')
+      setNewKeys(''); setNewLabel(''); setAddingKey(false)
     }
   }
+  const cancelAdd = () => { setAddingKey(false); setNewKeys(''); setNewLabel('') }
   const keyOp = async (masked: string, op: 'remove' | 'toggle' | 'label', value?: boolean | string) => {
     if (busy !== '') return
     if (op === 'remove') {
@@ -153,7 +162,6 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
       const models = manualMode ? modelList(manualText) : selected
       const body: Record<string, unknown> = {
         providerId: provider.id, baseUrl: url.toString(), models, paidModels: paid, enabled,
-        ...(parsedNew.length > 0 ? { apiKeys: parsedNew } : {}),
       }
       if (provider.authKind !== 'none' && keys.length === 0 && parsedNew.length === 0) throw new Error('请先添加至少一把 API Key。')
       await management('/providers/save', body)
@@ -210,11 +218,23 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
               </>}
           </div>
         })}
-        <textarea rows={3} spellCheck={false} autoComplete="off" value={newKeys}
-          placeholder="粘贴新密钥，每行一把；保存后立即进入轮换池（自动轮换、限流自动换号）"
-          disabled={busy !== ''} onChange={event => setNewKeys(event.target.value)} />
-        {parsedNew.length > 0 && <Button type="button" variant="outline" busy={busy === 'save'} disabled={busy !== ''}
-          onClick={() => { void addKeys() }}><Plus size={14} />添加 {parsedNew.length} 把到轮换池</Button>}
+        {!addingKey && <Button type="button" variant="outline" disabled={busy !== ''} onClick={() => setAddingKey(true)}>
+          <Plus size={14} />添加密钥</Button>}
+        {addingKey && <div className="wb-keyadd">
+          <textarea autoFocus rows={2} spellCheck={false} autoComplete="off" value={newKeys}
+            placeholder="粘贴密钥，每行一把；保存后立即进入轮换池（自动轮换、限流自动换号）"
+            disabled={busy !== ''} onChange={event => setNewKeys(event.target.value)} />
+          <Input aria-label="密钥备注" placeholder={parsedNew.length === 1 ? '备注：哪个账号（可选）' : '备注仅当一次添加一把时生效'}
+            value={newLabel} disabled={busy !== '' || parsedNew.length > 1}
+            onChange={event => setNewLabel(event.target.value)} />
+          <div className="wb-keyadd-actions">
+            <Button type="button" variant="outline" disabled={parsedNew.length === 0 || keys.length + parsedNew.length > 8} busy={busy === 'save'}
+              title={keys.length + parsedNew.length > 8 ? '轮换池最多 8 把' : undefined}
+              onClick={() => { void addKeys() }}><Save size={14} />保存{parsedNew.length > 0 ? `（${parsedNew.length} 把）` : ''}</Button>
+            <Button type="button" variant="ghost" disabled={busy !== ''} onClick={cancelAdd}>取消</Button>
+          </div>
+          {keys.length + parsedNew.length > 8 && <p className="wb-form-notes">轮换池最多 8 把，当前 {keys.length} 把。</p>}
+        </div>}
       </fieldset>
 
       <fieldset className="wb-models">

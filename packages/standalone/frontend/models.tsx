@@ -12,7 +12,7 @@ import './models.css'
 // 放前端本地是因为 src/model-test.js 依赖 node 侧模块，不能进浏览器包）。
 const failureKindNames: Record<string, string> = {
   'model-error': '模型异常', quota: '额度不足', 'rate-limit': '限流中',
-  region: '地区受限', auth: '鉴权失败', transport: '网络异常',
+  region: '地区受限', auth: '鉴权失败', transport: '网络异常', slow: '响应超慢',
 }
 const sourceNames: Record<string, string> = { anonymous: '匿名模型', kilo: 'Kilo 免费池', eac: 'EAC 协付' }
 const channelName = (id: string) => sourceNames[id]
@@ -45,6 +45,10 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   const [visibilitySaving, setVisibilitySaving] = useState(false)
   const visibilityPending = useRef(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  // 滚动锚点（2026-11-21 用户反馈「测试一个就滚到顶部」）：单模型测试完成刷新
+  // 后，行状态变化可能让筛选集增删行、虚拟列表条目整体移动；恢复刷新前的
+  // scrollTop，让测试结果不影响阅读位置。只在下一次列表变化时消费一次。
+  const scrollAnchor = useRef<{ top: number; id: string } | undefined>(undefined)
   const pending = useRef<AbortController | undefined>(undefined)
   const activeRef = useRef(active)
   activeRef.current = active
@@ -82,6 +86,14 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       if (scrollRef.current.scrollTop > max) scrollRef.current.scrollTop = max
     }
   }, [models.length, active, virtual])
+  // 消费一次滚动锚点：列表内容因测试结果变化后，把视口放回刷新前的深度。
+  // 依赖整个 models——普通 15 秒轮询无锚点时直接返回，不产生任何滚动。
+  useEffect(() => {
+    const anchor = scrollAnchor.current
+    if (anchor === undefined || !scrollRef.current || !active) return
+    scrollAnchor.current = undefined
+    if (models.some(model => model.id === anchor.id)) scrollRef.current.scrollTop = anchor.top
+  }, [models, active])
 
   const run = async (kind: Operation, model?: Model) => {
     if (pending.current || !activeRef.current) return
@@ -92,6 +104,8 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     const isCurrent = () => pending.current === controller && !controller.signal.aborted && activeRef.current
     try {
       if (kind === 'test' && model) {
+        // 记录刷新前的视口深度，测试结果落地后恢复，不让列表跳动。
+        if (scrollRef.current) scrollAnchor.current = { top: scrollRef.current.scrollTop, id: model.id }
         const result = await host.testModel(model.id, controller.signal)
         if (!isCurrent()) return
         setTest({ model, state: 'success', result })
@@ -110,7 +124,12 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     } catch (reason) {
       if (!isCurrent()) return
       const detail = reason instanceof Error ? reason.name === 'TimeoutError' ? '请求超时，请重试。' : reason.message : '操作失败，请重试。'
-      if (kind === 'test' && model) setTest({ model, state: 'error', error: detail, kind: (reason as { failureKind?: string })?.failureKind })
+      if (kind === 'test' && model) {
+        setTest({ model, state: 'error', error: detail, kind: (reason as { failureKind?: string })?.failureKind })
+        // 失败同样已在服务端沉淀（manualResults / 归因落表），立即刷新让行
+        // 徽章与筛选马上跟上，不再等 15 秒轮询；刷新失败不覆盖主错误信息。
+        void host.refresh().catch(() => {})
+      }
       else setError(detail)
     } finally {
       if (isCurrent()) { pending.current = undefined; setOperation(undefined) }
@@ -134,15 +153,20 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   }
 
   // 一键隐藏实测/调用不可用的模型（写入 hiddenModelIds，可随时在列表里恢复）。
-  // 范围收紧（2026-11-21 用户要求「避免误管」）：只有「探测不可用 / 地区受限 /
-  // 实测确认模型异常」才进批量隐藏；额度不足、限流、鉴权、网络异常都是环境
-  // 问题——模型本体可能完好，混进来就是误杀。它们的归因存在 failureKind。
+  // 范围（2026-11-21 两轮收紧）：探测不可用 / 地区受限 / 实测确认模型异常 /
+  // 响应超慢（长时间无响应，用户确认"速度太慢的模型一般也不能用"）进批量
+  // 隐藏；额度不足、限流、鉴权、网络异常都是环境问题——模型本体可能完好，
+  // 混进来就是误杀。它们的归因存在 failureKind。
   const probeBroken = summary.catalog.filter(model =>
     (model.availability === 'unavailable' || model.availability === 'region-blocked') && model.hiddenByUser !== true)
-  const testBroken = summary.catalog.filter(model =>
+  const testBrokenError = summary.catalog.filter(model =>
     model.availabilitySource === 'manual' && model.failureKind === 'model-error' && model.hiddenByUser !== true)
+  const testBrokenSlow = summary.catalog.filter(model =>
+    model.availabilitySource === 'manual' && model.failureKind === 'slow' && model.hiddenByUser !== true)
+  const testBroken = [...testBrokenError, ...testBrokenSlow]
   const envLimited = summary.catalog.filter(model =>
-    model.availabilitySource === 'manual' && model.failureKind !== undefined && model.failureKind !== 'model-error'
+    model.availabilitySource === 'manual' && model.failureKind !== undefined
+    && !['model-error', 'slow'].includes(model.failureKind)
     && model.availability !== 'throttled' && model.hiddenByUser !== true)
   const unusable = [...probeBroken, ...testBroken]
   const hideUnusable = () => {
@@ -150,7 +174,8 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     const scope = unusable.length === 1 ? unusable[0].name : `${unusable.length} 个模型`
     const breakdown = [
       probeBroken.length > 0 && `探测不可用 ${probeBroken.length} 个`,
-      testBroken.length > 0 && `实测确认模型异常 ${testBroken.length} 个`,
+      testBrokenError.length > 0 && `实测确认模型异常 ${testBrokenError.length} 个`,
+      testBrokenSlow.length > 0 && `响应超慢 ${testBrokenSlow.length} 个`,
     ].filter(Boolean).join('、')
     const suffix = envLimited.length > 0
       ? `\n\n另有 ${envLimited.length} 个模型属额度不足/鉴权/网络异常等环境问题，不会包含——它们不代表模型损坏。`
@@ -245,9 +270,10 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       {test.state === 'pending' && elapsed >= 30 && <p className="model-test-hint" role="status">测试是 16 token 的最小请求，通常几十秒内返回；长时间无响应多半是上游挂起，可取消后重试（服务端会在 120–150 秒自动中止）。</p>}
       {test.state === 'success' && <><pre>{test.result?.text}</pre>{test.result?.persisted === false && <p role="status">测试已成功，但结果未能保存；请检查数据目录权限或重新测试。</p>}</>}
       {test.state === 'error' && <p>{test.error}
-        {test.kind && test.kind !== 'model-error' && <span className="model-test-hint">
-          （归因：{failureKindNames[test.kind] ?? test.kind}）这是环境/账号问题，不代表模型损坏；不会计入「隐藏不可用」。</span>}
+        {test.kind === 'slow' && <span className="model-test-hint">（归因：响应超慢）上游长时间无响应，一般不可用；已计入「隐藏不可用」。</span>}
         {test.kind === 'model-error' && <span className="model-test-hint">（归因：模型异常）模型疑似真断，可计入「隐藏不可用」。</span>}
+        {test.kind && !['model-error', 'slow'].includes(test.kind) && <span className="model-test-hint">
+          （归因：{failureKindNames[test.kind] ?? test.kind}）这是环境/账号问题，不代表模型损坏；不会计入「隐藏不可用」。</span>}
       </p>}
     </section>}
     {models.length ? <div className="model-table" role="table" aria-label="模型清单" aria-rowcount={models.length + 1} aria-colcount={5}>
@@ -285,6 +311,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
                 {(model.availabilitySource === 'manual' || model.availabilitySource === 'usage') && state !== 'available' && model.detail && <small title={model.detail}
                   style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.detail}</small>}
                 {envFailure && <small>环境问题，不代表模型损坏</small>}
+                {state === 'slow' && <small>长时间无响应，一般不可用；计入「隐藏不可用」</small>}
                 {!model.routable && <small>{model.hiddenByUser ? visibility.hidden : '未公开'}</small>}
                 {model.ttftMs != null && <small>首响应 {number(model.ttftMs)} ms</small>}</div>
               <div role="cell" className="model-row-actions">

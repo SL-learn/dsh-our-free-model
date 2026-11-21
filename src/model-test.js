@@ -35,6 +35,11 @@ export function classifyModelFailure(error) {
   const code = String(error?.code ?? '')
   const status = Number(error?.statusCode ?? error?.status ?? 0)
   const text = message.toLowerCase()
+  // 响应超慢（2026-11-21 用户反馈）：长时间无响应本身就是一种判定——上游挂起
+  // 或排队极深，速度太慢的模型一般也不能用。与传输故障（换个网络就恢复）分开
+  // 归因，独立成档、可筛选，也计入「隐藏不可用」。
+  if (error?.name === 'TimeoutError' || code === 'TIMEOUT'
+    || /operation (?:was )?aborted due to timeout|模型测试超时/.test(text)) return 'slow'
   if (code === 'REGION_BLOCKED' || (status === 403 && /region|country|geo/.test(text)) || /region-?blocked|地区受限/.test(text)) return 'region'
   if (status === 402 || code === 'QUOTA_EXHAUSTED'
     || /insufficient balance|usage limit|quota|credit|no token|余额|额度|充值/.test(text)) return 'quota'
@@ -59,6 +64,7 @@ export const failureKindNames = {
   region: '地区受限',
   auth: '鉴权失败',
   transport: '网络异常',
+  slow: '响应超慢',
 }
 
 /** Only a nonempty, normally finished tool-free answer establishes a successful text test. */

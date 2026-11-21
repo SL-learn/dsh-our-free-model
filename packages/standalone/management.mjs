@@ -676,7 +676,19 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
         const result = await runtime.testModel(body.model, undefined, { signal: controller.signal })
         if (!controller.signal.aborted) json(res, 200, result)
       } catch (error) {
-        if (!controller.signal.aborted) throw fail(error.status === 404 ? 404 : error.code === 'TIMEOUT' ? 504 : 502, String(error.message ?? '模型测试失败'))
+        // 看门狗触发（aborted=true + reason.code=TIMEOUT）时必须明确回 504，
+        // 否则前端只能等自己的 180 秒超时；failureKind 让 UI 把这次等待沉淀
+        // 为「响应超慢」而不是未定性的网络异常。
+        if (controller.signal.reason?.code === 'TIMEOUT') {
+          throw Object.assign(fail(504, '模型测试超时（150 秒未响应，已中止）'), { failureKind: 'slow' })
+        }
+        if (!controller.signal.aborted) {
+          const wrapped = fail(error.status === 404 ? 404 : error.code === 'TIMEOUT' ? 504 : 502, String(error.message ?? '模型测试失败'))
+          // 渠道分流 / 核心车道已把归因（slow/auth/…）附在原始错误上；包装时
+          // 带走，前端测试横幅才能显示归因提示。
+          if (error.failureKind !== undefined) wrapped.failureKind = error.failureKind
+          throw wrapped
+        }
       } finally {
         clearTimeout(watchdog)
         res.removeListener('close', abort)

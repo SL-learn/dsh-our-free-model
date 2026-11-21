@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { measureModelTest, runModelTest, modelAvailability, MODEL_TEST_TIMEOUT_MS } from '../src/model-test.js'
+import { measureModelTest, runModelTest, modelAvailability, MODEL_TEST_TIMEOUT_MS, classifyModelFailure } from '../src/model-test.js'
 import { createRuntimeStores, createModelRuntime, computeMembership } from '../src/core/runtime.js'
 import { CODE } from '../src/http.js'
 
@@ -133,4 +133,13 @@ test('an older overlapping failed test cannot overwrite the newer successful res
 test('a listing alone is not reported as a successful test', () => {
   assert.equal(modelAvailability('eac/test', {}, true).availabilitySource, 'listing')
   assert.equal(modelAvailability('eac/test', {}, true).availability, 'unknown')
+})
+
+test('长时间无响应归因为 slow，而不是笼统的网络异常', () => {
+  assert.equal(classifyModelFailure(Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError' })), 'slow')
+  assert.equal(classifyModelFailure(Object.assign(new Error('模型测试超时（150 秒未响应，已中止）'), { code: 'TIMEOUT' })), 'slow')
+  // 用户取消（AbortError）不是超时，也不应判 slow。
+  assert.notEqual(classifyModelFailure(Object.assign(new Error('This operation was aborted'), { name: 'AbortError' })), 'slow')
+  // 普通传输故障仍归 transport。
+  assert.equal(classifyModelFailure(new Error('fetch failed')), 'transport')
 })

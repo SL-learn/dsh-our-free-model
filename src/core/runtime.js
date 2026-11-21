@@ -563,6 +563,10 @@ export function createModelRuntime({
     }
     const code = String(error?.code ?? '')
     const detail = String(error?.message ?? error ?? '').slice(0, 200)
+    // 用户取消与自动中止不是模型的错（2026-11-21 真机踩坑：z-ai 连续两次
+    // "request aborted" 被计成连败误标不可用）。与 testModel 的
+    // `error.code !== CODE.aborted` 排除对齐：中止不计连败、不改状态。
+    if (code === CODE.aborted || /request aborted|aborted by (?:user|client)|请求已中止/.test(detail.toLowerCase())) return
     // 退役归因（2026-11-21 体检）：上游明确宣告模型下架/退役（end-of-life、
     // no longer available、下架…）是模型终态，单次即标 unavailable 并带上
     // failureKind:'retired'，不走连败计数——等第二次调用没有意义，模型不会
@@ -573,12 +577,15 @@ export function createModelRuntime({
       write(STATE.unavailable, { detail, failureKind: kind })
       return
     }
-    if (code === 'REGION_BLOCKED') {
+    if (code === 'REGION_BLOCKED' || kind === 'region') {
       usageFailures.delete(entry.id)
       write(STATE.regionBlocked, { detail })
       return
     }
-    if (code === 'RATE_LIMIT' || code === 'QUOTA_EXHAUSTED' || Number.isFinite(Number(error?.providerRetryAfterMs))) {
+    // 限流/额度是暂态，单次即标「限流中」——错误对象没带 code 时靠
+    // classifyModelFailure 的文本归因兜底（真机踩坑：上游 "temporarily
+    // rate-limited" 无 code，曾被当成硬失败计连败）。
+    if (kind === 'rate-limit' || kind === 'quota' || code === 'RATE_LIMIT' || code === 'QUOTA_EXHAUSTED' || Number.isFinite(Number(error?.providerRetryAfterMs))) {
       usageFailures.delete(entry.id)
       write(STATE.throttled, { detail })
       return

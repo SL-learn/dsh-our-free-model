@@ -44,7 +44,7 @@ export function classifyModelFailure(error) {
   if (status === 402 || code === 'QUOTA_EXHAUSTED'
     || /insufficient balance|usage limit|quota|credit|no token|余额|额度|充值/.test(text)) return 'quota'
   if (status === 429 || code === 'RATE_LIMIT'
-    || /rate limit|throttl|overloaded|too many|限流|频繁/.test(text)) return 'rate-limit'
+    || /rate[- ]?limit|throttl|overloaded|too many|限流|频繁/.test(text)) return 'rate-limit'
   if (code === 'INVALID_CREDENTIAL' || code === 'AUTHORIZATION_REQUIRED' || code === 'LANE_LOCKED'
     || code === 'PERMISSION_DENIED' || status === 401
     || /unauthorized|invalid (api )?key|鉴权|登录/.test(text)) return 'auth'

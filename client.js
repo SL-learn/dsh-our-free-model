@@ -567,6 +567,7 @@ window.__ModuleLoader__.load({
         'chan.act.add': '添加账号',
         'chan.opencode.key': '粘贴 OpenCode Zen API Key',
         'chan.opencode.add': '添加 Key',
+        'chan.opencode.signup': '注册 / 获取 Key',
         'chan.zcode.provider': '登录渠道',
         'chan.zcode.bigmodel': 'bigmodel.cn',
         'chan.zcode.zai': 'z.ai 国际版',
@@ -1487,6 +1488,7 @@ window.__ModuleLoader__.load({
         'chan.act.add': 'Add account',
         'chan.opencode.key': 'Paste your OpenCode Zen API key',
         'chan.opencode.add': 'Add key',
+        'chan.opencode.signup': 'Sign up / get a key',
         'chan.zcode.provider': 'Sign-in route',
         'chan.zcode.bigmodel': 'bigmodel.cn',
         'chan.zcode.zai': 'z.ai international',
@@ -5282,7 +5284,7 @@ window.__ModuleLoader__.load({
       { id: 'minimax', name: 'MiniMax Code', org: 'MiniMax', accent: '#E4007F', note: '设备码 + PKCE，每日签到', login: 'browser' },
       { id: 'zcode', name: 'ZCode', org: '智谱', accent: '#3B6EF6', note: '浏览器登录（需本机可开浏览器）', login: 'browser' },
       { id: 'gemini', name: 'Gemini', org: 'Google Code Assist', accent: '#4285F4', note: '本地回调 OAuth 免费线', login: 'browser' },
-      { id: 'opencode', name: 'OpenCode', org: 'OpenCode Zen', accent: '#24292F', note: '粘贴 Zen API Key；免费模型匿名通道无需账号', login: 'apikey' },
+      { id: 'opencode', name: 'OpenCode', org: 'OpenCode Zen', accent: '#24292F', note: '免费模型匿名通道无需账号；粘贴 Zen API Key 可获独立配额桶', login: 'apikey', signup: 'https://opencode.ai/console/signup' },
     ]
 
     /** 与现有 RPC 的能力对应：余额、每日领取及独立签到状态分别判断。 */
@@ -5733,6 +5735,17 @@ window.__ModuleLoader__.load({
             onChange: event => setOpencodeKey(event.target.value),
             onKeyDown: event => { if (event.key === 'Enter') void addOpencodeKey() },
           }) : null,
+          channel.id === 'opencode' && channel.signup ? h('a', {
+            href: channel.signup, target: '_blank', rel: 'noopener noreferrer', className: 'ofm_btn ghost',
+            title: channel.signup,
+            // 桌面端让系统浏览器接管；open-external 成功时取消 <a> 默认导航。
+            onClick: async event => {
+              try {
+                const result = await post('/open-external', { url: channel.signup }, 15_000)
+                if (result?.opened === true) event.preventDefault()
+              } catch { /* the <a> fallback still navigates */ }
+            },
+          }, t('chan.opencode.signup')) : null,
           channel.id === 'opencode'
             ? h('button', { type: 'button', className: 'ofm_btn', disabled: busy !== '' || !rpc || opencodeKey.trim() === '', 'aria-busy': busy === 'add' ? 'true' : undefined, onClick: addOpencodeKey }, busy === 'add' ? '…' : t('chan.opencode.add'))
             : h('button', { type: 'button', className: 'ofm_btn', disabled: busy !== '' || !rpc, 'aria-busy': busy === 'add' ? 'true' : undefined, onClick: startLogin }, busy === 'add' ? '…' : t('chan.act.add')),
@@ -7819,6 +7832,17 @@ window.__ModuleLoader__.load({
           colorScheme: colorScheme === 'dark' ? 'dark' : 'light', externalControls: true,
         }, window.location.origin)
       }
+      // 真机 WebView2 出现过 onLoad 时机丢失消息（假标题栏出现，2026-11-20）：
+      // 引擎侧就绪时回发 ofm:engine-ready，收到后立即补发；onLoad 后再重发几次。
+      useEffect(() => {
+        if (state !== 'ready') return
+        const onReady = event => {
+          if (event.source !== frame.current?.contentWindow) return
+          if (event.data?.type === 'ofm:engine-ready') syncTheme()
+        }
+        window.addEventListener('message', onReady)
+        return () => window.removeEventListener('message', onReady)
+      }, [state])
       useEffect(() => {
         if (state !== 'ready') return
         const observer = new MutationObserver(syncTheme)
@@ -7919,7 +7943,7 @@ window.__ModuleLoader__.load({
         state === 'ready'
           ? h('iframe', { ref: frame, className: 'ofm_engineframe', src: `${API}/engine/ui/?mode=window&view=providers`, title: t('engine.title'),
             allow: 'clipboard-write', referrerPolicy: 'same-origin', onLoad: event => {
-              syncTheme()
+              ;[0, 600, 2000].forEach(delay => setTimeout(syncTheme, delay))
               const doc = event.currentTarget.contentDocument
               if (!doc || doc.getElementById('ofm-workspace-layout')) return
               const style = doc.createElement('style')

@@ -295,6 +295,33 @@ export async function startStandalone({
       state: () => ({ ...core.state(), catalog: [...core.catalog, ...channels.publicModelRows()] }),
       publicModelRows: () => [...core.publicModelRows(), ...channels.publicModelRows()],
       complete: (request, onChunk) => channels.handles(request.model) ? channels.complete(request, onChunk) : core.complete(request, onChunk),
+      // 渠道模型（`provider/model`）不在核心 catalog 里，core.testModel 对它们
+      // 恒 404（用户在清单页点「测试」只能看到 Unknown model，2026-11-21 实测）。
+      // 与 complete 同款分流：渠道模型走渠道引擎跑同一条 "OK" 最小探针。
+      testModel: async (model, effort, options) => {
+        if (core.catalog.some(entry => entry.id === model)) return core.testModel(model, effort, options)
+        if (!channels.handles(model)) throw Object.assign(new Error(`Unknown model "${model}"`), { statusCode: 404 })
+        if (stores.settings.get().enabled === false) throw Object.assign(new Error('推理服务已暂停，请先在服务设置中启用'), { statusCode: 503 })
+        const started = Date.now()
+        let first = 0
+        const outcome = await channels.complete({
+          model,
+          openAi: { model, messages: [{ role: 'user', content: 'Reply with exactly: OK' }], max_tokens: 16 },
+          ...(options?.signal ? { signal: options.signal } : {}),
+        }, chunk => { if (!first && (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta' || chunk.type === 'usage')) first = Date.now() })
+        if (outcome.error !== undefined) {
+          const message = String(outcome.error.message ?? outcome.error)
+          throw Object.assign(new Error(message.slice(0, 300)), { statusCode: 502 })
+        }
+        const latencyMs = Date.now() - started
+        return {
+          model, effort: effort ?? 'balanced', ok: true,
+          totalMs: latencyMs, latencyMs,
+          ttftMs: first ? first - started : undefined,
+          outputTokens: outcome.usage?.completion_tokens, reasoningTokens: outcome.usage?.completion_tokens_details?.reasoning_tokens,
+          sample: outcome.text?.slice(0, 40), text: outcome.text, persisted: false,
+        }
+      },
       async refreshCatalog(options) {
         if (stopped) return
         const [result, channelResult] = await Promise.all([core.refreshCatalog(options), channels.refresh(options).catch(error => { if (!stopped) throw error })])

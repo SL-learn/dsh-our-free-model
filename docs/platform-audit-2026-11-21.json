@@ -1,0 +1,402 @@
+{
+  "auditedAt": "2026-11-21T07:03:34.413Z",
+  "port": "18900",
+  "results": [
+    {
+      "channel": "core",
+      "model": "big-pickle",
+      "baseline": {
+        "status": 429,
+        "ms": 84,
+        "ok": false,
+        "error": "the OpenCode free quota window is open on this egress: Free usage limit reached. Free models work in OpenCode (https://opencode.ai); subscribe to OpenCode Go to keep going: https://opencode.ai/go — retry after 2026-11-22T00:00:00.416Z, or switch the lane's exit proxy; Kilo and extension channels are unaffected"
+      },
+      "developer": {
+        "skipped": "rate-limited on baseline call"
+      },
+      "stopped": true
+    },
+    {
+      "channel": "amd",
+      "model": "amd/Qwen3.8-27B",
+      "baseline": {
+        "status": 502,
+        "ms": 3606,
+        "ok": false,
+        "error": "Invalid bearer token"
+      },
+      "developer": {
+        "status": 502,
+        "ms": 3194,
+        "ok": false,
+        "error": "Invalid bearer token"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "minimaxai",
+      "model": "minimaxai/minimax-m3.1-flash",
+      "baseline": {
+        "status": 200,
+        "ms": 19364,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 19811,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "moonshotai",
+      "model": "moonshotai/kimi-k3.1-pro",
+      "baseline": {
+        "status": 200,
+        "ms": 22072,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "developer": {
+        "status": 0,
+        "ms": 60003,
+        "ok": false,
+        "error": "TimeoutError: The operation was aborted due to timeout"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "z-ai",
+      "model": "z-ai/glm-5.3-flash",
+      "baseline": {
+        "status": 0,
+        "ms": 60022,
+        "ok": false,
+        "error": "TimeoutError: The operation was aborted due to timeout"
+      },
+      "developer": {
+        "status": 0,
+        "ms": 60013,
+        "ok": false,
+        "error": "TimeoutError: The operation was aborted due to timeout"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "stepfun-ai",
+      "model": "stepfun-ai/step-5-preview",
+      "baseline": {
+        "status": 0,
+        "ms": 60009,
+        "ok": false,
+        "error": "TimeoutError: The operation was aborted due to timeout"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 21295,
+        "ok": true,
+        "content": "Hello! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "deepseek-ai",
+      "model": "deepseek-ai/deepseek-v4.1-flash",
+      "baseline": {
+        "status": 502,
+        "ms": 1307,
+        "ok": false,
+        "error": "The model 'deepseek-ai/deepseek-v4.1-flash' has reached its end of life on 2026-11-16T08:00:00Z and is no longer available."
+      },
+      "developer": {
+        "status": 502,
+        "ms": 402,
+        "ok": false,
+        "error": "The model 'deepseek-ai/deepseek-v4.1-flash' has reached its end of life on 2026-11-16T08:00:00Z and is no longer available."
+      },
+      "stopped": false
+    },
+    {
+      "channel": "opencode",
+      "model": "opencode/glm-5.3-flash-free",
+      "baseline": {
+        "status": 404,
+        "ms": 1155,
+        "ok": false,
+        "error": "模型不存在或已停用"
+      },
+      "developer": {
+        "status": 404,
+        "ms": 57,
+        "ok": false,
+        "error": "模型不存在或已停用"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "openai",
+      "model": "openai/gpt-oss-20b",
+      "baseline": {
+        "status": 502,
+        "ms": 612,
+        "ok": false,
+        "error": "The model 'openai/gpt-oss-20b' has reached its end of life on 2026-11-18T08:00:00Z and is no longer available."
+      },
+      "developer": {
+        "status": 502,
+        "ms": 1350,
+        "ok": false,
+        "error": "The model 'openai/gpt-oss-20b' has reached its end of life on 2026-11-18T08:00:00Z and is no longer available."
+      },
+      "stopped": false
+    },
+    {
+      "channel": "kilo-auto",
+      "model": "kilo-auto/free",
+      "baseline": {
+        "status": 200,
+        "ms": 1232,
+        "ok": true,
+        "content": "Hello! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 1256,
+        "ok": true,
+        "content": "Hello! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "baidu",
+      "model": "baidu/ernie-5.5-flash-preview:free",
+      "baseline": {
+        "status": 200,
+        "ms": 1573,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 1811,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "particle-ai",
+      "model": "particle-ai/particle-1:free",
+      "baseline": {
+        "status": 429,
+        "ms": 930,
+        "ok": false,
+        "error": "Provider returned error: particle-ai/particle-1:free is temporarily rate-limited upstream. Please retry shortly, or add your own provider key to use your own limits: https://openrouter.ai/workspaces/default/byok (Particle AI)"
+      },
+      "developer": {
+        "skipped": "rate-limited on baseline call"
+      },
+      "stopped": true
+    },
+    {
+      "channel": "recursive",
+      "model": "recursive/flint-v1.0:free",
+      "baseline": {
+        "status": 200,
+        "ms": 4769,
+        "ok": true,
+        "content": "Hello! 😊 Great to see you.\n\nWhat can I "
+      },
+      "developer": {
+        "status": 200,
+        "ms": 4786,
+        "ok": true,
+        "content": "Hey there! 👋 \n\nGreat to see you! How's "
+      },
+      "stopped": false
+    },
+    {
+      "channel": "nvidia",
+      "model": "nvidia/nemotron-3.5-super-vl:free",
+      "baseline": {
+        "status": 200,
+        "ms": 1318,
+        "ok": true,
+        "content": "Hello! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 1143,
+        "ok": true,
+        "content": "Hello! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "openrouter",
+      "model": "openrouter/free",
+      "baseline": {
+        "status": 200,
+        "ms": 2102,
+        "ok": true,
+        "content": "Hi there! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 2221,
+        "ok": true,
+        "content": "Hi there! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "reflection",
+      "model": "reflection/beam-free",
+      "baseline": {
+        "status": 200,
+        "ms": 1620,
+        "ok": true,
+        "content": "Hi there! 👋 How can I help you today? W"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 1707,
+        "ok": true,
+        "content": "Hi there! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "stealth",
+      "model": "stealth/glyph-cluster",
+      "baseline": {
+        "status": 200,
+        "ms": 2394,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 2524,
+        "ok": true,
+        "content": "Hi! How can I help you today?"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "codearts",
+      "model": "codearts/GLM-5.2",
+      "baseline": {
+        "status": 200,
+        "ms": 9596,
+        "ok": true,
+        "content": "Hi there! I"
+      },
+      "developer": {
+        "status": 502,
+        "ms": 597,
+        "ok": false,
+        "error": "codearts: request param validation error, Value error, message must contain at least one 'user' or 'tool' role.Current roles {'system'} are insufficient for a valid interaction."
+      },
+      "stopped": false
+    },
+    {
+      "channel": "qoder",
+      "model": "qoder/auto",
+      "baseline": {
+        "status": 502,
+        "ms": 317,
+        "ok": false,
+        "error": "qoder: {\"pricingUrl\":\"https://qoder.com/pricing?client=qoder\"} (112/model_error)"
+      },
+      "developer": {
+        "status": 502,
+        "ms": 295,
+        "ok": false,
+        "error": "qoder: {\"pricingUrl\":\"https://qoder.com/pricing?client=qoder\"} (112/model_error)"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "qodercn",
+      "model": "qodercn/auto",
+      "baseline": {
+        "status": 200,
+        "ms": 1147,
+        "ok": true,
+        "content": "Hi! How"
+      },
+      "developer": {
+        "status": 200,
+        "ms": 911,
+        "ok": true,
+        "content": "Hi! How"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "cline",
+      "model": "cline/cline-free/nemotron-3.5-super-vl",
+      "baseline": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "developer": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "loomy",
+      "model": "loomy/spark-x2.6",
+      "baseline": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "developer": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "raccoon",
+      "model": "raccoon/sn-sensenova-6-8-flash",
+      "baseline": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "developer": {
+        "status": 200,
+        "ok": true,
+        "note": "reasoning-truncated"
+      },
+      "stopped": false
+    },
+    {
+      "channel": "minimax",
+      "model": "minimax/MiniMax-M3.1-Flash",
+      "baseline": {
+        "status": 200,
+        "ms": 1745,
+        "ok": true,
+        "content": "Hi! How"
+      },
+      "developer": {
+        "status": 502,
+        "ms": 129,
+        "ok": false,
+        "error": "minimax: HTTP 400 — {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"invalid params, messages must not be empty (2013)\"},\"request_id\":\"075075460ec582a86194e71729f13249\"}"
+      },
+      "stopped": false
+    }
+  ]
+}

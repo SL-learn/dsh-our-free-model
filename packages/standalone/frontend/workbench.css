@@ -710,6 +710,136 @@
   padding-top: 4px;
 }
 
+/* 聚合渠道编辑器：凭据轮换池 + 模型勾选列表（pd-* 页共用） */
+.wb-form-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 11.5px;
+}
+.wb-form-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.wb-form-links a:hover { text-decoration: underline; }
+.wb-keys,
+.wb-models {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+}
+.wb-keys legend,
+.wb-models legend {
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+.wb-keys textarea { min-height: 64px; max-height: 140px; }
+.wb-keys-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--fg-2);
+}
+.wb-keyrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+}
+.wb-keyrow.is-disabled { opacity: 0.55; }
+.wb-keyrow code {
+  flex: none;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--fg-1);
+}
+.wb-keyrow input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: transparent;
+  padding: 3px 6px;
+  font-size: 11.5px;
+  color: var(--fg-1);
+}
+.wb-keyrow input:focus {
+  outline: none;
+  border-color: var(--line-1);
+  background: var(--bg-1);
+}
+.wb-models-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wb-models-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-2);
+}
+.wb-model-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-md);
+  background: var(--bg-1);
+}
+.wb-model-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.wb-model-row + .wb-model-row { border-top: 1px solid var(--line-1); }
+.wb-model-row:hover { background: var(--bg-2); }
+.wb-model-row input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var(--accent); }
+.wb-model-id {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-paid {
+  flex: none;
+  border: 1px solid var(--line-1);
+  border-radius: 999px;
+  background: transparent;
+  padding: 1px 8px;
+  font-size: 10px;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+.wb-paid.is-paid {
+  border-color: var(--warn, var(--accent));
+  color: var(--warn, var(--accent));
+}
+
 .wb-import-tabs { align-self: stretch; }
 .wb-import-tabs button { flex: 1; }
 .wb-file {

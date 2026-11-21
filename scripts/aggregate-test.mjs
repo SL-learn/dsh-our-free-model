@@ -724,6 +724,31 @@ await checkAsync('the catalog admits rows keyed by the apiKeys pool', async () =
   assert.equal(empty.length, 0)
 })
 
+await checkAsync('a user-disabled key sits out of rotation entirely', async () => {
+  // 停用（keyMeta.disabled）≠ 冷却：除名后连试都不试，剩下的键照常轮换。
+  // 掩码与 maskKey 同规则：短键（≤14 位）只露尾 4 位。
+  const maskOf = key => key.length <= 14 ? `…${key.slice(-4)}` : `${key.slice(0, 6)}…${key.slice(-4)}`
+  rotScript(okStream)
+  const disabledConfig = {
+    enabled: true,
+    providers: {
+      mistral: {
+        enabled: true, apiKeys: [ROT_A, ROT_B, ROT_C], baseUrl: `${base}/mistral`,
+        keyMeta: { [maskOf(ROT_A)]: { disabled: true, label: '旧账号' } },
+      },
+    },
+  }
+  for (let turn = 0; turn < 4; turn += 1) {
+    rotSeen.length = 0
+    await postAggregateStreamed({ config: disabledConfig, providerId: 'mistral', modelId: 'mistral-large-latest', body: { messages: [{ role: 'user', content: 'hi' }] }, onData: () => {} })
+    assert.equal(rotKeys().includes(ROT_A), false, `keys seen: ${rotKeys().join(',')}`)
+    assert.ok(rotKeys().every(key => [ROT_B, ROT_C].includes(key)))
+  }
+  // 整池停用 = 渠道无键：目录不再出这家的行。
+  const rows = buildAggregateCatalog({ enabled: true, providers: { mistral: { enabled: true, apiKeys: [ROT_A], models: ['mistral-large-latest'], keyMeta: { [maskOf(ROT_A)]: { disabled: true } } } } })
+  assert.equal(rows.length, 0)
+})
+
 // ── teardown ─────────────────────────────────────────────────────────────────
 for (const response of openResponses) response.destroy()
 server.closeAllConnections?.()

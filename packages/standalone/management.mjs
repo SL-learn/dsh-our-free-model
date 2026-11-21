@@ -545,7 +545,7 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
     } else if (pathname.startsWith(`${PREFIX}/providers/`) && method === 'POST' && providerManagement) {
       const action = pathname.slice(`${PREFIX}/providers/`.length)
       const body = await readBody(req, 128 * 1024)
-      if (!['save', 'remove', 'test', 'discover'].includes(action)) throw fail(404, '供应商操作不存在')
+      if (!['save', 'remove', 'test', 'discover', 'key'].includes(action)) throw fail(404, '供应商操作不存在')
       const controller = new AbortController()
       const abort = () => controller.abort()
       res.once('close', abort)

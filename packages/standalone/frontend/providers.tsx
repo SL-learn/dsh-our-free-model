@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
-import { ArrowRight, Check, CircleAlert, FlaskConical, ListRestart, RefreshCw, Save, Search, Settings2, Trash2 } from 'lucide-react'
+import { ArrowRight, Check, CircleAlert, ExternalLink, FlaskConical, KeyRound, ListRestart, Plus, RefreshCw, Save, Search, Settings2, Trash2 } from 'lucide-react'
 import { Badge, Button, Input, Switch } from './components/ui'
 import { ProviderIcon } from './components/provider-icon'
 import { WorkbenchDialog } from './components/workbench-dialog'
@@ -7,12 +7,16 @@ import { failureMessage, management, useManagementResource } from './management'
 import { useReveal } from './motion/hooks'
 import type { Host } from './types'
 
+interface StoredKey { masked: string; label: string; disabled: boolean }
 interface Provider {
   id: string; name: string; category: string; format: string; authKind: string
   baseUrl: string; modelCount: number; models?: string[]; notes: string
+  website?: string; credentialUrl?: string; freeModelsHint?: string
 }
 interface Configuration {
-  enabled: boolean; hasKey: boolean; keyCount?: number; keyHint?: string; baseUrl: string; models: string[]
+  enabled: boolean; hasKey: boolean; keyCount?: number; keyHint?: string
+  keys?: StoredKey[]; paidModels?: string[]; baseUrl: string; models: string[]
+  discovered?: string[]
   lastTest?: { ok?: boolean; at?: number } | number
 }
 interface Directory { registry: Provider[]; configured: Record<string, Configuration> }
@@ -23,85 +27,216 @@ const keyList = (text: string) => [...new Set(text.split(/\n+/).map(row => row.t
 const endpoint = (url: string) => {
   try { const value = new URL(url); return value.host + value.pathname.replace(/\/$/, '') } catch { return url || '未设置 API 地址' }
 }
+const validBaseUrl = (url: string) => {
+  try { const value = new URL(url.trim()); return ['http:', 'https:'].includes(value.protocol) && !value.username && !value.password } catch { return false }
+}
 
 function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   provider: Provider; configuration?: Configuration; onClose(): void; onSaved(): Promise<void>
 }) {
-  const [keysText, setKeysText] = useState('')
+  const savedKeys = configuration?.keys ?? []
   const [baseUrl, setBaseUrl] = useState(configuration?.baseUrl || provider.baseUrl)
-  const [models, setModels] = useState((configuration?.models ?? provider.models ?? []).join('\n'))
   const [enabled, setEnabled] = useState(configuration?.enabled ?? true)
+  const [keys, setKeys] = useState<StoredKey[]>(savedKeys)
+  const [newKeys, setNewKeys] = useState('')
+  const [labelDraft, setLabelDraft] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<string[]>(configuration?.models ?? [])
+  const [paid, setPaid] = useState<string[]>(configuration?.paidModels ?? [])
+  const [discovered, setDiscovered] = useState<string[] | undefined>(configuration?.discovered)
+  const [manualMode, setManualMode] = useState(false)
+  const [manualText, setManualText] = useState((configuration?.models ?? []).join('\n'))
+  const [search, setSearch] = useState('')
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
-  const [saved, setSaved] = useState(!!configuration)
-  const [hasKey, setHasKey] = useState(!!configuration?.hasKey)
-  const [dirty, setDirty] = useState(false)
   const [removing, setRemoving] = useState(false)
   const live = useRef(true)
   const lock = useRef(false)
   useEffect(() => () => { live.current = false }, [])
-  const change = (action: () => void) => { action(); setDirty(true); setStatus(''); setRemoving(false) }
-  const run = async (action: string) => {
-    if (lock.current) return
+  const run = async (action: string, body?: Record<string, unknown>) => {
+    if (lock.current) return null
     lock.current = true
     setError(''); setStatus(''); setBusy(action)
     try {
-      if (action === 'save') {
-        const url = new URL(baseUrl.trim())
-        if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('请输入不含用户名和密码的 HTTP(S) API 地址。')
-        const keys = keyList(keysText)
-        if (keys.length === 0 && !hasKey && provider.authKind !== 'none') throw new Error('请输入 API Key（每行一把，可保存多把自动轮换）。')
-        await management('/providers/save', {
-          providerId: provider.id, ...(keys.length > 0 ? { apiKeys: keys } : {}),
-          baseUrl: url.toString(), models: modelList(models), enabled,
-        })
-        if (!live.current) return
-        setHasKey(hasKey || keys.length > 0); setKeysText(''); setSaved(true); setDirty(false); setStatus(keys.length > 1 ? `渠道配置已保存（${keys.length} 把密钥，自动轮换）。` : '渠道配置已保存。')
-      } else if (action === 'test') {
-        const result = await management<{ ok?: boolean; success?: boolean; lastTest?: { ok?: boolean } }>('/providers/test', { providerId: provider.id })
-        if (result.success === false || result.lastTest?.ok === false) throw new Error('连接测试未通过，请检查 API 地址、密钥与模型。')
-        if (!live.current) return
-        setStatus(result.ok === true || result.success === true || result.lastTest?.ok === true ? '连接测试通过。' : '测试请求已完成，服务未返回明确的通过状态。')
-      } else if (action === 'discover') {
-        const result = await management<{ models?: (string | { id: string })[]; configured?: Configuration; provider?: Configuration }>('/providers/discover', { providerId: provider.id })
-        if (!live.current) return
-        const discovered = result.models ?? result.configured?.models ?? result.provider?.models
-        if (discovered) {
-          setModels(discovered.map(row => typeof row === 'string' ? row : row.id).join('\n'))
-          setDirty(true)
-          setStatus(`已发现 ${discovered.length} 个模型，请保存模型配置。`)
-        } else setStatus('模型发现请求已完成，服务未返回模型列表。')
-      } else {
-        await management('/providers/remove', { providerId: provider.id })
-        if (!live.current) return
-        setKeysText(''); await onSaved(); onClose(); return
-      }
-      await onSaved()
-    } catch (reason) { if (live.current) setError(failureMessage(reason)) }
+      return await management<Record<string, unknown>>(`/providers/${action}`, body ?? {})
+    } catch (reason) { if (live.current) setError(failureMessage(reason)); return null }
     finally { lock.current = false; if (live.current) setBusy('') }
   }
-  return <WorkbenchDialog title={`${provider.name} · ${saved ? '渠道配置' : '连接渠道'}`} onClose={onClose} busy={!!busy}>
-    <form className="wb-form" onSubmit={event => { event.preventDefault(); void run('save') }}>
-      <div className="wb-form-meta"><Badge tone="blue">{provider.format}</Badge><Badge>{provider.category}</Badge><span>{provider.authKind}</span>
-        {configuration?.keyCount !== undefined && configuration.keyCount > 0 && <span>已存 {configuration.keyCount} 把密钥</span>}</div>
+  const runAndRefresh = async (action: string, body?: Record<string, unknown>) => {
+    const result = await run(action, body)
+    if (result !== null) { setStatus('已保存。'); await onSaved() }
+    return result
+  }
+
+  // ── 凭据管理：粘贴即入库（合并进轮换池），行内备注/停用/删除 ──
+  const parsedNew = keyList(newKeys)
+  const addKeys = async () => {
+    if (parsedNew.length === 0 || busy !== '') return
+    const result = await runAndRefresh('save', { providerId: provider.id, apiKeys: parsedNew })
+    if (result !== null) {
+      const next = (result as { configured?: Record<string, Configuration> }).configured?.[provider.id]
+      if (next) setKeys(next.keys ?? [])
+      setNewKeys('')
+    }
+  }
+  const keyOp = async (masked: string, op: 'remove' | 'toggle' | 'label', value?: boolean | string) => {
+    if (busy !== '') return
+    if (op === 'remove') {
+      const entry = keys.find(row => row.masked === masked)
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function'
+        && !window.confirm(`删除密钥 ${masked}（${entry?.label || '无备注'}）？轮换池将立即少这一把。`)) return
+    }
+    const result = await runAndRefresh('key', { providerId: provider.id, masked, op, ...(op === 'toggle' ? { disabled: value } : {}), ...(op === 'label' ? { label: value } : {}) })
+    if (result !== null) {
+      const next = (result as { configured?: Record<string, Configuration> }).configured?.[provider.id]
+      if (next) setKeys(next.keys ?? [])
+    }
+  }
+  const saveLabel = async (masked: string) => {
+    const draft = labelDraft[masked]
+    if (draft === undefined) return
+    setLabelDraft(previous => { const next = { ...previous }; delete next[masked]; return next })
+    await keyOp(masked, 'label', draft)
+  }
+
+  // ── 模型：填完 key 即可发现（未保存的 key 作为临时凭据，不落盘） ──
+  const hasUsableKey = keys.some(row => !row.disabled) || parsedNew.length > 0
+  const canDiscover = provider.authKind === 'none' || (hasUsableKey && validBaseUrl(baseUrl))
+  const discover = async () => {
+    if (!canDiscover || busy !== '') return
+    const override = parsedNew.length > 0 ? { apiKeys: parsedNew } : undefined
+    const result = await run('discover', { providerId: provider.id, ...(override ?? {}) })
+    if (result === null) return
+    const models = (result as { models?: string[] | null }).models
+    if (Array.isArray(models)) {
+      setDiscovered(models)
+      setStatus(`发现 ${models.length} 个模型，请勾选要启用的。`)
+    } else setStatus('该供应商没有公开模型列表接口，请手动填写模型 ID。')
+  }
+  const test = async () => {
+    if (busy !== '' || !validBaseUrl(baseUrl)) return
+    const override = parsedNew.length > 0 ? { apiKeys: parsedNew } : undefined
+    const result = await run('test', { providerId: provider.id, ...(override ?? {}) })
+    if (result === null) return
+    const ok = (result as { ok?: boolean }).ok === true
+    setStatus(ok ? '连接测试通过。' : '连接测试未通过，请检查 API 地址、密钥与模型。')
+  }
+  const modelIds = useMemo(() => [...new Set([
+    ...(discovered ?? []),
+    ...(provider.models ?? []),
+    ...selected,
+  ])], [discovered, provider.models, selected])
+  const rows = modelIds
+    .map(id => ({ id, name: id, paid: paid.includes(id) }))
+    .filter(row => `${row.id}`.toLowerCase().includes(search.toLowerCase().trim()))
+  const toggle = (id: string) => setSelected(previous => previous.includes(id) ? previous.filter(row => row !== id) : [...previous, id])
+  const togglePaid = (id: string) => setPaid(previous => previous.includes(id) ? previous.filter(row => row !== id) : [...previous, id])
+  const checkVisible = () => setSelected(previous => [...new Set([...previous, ...rows.map(row => row.id)])])
+  const clearVisible = () => setSelected(previous => previous.filter(id => !rows.some(row => row.id === id)))
+  const uncheckPaid = () => setSelected(previous => previous.filter(id => !paid.includes(id)))
+
+  const save = async () => {
+    if (busy !== '' || lock.current) return
+    setError(''); setStatus(''); setBusy('save')
+    try {
+      const url = new URL(baseUrl.trim())
+      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('请输入不含用户名和密码的 HTTP(S) API 地址。')
+      const models = manualMode ? modelList(manualText) : selected
+      const body: Record<string, unknown> = {
+        providerId: provider.id, baseUrl: url.toString(), models, paidModels: paid, enabled,
+        ...(parsedNew.length > 0 ? { apiKeys: parsedNew } : {}),
+      }
+      if (provider.authKind !== 'none' && keys.length === 0 && parsedNew.length === 0) throw new Error('请先添加至少一把 API Key。')
+      await management('/providers/save', body)
+      if (!live.current) return
+      setStatus('渠道配置已保存。'); setNewKeys('')
+      await onSaved()
+    } catch (reason) { if (live.current) setError(failureMessage(reason)) }
+    finally { if (live.current) setBusy('') }
+  }
+  const remove = async () => {
+    if (busy !== '') return
+    const result = await runAndRefresh('remove', { providerId: provider.id })
+    if (result !== null) onClose()
+  }
+  const officialUrl = provider.website || provider.credentialUrl || ''
+  const keyUrl = provider.credentialUrl || provider.website || ''
+  return <WorkbenchDialog title={`${provider.name} · ${configuration ? '渠道配置' : '连接渠道'}`} onClose={onClose} busy={busy !== ''}>
+    <form className="wb-form" onSubmit={event => { event.preventDefault(); void save() }}>
+      <div className="wb-form-meta">
+        <Badge tone="blue">{provider.format}</Badge><Badge>{provider.category}</Badge><span>{provider.authKind}</span>
+        {keys.length > 0 && <span>{keys.filter(row => !row.disabled).length}/{keys.length} 把密钥参与轮换</span>}
+      </div>
       {provider.notes && <p className="wb-form-notes">{provider.notes}</p>}
-      <label>API 地址<Input required type="url" value={baseUrl} disabled={!!busy} onChange={event => change(() => setBaseUrl(event.target.value))} /></label>
-      <label>API Key（可多把轮换）<textarea rows={3} spellCheck={false} autoComplete="off" value={keysText}
-        placeholder={hasKey ? `已保存密钥（留空保留）；粘贴新密钥每行一把，保存后自动轮换、命中限流自动换号` : '每行一把 API Key；保存后自动轮换，命中限流自动换号'} disabled={!!busy}
-        onChange={event => change(() => setKeysText(event.target.value))} /></label>
-      <label>模型<textarea rows={5} spellCheck={false} value={models} placeholder="每行一个模型 ID" disabled={!!busy} onChange={event => change(() => setModels(event.target.value))} /></label>
-      <div className="wb-form-switch"><span>启用渠道</span><Switch checked={enabled} disabled={!!busy} aria-label="启用渠道" onCheckedChange={value => change(() => setEnabled(value))} /></div>
+      {(officialUrl !== '' || keyUrl !== '') && <div className="wb-form-links">
+        {keyUrl !== '' && <a href={keyUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} />申请 Key / 注册</a>}
+        {officialUrl !== '' && officialUrl !== keyUrl && <a href={officialUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} />官网</a>}
+      </div>}
+      <label>API 地址<Input required type="url" value={baseUrl} disabled={busy !== ''} onChange={event => setBaseUrl(event.target.value)} /></label>
+
+      <fieldset className="wb-keys">
+        <legend>API Key 轮换池</legend>
+        {keys.length === 0 && <p className="wb-keys-empty"><KeyRound size={15} />还没有密钥；在下方粘贴，每行一把。</p>}
+        {keys.map((row, index) => <div className={`wb-keyrow ${row.disabled ? 'is-disabled' : ''}`} key={row.masked + index}>
+          <code title="掩码指纹：足够辨认账号，明文不回传">{row.masked}</code>
+          <input aria-label="密钥备注" placeholder="备注：哪个账号" value={labelDraft[row.masked] ?? row.label} disabled={busy !== ''}
+            onChange={event => setLabelDraft(previous => ({ ...previous, [row.masked]: event.target.value }))}
+            onBlur={() => { if (labelDraft[row.masked] !== undefined) void saveLabel(row.masked) }}
+            onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void saveLabel(row.masked) } }} />
+          {row.disabled && <Badge tone="neutral">已停用</Badge>}
+          <Switch checked={!row.disabled} disabled={busy !== ''} aria-label={row.disabled ? '启用这把密钥' : '停用这把密钥'}
+            onCheckedChange={value => { void keyOp(row.masked, 'toggle', !value) }} />
+          <Button type="button" variant="ghost" size="icon" className="wb-danger" title="删除这把密钥" aria-label="删除这把密钥"
+            disabled={busy !== ''} onClick={() => { void keyOp(row.masked, 'remove') }}><Trash2 size={14} /></Button>
+        </div>)}
+        <textarea rows={3} spellCheck={false} autoComplete="off" value={newKeys}
+          placeholder="粘贴新密钥，每行一把；保存后立即进入轮换池（自动轮换、限流自动换号）"
+          disabled={busy !== ''} onChange={event => setNewKeys(event.target.value)} />
+        {parsedNew.length > 0 && <Button type="button" variant="outline" busy={busy === 'save'} disabled={busy !== ''}
+          onClick={() => { void addKeys() }}><Plus size={14} />添加 {parsedNew.length} 把到轮换池</Button>}
+      </fieldset>
+
+      <fieldset className="wb-models">
+        <legend>模型（勾选启用，可标记付费便于批量排除）</legend>
+        <div className="wb-models-toolbar">
+          <Button type="button" variant="outline" disabled={!canDiscover || busy !== ''} busy={busy === 'discover'}
+            title={canDiscover ? '用当前密钥拉取模型列表' : '先填写 API Key 与地址'} onClick={() => { void discover() }}>
+            <ListRestart size={15} />发现模型</Button>
+          <Button type="button" variant="ghost" disabled={modelIds.length === 0 || busy !== ''} onClick={checkVisible}>全选</Button>
+          <Button type="button" variant="ghost" disabled={selected.length === 0 || busy !== ''} onClick={clearVisible}>清空</Button>
+          <Button type="button" variant="ghost" disabled={paid.length === 0 || busy !== ''}
+            title="取消勾选所有标记为付费的模型" onClick={uncheckPaid}>取消勾选付费</Button>
+          <Button type="button" variant="ghost" disabled={busy !== ''}
+            onClick={() => setManualMode(value => !value)}>{manualMode ? '返回勾选' : '手动编辑'}</Button>
+        </div>
+        {manualMode ? <textarea rows={8} spellCheck={false} value={manualText} placeholder="每行一个模型 ID" disabled={busy !== ''}
+          onChange={event => setManualText(event.target.value)} />
+          : <><label className="wb-models-search"><Search size={14} /><Input aria-label="搜索模型" value={search}
+            placeholder="搜索模型 ID" onChange={event => setSearch(event.target.value)} /></label>
+            <div className="wb-model-list" role="group" aria-label="模型列表">
+              {rows.length === 0 && <p className="wb-keys-empty">{modelIds.length === 0 ? '还没有模型：点「发现模型」拉取，或切「手动编辑」填写。' : '没有匹配的模型'}</p>}
+              {rows.map(row => <label className="wb-model-row" key={row.id}>
+                <input type="checkbox" checked={selected.includes(row.id)} disabled={busy !== ''} onChange={() => toggle(row.id)} />
+                <span className="wb-model-id" title={row.id}>{row.id}</span>
+                <button type="button" className={`wb-paid ${row.paid ? 'is-paid' : ''}`} title={row.paid ? '取消付费标记' : '标记为付费模型'}
+                  disabled={busy !== ''} onClick={event => { event.preventDefault(); togglePaid(row.id) }}>{row.paid ? '付费' : '标付费'}</button>
+              </label>)}
+            </div></>}
+        {provider.freeModelsHint !== undefined && provider.freeModelsHint !== '' && <p className="wb-form-notes">{provider.freeModelsHint}</p>}
+      </fieldset>
+
+      <div className="wb-form-switch"><span>启用渠道</span><Switch checked={enabled} disabled={busy !== ''} aria-label="启用渠道" onCheckedChange={value => setEnabled(value)} /></div>
       {error && <p className="wb-error" role="alert"><CircleAlert size={15} />{error}</p>}
       {status && <p className="wb-status" role="status"><Check size={15} />{status}</p>}
       <div className="wb-form-actions">
-        <Button variant="outline" disabled={!!busy || !saved || dirty} onClick={() => void run('test')} busy={busy === 'test'}><FlaskConical size={15} />测试连接</Button>
-        <Button variant="outline" disabled={!!busy || !saved || dirty} onClick={() => void run('discover')} busy={busy === 'discover'}><ListRestart size={15} />发现模型</Button>
-        <Button type="submit" disabled={!!busy} busy={busy === 'save'}><Save size={15} />{saved ? '保存配置' : '保存并连接'}</Button>
+        <Button type="button" variant="outline" disabled={busy !== '' || !validBaseUrl(baseUrl) || (!hasUsableKey && provider.authKind !== 'none')}
+          busy={busy === 'test'} title="用当前已存（或刚粘贴未保存）的密钥测试" onClick={() => { void test() }}>
+          <FlaskConical size={15} />测试连接</Button>
+        <Button type="submit" disabled={busy !== ''} busy={busy === 'save'}><Save size={15} />{configuration ? '保存配置' : '保存并连接'}</Button>
       </div>
-      {saved && <div className="wb-remove">
-        {removing ? <><span>移除本机渠道配置？</span><Button variant="outline" disabled={!!busy} onClick={() => setRemoving(false)}>取消</Button><Button variant="outline" className="wb-danger" busy={busy === 'remove'} disabled={!!busy} onClick={() => void run('remove')}><Trash2 size={14} />确认移除</Button></>
-          : <Button variant="ghost" className="wb-danger" disabled={!!busy} onClick={() => setRemoving(true)}><Trash2 size={14} />移除连接</Button>}
+      {configuration && <div className="wb-remove">
+        {removing ? <><span>移除本机渠道配置？密钥池与模型选择一并删除。</span><Button variant="outline" disabled={busy !== ''} onClick={() => setRemoving(false)}>取消</Button><Button variant="outline" className="wb-danger" busy={busy === 'remove'} disabled={busy !== ''} onClick={() => void remove()}><Trash2 size={14} />确认移除</Button></>
+          : <Button variant="ghost" className="wb-danger" disabled={busy !== ''} onClick={() => setRemoving(true)}><Trash2 size={14} />移除连接</Button>}
       </div>}
     </form>
   </WorkbenchDialog>
@@ -142,6 +277,7 @@ export function Providers({ active, host }: { active: boolean; host: Host }) {
           <div className="pd-name"><strong>{provider.name}</strong><small title={config?.baseUrl || provider.baseUrl}>{endpoint(config?.baseUrl || provider.baseUrl)}</small></div>
           <div className="pd-protocol"><Badge>{provider.format}</Badge><small>{provider.category}</small></div>
           <span className="pd-model-count">{config?.models?.length ?? provider.modelCount ?? '未知'} <small>模型</small></span>
+          {config?.keys !== undefined && config.keys.length > 1 && <span className="pd-key-count" title="参与轮换的密钥">{config.keys.filter(row => !row.disabled).length} 把密钥</span>}
           <Badge tone={isConnected ? 'success' : 'neutral'} dot={isConnected}>{isConnected ? '已连接' : '未连接'}</Badge>
           <Button variant="outline" onClick={() => ['oauth', 'adc'].includes(provider.authKind) ? host.navigate('agents') : setSelected(provider)}>{isConnected || config ? <Settings2 size={14} /> : <ArrowRight size={14} />}{['oauth', 'adc'].includes(provider.authKind) ? '导入订阅' : isConnected || config ? '配置' : '连接'}</Button>
         </div>

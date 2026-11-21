@@ -103,16 +103,32 @@ const keyCooldown = new Map()
 /** The provider's stored keys: the `apiKeys` list where valid, else the legacy single `apiKey`. */
 function usableKeys(setting) {
   const raw = Array.isArray(setting?.apiKeys) ? setting.apiKeys : [setting?.apiKey]
+  // 用户显式停用的键（keyMeta[masked].disabled）不参与轮换：它是账号管理
+  // 操作，不是故障——不进冷却表，只是从池里除名。
+  const meta = isRecord(setting?.keyMeta) ? setting.keyMeta : {}
   const seen = new Set()
   const keys = []
   for (const value of raw) {
     const key = text(value)
     if (key === '' || key.length > 8192 || seen.has(key)) continue
+    const entry = meta[maskKey(key)]
+    if (isRecord(entry) && entry.disabled === true) continue
     seen.add(key)
     keys.push(key)
     if (keys.length >= MAX_KEYS_PER_PROVIDER) break
   }
   return keys
+}
+
+/**
+ * The client-visible fingerprint of one key: enough to tell accounts apart,
+ * never enough to leak the credential back through the management API.
+ */
+export function maskKey(key) {
+  const value = text(key)
+  if (value === '') return ''
+  if (value.length <= 14) return `…${value.slice(-4)}`
+  return `${value.slice(0, 6)}…${value.slice(-4)}`
 }
 
 /**
@@ -443,9 +459,27 @@ function retryAfterMs(response) {
  * clear a persisted roster, while a failed round keeps it — the same discipline
  * the Kilo channel's roster already follows.
  */
-export async function fetchProviderModels(config, providerId, { signal, timeoutMs = LISTING_TIMEOUT_MS } = {}) {
+/**
+ * Merge one provider's stored setting with unsaved overrides (keys pasted in
+ * the editor but not saved yet, a base URL still being typed). The merge is a
+ * fresh object — the caller's config is never mutated, and persistence stays
+ * an explicit save.
+ */
+function withOverride(config, providerId, override) {
+  if (!isRecord(override)) return config
+  const providers = isRecord(config?.providers) ? config.providers : {}
+  return {
+    ...config,
+    providers: {
+      ...providers,
+      [text(providerId)]: { ...providers[text(providerId)], ...override },
+    },
+  }
+}
+
+export async function fetchProviderModels(config, providerId, { signal, timeoutMs = LISTING_TIMEOUT_MS, override } = {}) {
   let resolved
-  try { resolved = resolveProvider(config, providerId) } catch { return null }
+  try { resolved = resolveProvider(withOverride(config, providerId, override), providerId) } catch { return null }
   if (resolved.modelsUrl === null) return null
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -483,10 +517,10 @@ export async function fetchProviderModels(config, providerId, { signal, timeoutM
  *
  * @returns {Promise<{ok:boolean, status:number, message:string, modelCount?:number}>}
  */
-export async function testProvider(config, providerId, { signal, timeoutMs = LISTING_TIMEOUT_MS } = {}) {
+export async function testProvider(config, providerId, { signal, timeoutMs = LISTING_TIMEOUT_MS, override } = {}) {
   let resolved
   try {
-    resolved = resolveProvider(config, providerId)
+    resolved = resolveProvider(withOverride(config, providerId, override), providerId)
   } catch (error) {
     return { ok: false, status: 0, message: String(error?.message ?? error) }
   }

@@ -1,0 +1,30 @@
+/* OpenCode 出口池面板（多代理自动轮换）。复用全局主题变量，与渠道页一致。 */
+.exit-pool { max-width: 720px; }
+.exit-pool .ofm_note { color: var(--fg-2); line-height: 1.6; font-size: 11.5px; }
+.exit-pool-input-label {
+  display: block; margin: 12px 0 6px; font-size: 11.5px; color: var(--fg-1); font-weight: 560;
+}
+.exit-pool-input {
+  width: 100%; box-sizing: border-box; padding: 9px 11px; resize: vertical;
+  background: var(--bg-2); color: var(--fg-0); border: 1px solid var(--line-2, var(--line-1));
+  border-radius: var(--r-md, 8px); font-family: var(--mono-font, monospace); font-size: 12px; line-height: 1.6;
+}
+.exit-pool-input::placeholder { color: var(--fg-3); }
+.exit-pool-input:focus-visible { outline: 2px solid var(--info, var(--fg-0)); outline-offset: -1px; }
+.exit-pool-tested {
+  margin: 10px 0; padding: 8px 11px; background: var(--bg-2);
+  border: 1px solid var(--line-1); border-radius: var(--r-md, 8px);
+}
+.exit-pool-tested p { margin: 3px 0; font-size: 11px; color: var(--fg-1); }
+.exit-pool-tested code { color: var(--fg-0); }
+.exit-pool-list { margin-top: 16px; }
+.exit-pool-list h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--fg-0); }
+.exit-pool-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 11px; margin-bottom: 6px;
+  background: var(--bg-1); border: 1px solid var(--line-1); border-radius: var(--r-md, 8px);
+  color: var(--fg-2);
+}
+.exit-pool-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.exit-pool-info strong { font-size: 12px; color: var(--fg-0); font-weight: 600; }
+.exit-pool-info code { font-size: 10.5px; color: var(--fg-2); font-family: var(--mono-font, monospace); }
+.exit-pool-info small { font-size: 10.5px; color: var(--fg-2); word-break: break-all; }

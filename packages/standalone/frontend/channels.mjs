@@ -2,7 +2,9 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { shared } from 'ofm-shared-client'
 import { ChannelBrowser } from './components/channel-browser'
+import { OpencodeExitPool } from './opencode-exit-pool'
 import 'ofm-shared-styles.css'
+import './opencode-exit-pool.css'
 
 const { EacAuth, useEacLogin, DICT, Tank, usePool, poolReading, capacityText, CHANNEL_PROVIDERS, LedgerPage, LogsPage } = shared
 const h = React.createElement
@@ -120,12 +122,13 @@ function ChannelConsole({ summary }) {
       h('div', null, h('div', { className: 'heading-eyebrow' }, 'WORKSPACE / CHANNELS'),
         h('h1', null, 'EAC router'), h('p', null, '连接你的账号，把各家的免费额度汇集到一个 API。'))),
     h('div', { className: 'ofm_seg', role: 'tablist', 'aria-label': '渠道管理页面' },
-      [['accounts', '登录与账号池'], ['ledger', '渠道用量'], ['logs', '请求日志'], ['tools', '供应商与备份']].map(([id, name]) =>
+      [['accounts', '登录与账号池'], ['exitpool', 'OpenCode 出口池'], ['ledger', '渠道用量'], ['logs', '请求日志'], ['tools', '供应商与备份']].map(([id, name]) =>
         h('button', { key: id, role: 'tab', 'aria-selected': page === id, onClick: () => setPage(id) }, name))),
     page === 'accounts' ? h(ChannelBrowser, { rpc, summary })
-      : page === 'ledger' ? h(LedgerPage, { t, ctx, summary })
-        : page === 'logs' ? h(LogsPage, { t, ctx, summary })
-          : h(ChannelTools, { summary }))
+      : page === 'exitpool' ? h(OpencodeExitPool, { rpc, onChanged: () => summary.reload?.() })
+        : page === 'ledger' ? h(LedgerPage, { t, ctx, summary })
+          : page === 'logs' ? h(LogsPage, { t, ctx, summary })
+            : h(ChannelTools, { summary }))
 }
 
 function EacPage({ summary }) {

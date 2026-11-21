@@ -59,6 +59,20 @@ export interface RpcOpencodeTestProxyResponse {
   country: string
   latencyMs: number
 }
+/** 一条 opencode 出口槽的展示形态（代理地址只回掩码，明文永不出后端）。 */
+export interface OpencodeSlotView {
+  id: string
+  nickname: string
+  enabled: boolean
+  anonymous: boolean
+  /** 该槽绑定的代理掩码（如 `http://u:***@host:port`）；空串=直连。 */
+  proxyLabel: string
+  /** 是否已绑定代理（判断掩码是否为空，不依赖明文）。 */
+  hasProxy: boolean
+}
+export interface RpcOpencodeListSlotsResponse {
+  slots: OpencodeSlotView[]
+}
 export interface RpcOpencodeRotateRequest {
   accountId: string
 }
@@ -78,6 +92,12 @@ export interface OpencodePoolLike {
   setOpencodeProxy(accountId: string, proxy: string): Promise<void>
   updateOpencodeFingerprintGeneration(accountId: string, generation: number): Promise<void>
   opencodeFingerprintGenerationFor(accountId: string): number
+  /** 读取槽绑定的代理明文（仅在后端生成掩码，不回传前端）。 */
+  opencodeProxyFor(accountId: string): string
+  /** 读取槽的完整条目（昵称/启用态/凭据引用）。 */
+  listAccountsByProvider(provider: string): Array<{
+    id: string; enabled: boolean; credentialRef: string; nickname?: string
+  }>
 }
 
 /**
@@ -127,6 +147,36 @@ export async function handleOpencodeRpc(
   const call = { method, payload }
   try {
     switch (method) {
+
+            case 'opencode.listSlots': {
+              // 出口池面板的数据源：列出全部 opencode 槽 + 每槽代理绑定。
+              // 槽轮换（遇 429/限流自动换下一槽）由 adapter 的 stream() 负责，
+              // 这里只负责让用户看到有哪些槽、各自走哪个出口。
+              const slots: OpencodeSlotView[] = []
+              for (const entry of pool.listAccountsByProvider(OPENCODE.id)) {
+                const proxy = pool.opencodeProxyFor(entry.id).trim()
+                let credential: { api_key?: string } = {}
+                try {
+                  const stored = await ctx.credentials.resolve(credentialRef(entry.credentialRef))
+                  if (stored) credential = JSON.parse(stored.value) as { api_key?: string }
+                } catch { /* 凭据损坏：按匿名/账号未知处理，不阻断列出 */ }
+                // 掩码复用规范化器的 label（它已经做过打码），失败时只回固定占位。
+                let proxyLabel = ''
+                if (proxy !== '') {
+                  const normalized = normalizeProxy(proxy)
+                  proxyLabel = normalized.ok ? normalized.proxy.label : '（代理地址无效）'
+                }
+                slots.push({
+                  id: entry.id,
+                  nickname: entry.nickname ?? entry.id,
+                  enabled: entry.enabled,
+                  anonymous: credential.api_key === OPENCODE.anonymousKey,
+                  proxyLabel,
+                  hasProxy: proxy !== '',
+                })
+              }
+              return done({ slots } satisfies RpcOpencodeListSlotsResponse)
+            }
 
             case 'opencode.addAccount': {
               const req = call.payload as RpcOpencodeAddAccountRequest

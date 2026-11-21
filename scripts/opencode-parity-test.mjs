@@ -116,8 +116,11 @@ try {
   console.log('\n=== 5. the channel pack lists the free models this change added ===')
   const free = new Map(product.OPENCODE_FALLBACK_MODELS.map(model => [model.id, model]))
   check('deepseek-v4.1-flash-free is free and reachable', [free.has('deepseek-v4.1-flash-free'), free.get('deepseek-v4.1-flash-free')?.isFree], [true, true])
-  check('glm-5.3-flash-free is free and reachable', [free.has('glm-5.3-flash-free'), free.get('glm-5.3-flash-free')?.isFree], [true, true])
-  check('both carry a positive context window', [free.get('deepseek-v4.1-flash-free').contextWindow > 0, free.get('glm-5.3-flash-free').contextWindow > 0], [true, true])
+  // 2026-11-21 名册复核：glm-5.3-flash-free 已在上游下线（用户实测报
+  // 「模型不存在或已停用」），从表中移除；替换为当次新增的在列免费模型。
+  check('glm-5.3-flash-free was retired (no longer listed)', free.has('glm-5.3-flash-free'), false)
+  check('longcat-2.5-free is free and reachable', [free.has('longcat-2.5-free'), free.get('longcat-2.5-free')?.isFree], [true, true])
+  check('both carry a positive context window', [free.get('deepseek-v4.1-flash-free').contextWindow > 0, free.get('longcat-2.5-free').contextWindow > 0], [true, true])
 
   console.log('\n=== 6. a caller tool on a gate name moves aside on both sides ===')
   // The lane ports v1.4.7 `BindOfficial`: a folded gate-name match binds to
@@ -177,6 +180,33 @@ try {
   check('a model that declares no menu drops the field', adapter.resolveOpencodeEffort('longcat-2.5-preview-free', 'low', [toggleOnly]), { outcome: 'dropped' })
   check('an unknown model passes the caller value through', adapter.resolveOpencodeEffort('never-seen', 'high', []), { effort: 'high', outcome: 'passthrough' })
   check('no effort asked for, nothing sent', adapter.resolveOpencodeEffort('deepseek-v4.1-flash-free', undefined, [deepseek]), { outcome: 'passthrough' })
+
+  console.log('\n=== 7. opencode.listSlots never leaks a proxy password ===')
+  const { handleOpencodeRpc } = await import('../vendor/channel-pack/src/opencode-rpc.ts')
+  const secret = 'super-secret-password'
+  const fakeCtx = { credentials: {
+    async resolve() { return { value: JSON.stringify({ api_key: 'public' }) } },
+  } }
+  const fakePool = {
+    listAccountsByProvider() {
+      return [
+        { id: 'opencode-anon-aaa', enabled: true, credentialRef: 'ANON', nickname: '出口 1' },
+        { id: 'opencode-acct-bbb', enabled: true, credentialRef: 'ACCT', nickname: '我的 key' },
+      ]
+    },
+    opencodeProxyFor(id) { return id === 'opencode-anon-aaa' ? `http://user:${secret}@1.2.3.4:8080` : '' },
+    // listSlots 只用到上面两个方法，下面为满足结构化类型补齐（不会被调用）。
+    async addAccount() {}, async updateAccount() {}, async setOpencodeProxy() {},
+    async updateOpencodeFingerprintGeneration() {}, opencodeFingerprintGenerationFor() { return 0 },
+  }
+  const listed = await handleOpencodeRpc(fakeCtx, fakePool, 'opencode.listSlots', {})
+  check('listSlots returns ok', listed.ok, true)
+  check('two slots listed', listed.value.slots.length, 2)
+  check('first slot is anonymous + has proxy', [listed.value.slots[0].anonymous, listed.value.slots[0].hasProxy], [true, true])
+  check('proxy label is masked (no secret)', [listed.value.slots[0].proxyLabel.includes(secret), listed.value.slots[0].proxyLabel], [false, 'http://user:***@1.2.3.4:8080'])
+  check('second slot is direct (no proxy)', listed.value.slots[1].hasProxy, false)
+  const dumped = JSON.stringify(listed)
+  check('serialized response has no plaintext password anywhere', dumped.includes(secret), false)
 } finally {
   hooks.deregister()
 }

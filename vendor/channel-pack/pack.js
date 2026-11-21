@@ -58548,6 +58548,32 @@ async function handleOpencodeRpc(ctx, pool, method, payload) {
   const call = { method, payload };
   try {
     switch (method) {
+      case "opencode.listSlots": {
+        const slots = [];
+        for (const entry of pool.listAccountsByProvider(OPENCODE.id)) {
+          const proxy = pool.opencodeProxyFor(entry.id).trim();
+          let credential = {};
+          try {
+            const stored = await ctx.credentials.resolve(credentialRef10(entry.credentialRef));
+            if (stored) credential = JSON.parse(stored.value);
+          } catch {
+          }
+          let proxyLabel = "";
+          if (proxy !== "") {
+            const normalized = normalizeProxy(proxy);
+            proxyLabel = normalized.ok ? normalized.proxy.label : "\uFF08\u4EE3\u7406\u5730\u5740\u65E0\u6548\uFF09";
+          }
+          slots.push({
+            id: entry.id,
+            nickname: entry.nickname ?? entry.id,
+            enabled: entry.enabled,
+            anonymous: credential.api_key === OPENCODE.anonymousKey,
+            proxyLabel,
+            hasProxy: proxy !== ""
+          });
+        }
+        return done({ slots });
+      }
       case "opencode.addAccount": {
         const req = call.payload;
         const apiKey = typeof req?.apiKey === "string" ? req.apiKey.trim() : "";

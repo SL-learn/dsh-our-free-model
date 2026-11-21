@@ -53,7 +53,17 @@ export function stageDesktopService(destination, { requireWorkspace = false } = 
     fs.mkdirSync(undiciTarget, { recursive: true })
     fs.copyFileSync(path.join(undiciSource, name), path.join(undiciTarget, name))
   }
-  fs.cpSync(path.join(undiciSource, 'lib'), path.join(undiciTarget, 'lib'), { recursive: true })
+  // lib/ 逐文件拷（117 个）：fs.cpSync 递归整目录会触发宿主的批量文件操作
+  // 保护把 Node 直接打崩（exit -1073740791，2026-11-21 实测）。
+  const undiciLib = (relative) => {
+    const source = path.join(undiciSource, relative)
+    const output = path.join(undiciTarget, relative)
+    if (fs.statSync(source).isDirectory()) {
+      fs.mkdirSync(output, { recursive: true })
+      for (const entry of fs.readdirSync(source)) undiciLib(`${relative}/${entry}`)
+    } else fs.copyFileSync(source, output)
+  }
+  undiciLib('lib')
   for (const name of ['qoder-auth-wasm.wasm', 'LICENSE', 'NOTICE.md']) copy(`vendor/channel-pack/${name}`)
   // The model workspace runs the same pinned engine the plugin ships, so the
   // desktop build carries that binary and its manifest. ⚠️ `src/magpie-engine.js`

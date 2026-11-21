@@ -65,6 +65,24 @@
 .model-search input { width: 100%; height: 32px; padding-left: 32px; }
 .model-filters > select { flex: none; max-width: 100%; }
 
+/* 批量操作条（2026-11-21 用户要求按筛选批量选择/探测/隐藏/启用）：
+   选中 > 0 时出现在筛选区下方，蓝色信息底与行色带同语言。 */
+.model-batch-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 9px 14px;
+  border: 1px solid var(--info, #4a90d9);
+  border-radius: var(--r-md, 10px);
+  background: var(--info-soft, rgba(74, 144, 217, .12));
+  font-size: 12px;
+}
+.model-batch-bar > strong { color: var(--fg-1); font-weight: 600; }
+.model-batch-progress { display: inline-flex; align-items: center; gap: 7px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.model-check-col { display: flex; align-items: center; justify-content: center; }
+.model-check-col input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--fg-0); }
+
 .model-list-toolbar {
   display: flex;
   align-items: center;
@@ -173,11 +191,13 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* 列宽在这里定义一次，表头与数据行共用，保证永远对齐 */
+/* 列宽在这里定义一次，表头与数据行共用，保证永远对齐。
+   首列 28px 是批量选择复选框（2026-11-21 用户要求按筛选批量操作）。 */
 .model-table-header,
 .model-table-row {
   display: grid;
   grid-template-columns:
+    28px
     minmax(180px, 1.9fr)
     minmax(120px, 1.1fr)
     minmax(108px, .85fr)
@@ -456,6 +476,7 @@
   .model-table-header,
   .model-table-row {
     grid-template-columns:
+      28px
       minmax(160px, 1.8fr)
       minmax(104px, 1fr)
       minmax(96px, .8fr)
@@ -466,12 +487,12 @@
 }
 
 @media (max-width: 950px) {
-  /* 收起"容量"列，其余保持单行 */
+  /* 收起"容量"列（第 5 个 span，首列为复选框），其余保持单行 */
   .model-table-header,
   .model-table-row {
-    grid-template-columns: minmax(150px, 1.8fr) minmax(96px, 1fr) minmax(108px, .9fr) 118px;
+    grid-template-columns: 28px minmax(150px, 1.8fr) minmax(96px, 1fr) minmax(108px, .9fr) 118px;
   }
-  .model-table-header > span:nth-child(3),
+  .model-table-header > span:nth-child(4),
   .model-limits { display: none; }
 }
 

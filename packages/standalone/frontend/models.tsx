@@ -37,6 +37,9 @@ const initialFilters = { search: '', channel: 'all', capability: 'all', availabi
 const sourceSegments = [['all', '全部'], ['own', '我的凭据'], ['combo', '组合'], ['shared', '公共池']] as const
 type Operation = 'refresh' | 'probe' | 'test'
 type TestState = { model: Model; state: 'pending' | 'success' | 'error' | 'cancelled'; result?: ModelTestResult; error?: string; kind?: string }
+// 批量测试进度（2026-11-21 用户要求按筛选批量选择、批量探测）：done 含失败；
+// current 是正在测试的模型 id，行上的 data-testing 高亮由它驱动。
+type BatchTest = { total: number; done: number; ok: number; fail: number; current?: string }
 
 export function Models({ summary, host, active }: { summary: Summary; host: Host; active: boolean }) {
   const visibility = visibilityCopy(document.documentElement.lang)
@@ -58,6 +61,11 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   const [focusedId, setFocusedId] = useState<string>()
   const [visibilitySaving, setVisibilitySaving] = useState(false)
   const visibilityPending = useRef(false)
+  // 批量选择（2026-11-21 用户要求「按筛选批量选择、批量探测/隐藏/启用」）：
+  // 选中集合只存模型 id；行复选框 + 表头全选（作用于当前筛选结果）。
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const [batchTest, setBatchTest] = useState<BatchTest>()
+  const batchAbort = useRef<AbortController | undefined>(undefined)
   const scrollRef = useRef<HTMLDivElement>(null)
   // 滚动锚点（2026-11-21 用户反馈「测试一个就滚到顶部」）：单模型测试完成刷新
   // 后，行状态变化可能让筛选集增删行、虚拟列表条目整体移动；恢复刷新前的
@@ -240,6 +248,88 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
     }
   }
 
+  // ── 批量选择与批量操作（2026-11-21 用户要求）──────────────────────────
+  // 选中集只保留 catalog 里仍存在的 id（刷新后消失的模型自动落选）。
+  const selectedModels = useMemo(() => summary.catalog.filter(model => selected.has(model.id)), [summary.catalog, selected])
+  const allSelected = models.length > 0 && models.every(model => selected.has(model.id))
+  const someSelected = models.some(model => selected.has(model.id))
+  const toggleAll = () => {
+    setSelected(previous => {
+      const next = new Set(previous)
+      if (allSelected) for (const model of models) next.delete(model.id)
+      else for (const model of models) next.add(model.id)
+      return next
+    })
+  }
+  const toggleOne = (id: string) => {
+    setSelected(previous => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  // 批量隐藏/恢复：hiddenModelIds 按 id 全渠道生效（store.isModelHidden），
+  // 隐藏 = 排除出推理路由（行变琥珀斜眼压暗），恢复 = 移除即重新启用。
+  const batchHide = () => {
+    const ids = selectedModels.filter(model => model.hiddenByUser !== true).map(model => model.id)
+    if (ids.length === 0) return
+    if (typeof window !== 'undefined' && !window.confirm(
+      `隐藏选中的 ${ids.length} 个模型？\n它们将被排除出推理路由（清单里仍可见，可随时批量恢复）。`)) return
+    void saveVisibility({ hiddenModelIds: [...new Set([...(summary.settings.hiddenModelIds ?? []), ...ids])] })
+      .then(() => setSelected(new Set()))
+  }
+  const batchShow = () => {
+    const hidden = summary.settings.hiddenModelIds ?? []
+    const ids = selectedModels.filter(model => model.hiddenByUser === true).map(model => model.id)
+    if (ids.length === 0) return
+    void saveVisibility({ hiddenModelIds: hidden.filter(id => !ids.includes(id)) })
+      .then(() => setSelected(new Set()))
+  }
+  // 批量测试：顺序逐个发最小推理请求（服务端串行限流已在 adapt 层处理），
+  // 每个结果落地立即 refresh，行徽章随测试进度逐个点亮/变红；可中途取消。
+  const batchTestRun = async () => {
+    if (batchTest || !activeRef.current) return
+    const targets = selectedModels.filter(model => summary.settings.enabled).slice(0, 30)
+    if (targets.length === 0) return
+    if (typeof window !== 'undefined' && !window.confirm(
+      `批量测试 ${targets.length} 个模型？\n会对每个模型发送一次最小推理请求（16 token），逐个顺序执行，完成后逐行更新状态。`)) return
+    const controller = new AbortController()
+    batchAbort.current = controller
+    const progress: BatchTest = { total: targets.length, done: 0, ok: 0, fail: 0 }
+    setBatchTest({ ...progress })
+    setMessage('')
+    setError('')
+    for (const model of targets) {
+      if (controller.signal.aborted || !activeRef.current) break
+      setBatchTest(previous => previous ? { ...previous, current: model.id } : previous)
+      try {
+        const result = await host.testModel(model.id, controller.signal)
+        if (controller.signal.aborted || !activeRef.current) break
+        if (result.ok) progress.ok += 1; else progress.fail += 1
+      } catch (reason) {
+        if (controller.signal.aborted || !activeRef.current) break
+        if ((reason as Error)?.name === 'TimeoutError') progress.fail += 1
+        else if (String((reason as Error)?.message ?? '').includes('已中止')) break
+        else progress.fail += 1
+      }
+      progress.done += 1
+      setBatchTest({ ...progress })
+      try { await host.refresh() } catch { /* 行状态由下一轮刷新/SSE 补齐 */ }
+    }
+    batchAbort.current = undefined
+    if (activeRef.current) {
+      setBatchTest(undefined)
+      setMessage(controller.signal.aborted
+        ? `批量测试已取消：完成 ${progress.done}/${progress.total}（成功 ${progress.ok}，失败 ${progress.fail}）`
+        : `批量测试完成：${progress.total} 个（成功 ${progress.ok}，失败 ${progress.fail}）`)
+      try { await host.refresh() } catch { /* 保留既有错误 */ }
+    }
+  }
+  const batchCancel = () => {
+    batchAbort.current?.abort()
+    batchAbort.current = undefined
+  }
+
   if (!active) return null
   const filtered = Object.entries(filters).some(([key, value]) => value !== initialFilters[key as keyof typeof initialFilters])
   const routable = summary.catalog.filter(model => model.routable).length
@@ -251,7 +341,8 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
         <Button variant="outline" disabled={!!operation} onClick={() => { void run('refresh') }}>
           <RefreshCw size={15} className={operation === 'refresh' ? 'spinning' : ''} />{operation === 'refresh' ? '正在刷新' : '刷新清单'}
         </Button>
-        <Button disabled={!!operation || !summary.settings.enabled} title="会向上游发送少量推理请求"
+        <Button disabled={!!operation || !summary.settings.enabled}
+          title="对匿名/Kilo/EAC 公共池模型逐个发送最小推理请求，刷新整批可用状态；聚合渠道与引擎车道模型不在探测范围——用单行「测试」或勾选后「批量测试」"
           onClick={() => { void run('probe') }}>
           {operation === 'probe' ? <LoaderCircle size={15} className="spinning" /> : <CircleCheck size={15} />}
           {operation === 'probe' ? '正在探测' : '探测可用性'}
@@ -314,6 +405,29 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
         <option value="all">全部状态</option>{stateOptions.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
       </select>
     </div>
+    {selected.size > 0 && <div className="model-batch-bar" role="toolbar" aria-label="批量操作">
+      <strong>已选 {number(selected.size)} 个模型</strong>
+      {batchTest
+        ? <span className="model-batch-progress" role="status">
+            <LoaderCircle size={14} className="spinning" />
+            正在测试 {number(batchTest.done + 1)} / {number(batchTest.total)}
+            （成功 {number(batchTest.ok)}，失败 {number(batchTest.fail)}）
+          </span>
+        : <>
+          <Button variant="outline" disabled={!summary.settings.enabled}
+            title="对选中模型逐个发送最小推理请求（16 token），顺序执行、每完成一个即更新行状态；一次最多 30 个"
+            onClick={() => { void batchTestRun() }}><Play size={14} />批量测试</Button>
+          <Button variant="outline" disabled={visibilitySaving || selectedModels.every(model => model.hiddenByUser === true)}
+            title="把选中模型排除出推理路由（hiddenModelIds），清单里仍可见，可随时批量恢复"
+            onClick={batchHide}><EyeOff size={15} />批量隐藏</Button>
+          <Button variant="outline" disabled={visibilitySaving || selectedModels.every(model => model.hiddenByUser !== true)}
+            title="恢复选中模型的推理路由（从隐藏列表移除）"
+            onClick={batchShow}><Eye size={15} />批量恢复</Button>
+        </>}
+      {batchTest
+        ? <Button variant="ghost" onClick={batchCancel}><Square size={14} />停止测试</Button>
+        : <Button variant="ghost" onClick={() => setSelected(new Set())}><X size={14} />取消选择</Button>}
+    </div>}
     <div className="model-list-toolbar">
       <div className="channel-filters" role="group" aria-label="筛选公开范围">
         {([['all', '全部模型'], ['routable', '可接入'], ['hidden', '未公开']] as const).map(([id, name]) =>
@@ -345,8 +459,14 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
           （归因：{failureKindNames[test.kind] ?? test.kind}）这是环境/账号问题，不代表模型损坏；不会计入「隐藏不可用」。</span>}
       </p>}
     </section>}
-    {models.length ? <div className="model-table" role="table" aria-label="模型清单" aria-rowcount={models.length + 1} aria-colcount={5}>
-      <div className="model-table-header" role="row"><span role="columnheader">模型 / ID</span><span role="columnheader">渠道与能力</span>
+    {models.length ? <div className="model-table" role="table" aria-label="模型清单" aria-rowcount={models.length + 1} aria-colcount={6}>
+      <div className="model-table-header" role="row">
+        <span role="columnheader" className="model-check-col">
+          <input type="checkbox" aria-label="全选当前筛选结果" checked={allSelected}
+            ref={node => { if (node) node.indeterminate = !allSelected && someSelected }}
+            onChange={toggleAll} />
+        </span>
+        <span role="columnheader">模型 / ID</span><span role="columnheader">渠道与能力</span>
         <span role="columnheader">上下文 / 输出</span><span role="columnheader">可用状态</span><span role="columnheader">操作</span></div>
       <div className="model-table-body">
       <div ref={scrollRef} className="model-scroll" role="rowgroup" tabIndex={0} aria-label="滚动模型列表" onKeyDown={event => {
@@ -372,6 +492,10 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
               onFocusCapture={() => setFocusedId(model.id)} onBlurCapture={event => {
                 if (!event.currentTarget.contains(event.relatedTarget)) setFocusedId(undefined)
               }}>
+              <div role="cell" className="model-check-col">
+                <input type="checkbox" aria-label={`选择 ${model.name}`} checked={selected.has(model.id)}
+                  onChange={() => toggleOne(model.id)} onClick={event => event.stopPropagation()} />
+              </div>
               <div role="cell" className="model-identity"><strong>{model.name}</strong><code>{model.id}</code></div>
               <div role="cell" className="model-source"><span>{modelChannelLabel(model)}</span>
                 <span className={`source-badge source-${sourceClassOf(model.channel)}`}>{sourceClassNames[sourceClassOf(model.channel)]}</span>

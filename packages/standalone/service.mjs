@@ -13,6 +13,7 @@ import { createChannelRuntime } from './channels/runtime.mjs'
 import { createSubscriptions } from '../../src/subscriptions.js'
 import { createSubscriptionRuntime } from '../../src/subscription-completion.js'
 import { createMagpieEngine, findAgentCli } from '../../src/magpie-engine.js'
+import { engineLaneEnvFromSettings } from './engine-lanes.mjs'
 import { createExtensionRuntime } from '../../src/extensions.js'
 import { builtinDescriptors } from '../../src/plugins.js'
 import { combineSubscriptionRuntimes, createMagpieModels } from '../../src/magpie-models.js'
@@ -260,7 +261,7 @@ export async function startStandalone({
     const subscriptionRuntime = createSubscriptionRuntime({ subscriptions, stats: stores.stats, logger })
     // The model workspace: the same embedded engine the plugin's settings page
     // uses, so both products answer "which providers, which models" the same way.
-    magpieEngine = createMagpieEngine({ dataDir, logger })
+    magpieEngine = createMagpieEngine({ dataDir, logger, laneEnv: () => engineLaneEnvFromSettings(stores.settings.get(), dataDir) })
     // The extension runtime is created just below; the lazy reference gives the
     // magpie lane the enhancement-hook seam without reordering boot.
     let extensionHookRuntime = null

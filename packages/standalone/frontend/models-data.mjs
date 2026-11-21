@@ -113,7 +113,7 @@ export const SOURCE_GROUP_ORDER = [
 export const AGGREGATE_CHANNEL_PREFIX = 'aggregate:'
 export const MAGPIE_CHANNEL_PREFIX = 'magpie:'
 
-/** lane 前缀 → 显示名；未收录的 lane 用「引擎车道 <前缀>」兜底。 */
+/** @type {Record<string, string>} lane 前缀 → 显示名；未收录的 lane 用「引擎车道 <前缀>」兜底。 */
 export const ENGINE_LANE_NAMES = {
   amd: 'AMD Radeon',
   'z-ai': '智谱 Z.ai',

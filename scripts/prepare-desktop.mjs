@@ -28,7 +28,7 @@ export function stageDesktopService(destination, { requireWorkspace = false } = 
   // （engine-payload.js）。漏掉分片 = 模型工作台报
   // "Magpie engine binary is unavailable"（2026-11-20 真机事故）。
   tree('src', file => /\.(js|json|part)$/.test(file))
-  for (const name of ['cli', 'service', 'management', 'desktop-update', 'login-terminal', 'open-external', 'eac', 'workbench', 'providers', 'library', 'client-terminal', 'routing', 'feedback']) copy(`packages/standalone/${name}.mjs`)
+  for (const name of ['cli', 'service', 'management', 'desktop-update', 'login-terminal', 'open-external', 'eac', 'workbench', 'providers', 'engine-lanes', 'library', 'client-terminal', 'routing', 'feedback']) copy(`packages/standalone/${name}.mjs`)
   tree('packages/standalone/channels', file => file.endsWith('.mjs'))
   const web = 'packages/standalone/web'
   const assets = JSON.parse(fs.readFileSync(path.join(repositoryRoot, web, 'assets.json'), 'utf8'))

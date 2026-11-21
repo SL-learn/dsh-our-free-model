@@ -77,7 +77,11 @@ try {
     }
     assert.ok(!fs.existsSync(path.join(serviceRoot, '.aoci')))
     assert.ok(!fs.existsSync(path.join(serviceRoot, '.pr-screenshots')))
-    assert.ok(!fs.existsSync(path.join(serviceRoot, 'node_modules')))
+    // service/node_modules/undici 是 2026-11-21 的系统代理修复（e3339b8）：
+    // 核心车道经代理出网必须带 undici。除此之外的 node_modules 仍不得进包。
+    assert.ok(fs.existsSync(path.join(serviceRoot, 'node_modules/undici/index.js')), 'undici 运行时必须随包')
+    const stagedNodeModules = fs.readdirSync(path.join(serviceRoot, 'node_modules'))
+    assert.deepEqual(stagedNodeModules, ['undici'], `node_modules 只允许 undici，实际：${stagedNodeModules.join(', ')}`)
     assert.ok(!fs.existsSync(path.join(serviceRoot, 'settings.json')))
   })
   occupied.listen(0, '127.0.0.1'); await once(occupied, 'listening')
@@ -167,12 +171,14 @@ try {
       assert.equal((await fetch(`http://127.0.0.1:${results[winner].port}/health`)).status, 200)
       await instances[winner].stop()
     })
-    await check('旧版活进程、无效 PID、损坏内容及未知归属的锁均保留，拒绝后可再次启动', async () => {
+    await check('无效 PID、损坏内容、未知归属的锁保留拒绝；同产品陈旧锁按进程锁语义回收', async () => {
       const directory = path.join(scratch, 'unverifiable-lock')
       const lockFile = path.join(directory, 'service.lock')
       fs.mkdirSync(directory)
+      // 进程锁（named pipe）语义：同产品 + 合法 PID 的陈旧锁在 pipe 空闲时
+      // 直接回收（PID 复用误报会把用户卡在"重启才能用"，以 pipe 为准）；
+      // 无效 PID、跨产品、损坏内容仍拒绝且锁文件原样保留。
       for (const owner of [
-        { pid: process.pid, product: 'our-free-model-standalone' },
         { pid: 0, product: 'our-free-model-standalone' },
         { pid: -1, product: 'our-free-model-standalone' },
         { pid: String(crashedPid), product: 'our-free-model-standalone' },
@@ -188,10 +194,15 @@ try {
         children.delete(rejected.child)
         assert.equal(fs.readFileSync(lockFile, 'utf8'), original)
       }
-      fs.writeFileSync(lockFile, JSON.stringify({ pid: crashedPid, product: 'our-free-model-standalone' }))
-      const recovered = launch({ directory })
-      assert.equal((await recovered.ready()).protocol, 'ofm-desktop-ready/v1')
-      await recovered.stop()
+      for (const owner of [
+        { pid: process.pid, product: 'our-free-model-standalone' },
+        { pid: crashedPid, product: 'our-free-model-standalone' },
+      ]) {
+        fs.writeFileSync(lockFile, JSON.stringify(owner))
+        const recovered = launch({ directory })
+        assert.equal((await recovered.ready()).protocol, 'ofm-desktop-ready/v1')
+        await recovered.stop()
+      }
     })
   }
   await check('桌面配置使用明确资源映射，启动不依赖系统 Node；标题栏 API 使用 v2', () => {
@@ -204,7 +215,14 @@ try {
     const css = fs.readFileSync(path.join(repositoryRoot, 'packages/desktop/ui/titlebar.css'), 'utf8')
     assert.ok(!css.startsWith('\uFEFF'), '注入的 CSS 不得带 BOM，否则第一个选择器失效')
     const hooks = fs.readFileSync(path.join(repositoryRoot, 'packages/desktop/src-tauri/install-hooks.nsh'), 'utf8')
-    assert.ok(!/taskkill|Delete |FileWrite/.test(hooks))
+    // 2026-11-21 语义更新：PREINSTALL 允许定向清理 web 目录的旧 hash bundle
+    // （累积安装的死文件清扫，3d05188）；仍禁止强杀进程与写用户配置，
+    // Delete 只允许命中 service/packages/standalone/web 下的旧 bundle。
+    assert.ok(!/taskkill|FileWrite/.test(hooks), '安装钩子不得强杀进程或写用户配置')
+    const deletes = [...hooks.matchAll(/Delete\s+"([^"]+)"/g)].map(match => match[1])
+    assert.ok(deletes.length > 0, '旧 bundle 清扫应在位')
+    assert.ok(deletes.every(target => target.includes('service\\packages\\standalone\\web')),
+      `Delete 只允许清理 web 旧 bundle，实际：${deletes.join(' | ')}`)
   })
   console.log(`${checks}/${checks} 桌面回归检查通过`)
 } finally {

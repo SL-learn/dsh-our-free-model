@@ -654,7 +654,7 @@ function parseBodyJSON(body) {
  * is privileged adapter-only access. The caller admits trusted UI requests and
  * enforces its own origin policy before proxy(). close() is terminal.
  */
-export function createMagpieEngine({ dataDir, logger, binary } = {}) {
+export function createMagpieEngine({ dataDir, logger, binary, laneEnv } = {}) {
   if (typeof dataDir !== 'string' || !path.isAbsolute(dataDir)) throw new TypeError('dataDir must be an absolute path')
   let metadata = {}
   try { metadata = JSON.parse(readFileSync(path.join(vendor, 'engine.json'), 'utf8')) } catch {}
@@ -831,6 +831,18 @@ export function createMagpieEngine({ dataDir, logger, binary } = {}) {
         MAGPIE_ADDR: `127.0.0.1:${gatewayPort}`, MAGPIE_WEB_KEY: webKey,
         MAGPIE_NO_SHORTCUT: '1',
       })
+      // 引擎车道凭据注入（2026-11-21 用户要求 UI 配 key 而非系统环境变量）：
+      // OFM 设置里按 lane 管理的激活 key，spawn 前写进引擎声明的 env 变量
+      // （models.json 每车道的 env 字段）。引擎只在 spawn 时读一次环境变量，
+      // 所以换 key 必须重启引擎（management 的 /engine-lanes/restart）。
+      try {
+        const injected = typeof laneEnv === 'function' ? laneEnv() : null
+        if (injected && typeof injected === 'object') {
+          for (const [name, value] of Object.entries(injected)) {
+            if (typeof name === 'string' && name !== '' && typeof value === 'string' && value !== '') env[name] = value
+          }
+        }
+      } catch { /* lane 凭据读取失败不阻塞引擎启动 */ }
       assertOpen()
       child = spawn(executable, ['web', '--addr', `127.0.0.1:${webPort}`, '--no-open'], {
         cwd: home, env, stdio: 'ignore', shell: false, windowsHide: true,
@@ -1168,7 +1180,19 @@ export function createMagpieEngine({ dataDir, logger, binary } = {}) {
     if (state !== 'ready' || closed) throw engineError('Magpie engine is not running')
     return { url: gatewayURL, key: gatewayKey }
   }
-  return { start, status, close, request, proxy, gateway }
+  // 非终态停止：与 close() 的区别在于 closed 标志不置位，之后可以再次 start()。
+  // 实现：杀掉当前子进程并等待 exited 回调的同款清理序列（cancel 在途请求、
+  // 放锁、复位连接态），供「换 key 重启引擎」复用——引擎只在 spawn 时读
+  // 环境变量，重启是换 key 生效的唯一途径。
+  const stop = async () => {
+    if (closed) return status()
+    if (starting) await starting.catch(() => {})
+    if (child) await stopChild()
+    await recovering.catch(() => {})
+    if (state === 'starting' || state === 'ready') state = 'stopped'
+    return status()
+  }
+  return { start, stop, status, close, request, proxy, gateway }
 }
 
 /**

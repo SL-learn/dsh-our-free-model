@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
-import { ArrowRight, Check, CircleAlert, ExternalLink, FlaskConical, KeyRound, ListRestart, Plus, RefreshCw, Save, Search, Settings2, Trash2 } from 'lucide-react'
+import { ArrowRight, Check, CircleAlert, Cpu, ExternalLink, FlaskConical, KeyRound, ListRestart, Plus, RefreshCw, Save, Search, Settings2, Trash2 } from 'lucide-react'
 import { Badge, Button, Input, Switch } from './components/ui'
 import { ProviderIcon } from './components/provider-icon'
 import { WorkbenchDialog } from './components/workbench-dialog'
 import { failureMessage, management, useManagementResource } from './management'
 import { useReveal } from './motion/hooks'
 import { providerName } from './provider-names.mjs'
+import { ENGINE_LANE_NAMES, engineLaneName } from './models-data.mjs'
 import type { Host } from './types'
 
 interface StoredKey { masked: string; label: string; disabled: boolean }
@@ -284,14 +285,168 @@ function ProviderEditor({ provider, configuration, onClose, onSaved }: {
   </WorkbenchDialog>
 }
 
+// ── 引擎车道（magpie）凭据（2026-11-21 用户要求 UI 入口，不再依赖系统环境变量）──
+interface EngineLane {
+  id: string; name: string; env: string | null; api: string
+  models: number; inCatalog: boolean; served: boolean; hasKey: boolean; keyCount: number
+  active: string | null; keys: StoredKey[]
+}
+interface EngineLaneDirectory { lanes: EngineLane[] }
+/** 车道显示名：收录过的 lane 用 models-data 的中文名，其余用引擎快照的名称。 */
+const laneLabel = (lane: EngineLane) =>
+  ENGINE_LANE_NAMES[lane.id] ?? (lane.name !== '' && lane.name !== lane.id ? lane.name : engineLaneName(lane.id))
+
+function EngineLaneEditor({ lane, onClose, onSaved }: { lane: EngineLane; onClose(): void; onSaved(): Promise<void> }) {
+  const [keys, setKeys] = useState<StoredKey[]>(lane.keys)
+  const [active, setActive] = useState<string | null>(lane.active)
+  const [addingKey, setAddingKey] = useState(false)
+  const [newKeys, setNewKeys] = useState('')
+  const [newLabel, setNewLabel] = useState('')
+  const [editingLabel, setEditingLabel] = useState<string | null>(null)
+  const [labelDraft, setLabelDraft] = useState('')
+  const [busy, setBusy] = useState('')
+  const [error, setError] = useState('')
+  const [status, setStatus] = useState('')
+  const [dirty, setDirty] = useState(false)
+  const live = useRef(true)
+  const lock = useRef(false)
+  useEffect(() => () => { live.current = false }, [])
+  const apply = (result: unknown) => {
+    const next = (result as EngineLaneDirectory | null)?.lanes?.find(row => row.id === lane.id)
+    if (next) { setKeys(next.keys ?? []); setActive(next.active) }
+  }
+  const run = async (action: string, body?: Record<string, unknown>) => {
+    if (lock.current) return null
+    lock.current = true
+    setError(''); setStatus(''); setBusy(action)
+    try {
+      return await management<Record<string, unknown>>(`/engine-lanes/${action}`, body ?? {})
+    } catch (reason) { if (live.current) setError(failureMessage(reason)); return null }
+    finally { lock.current = false; if (live.current) setBusy('') }
+  }
+  const runAndRefresh = async (action: string, body?: Record<string, unknown>) => {
+    const result = await run(action, body)
+    if (result !== null) { setStatus('已保存。'); setDirty(true); await onSaved() }
+    return result
+  }
+  const parsedNew = keyList(newKeys)
+  const maskOf = (key: string) => key.length <= 14 ? `…${key.slice(-4)}` : `${key.slice(0, 6)}…${key.slice(-4)}`
+  const addKeys = async () => {
+    if (parsedNew.length === 0 || busy !== '') return
+    const meta = parsedNew.length === 1 && newLabel.trim() !== ''
+      ? { [maskOf(parsedNew[0])]: { label: newLabel.trim() } } : undefined
+    const result = await runAndRefresh('save', { laneId: lane.id, apiKeys: parsedNew, ...(meta ? { keyMeta: meta } : {}) })
+    if (result !== null) { apply(result); setNewKeys(''); setNewLabel(''); setAddingKey(false) }
+  }
+  const keyOp = async (masked: string, op: 'remove' | 'toggle' | 'label' | 'activate', value?: boolean | string) => {
+    if (busy !== '') return
+    if (op === 'remove') {
+      const entry = keys.find(row => row.masked === masked)
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function'
+        && !window.confirm(`删除密钥 ${masked}（${entry?.label || '无备注'}）？`)) return
+    }
+    const result = await runAndRefresh('key', {
+      laneId: lane.id, masked, op,
+      ...(op === 'toggle' ? { disabled: value } : {}),
+      ...(op === 'label' ? { label: value } : {}),
+    })
+    if (result !== null) { apply(result); if (op !== 'label') setEditingLabel(null) }
+  }
+  const saveLabel = async (masked: string) => {
+    const result = await runAndRefresh('key', { laneId: lane.id, masked, op: 'label', label: labelDraft })
+    if (result !== null) { apply(result); setEditingLabel(null); setLabelDraft('') }
+  }
+  const restart = async () => {
+    if (busy !== '') return
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function'
+      && !window.confirm('重启模型工作台引擎？进行中的推理会话会中断。')) return
+    const result = await run('restart')
+    if (result !== null) { setStatus('引擎已重启，当前激活的密钥已生效。'); setDirty(false); await onSaved() }
+  }
+  return <WorkbenchDialog title={`${laneLabel(lane)} · 引擎车道`} onClose={onClose} busy={busy !== ''}>
+    <form className="wb-form" onSubmit={event => event.preventDefault()}>
+      <div className="wb-form-meta">
+        <Badge tone="blue">{lane.env ?? '未知变量'}</Badge>
+        {lane.models > 0 && <span>{lane.models} 个模型</span>}
+        {keys.length > 0 && <span>{keys.filter(row => !row.disabled).length}/{keys.length} 把密钥可用</span>}
+      </div>
+      <p className="wb-form-notes">引擎车道由模型工作台（magpie）引擎驱动，密钥在引擎启动时注入环境变量（当前变量：{lane.env ?? '—'}）。切换激活密钥后需重启引擎才会生效；进行中的推理会话会中断。</p>
+      <fieldset className="wb-keys">
+        <legend>密钥池（激活一把参与引擎调用）</legend>
+        {keys.length === 0 && <p className="wb-keys-empty"><KeyRound size={15} />还没有密钥；在下方粘贴，每行一把。</p>}
+        {keys.map((row, index) => {
+          const editing = editingLabel === row.masked
+          const isActive = active === row.masked
+          return <div className={`wb-keyrow ${row.disabled ? 'is-disabled' : ''}`} key={row.masked + index}>
+            <code title="掩码指纹：足够辨认账号，明文不回传">{row.masked}</code>
+            {editing ? <input autoFocus aria-label="编辑备注" value={labelDraft} disabled={busy !== ''}
+              placeholder="备注：哪个账号"
+              onChange={event => setLabelDraft(event.target.value)}
+              onKeyDown={event => { if (event.key === 'Escape') { setEditingLabel(null); setLabelDraft('') } }} />
+              : <button type="button" className="wb-keylabel" title="点击编辑备注" disabled={busy !== ''}
+                onClick={() => { setEditingLabel(row.masked); setLabelDraft(row.label) }}>{row.label === '' ? '备注：哪个账号' : row.label}</button>}
+            {editing ? <>
+              <Button type="button" variant="outline" disabled={busy !== '' || labelDraft.trim() === ''} busy={busy === 'key'}
+                onClick={() => { void saveLabel(row.masked) }}>保存</Button>
+              <Button type="button" variant="ghost" disabled={busy !== ''} onClick={() => { setEditingLabel(null); setLabelDraft('') }}>取消</Button>
+            </>
+              : <>
+                {isActive && <Badge tone="success" dot>激活中</Badge>}
+                {!isActive && !row.disabled && <Button type="button" variant="outline" disabled={busy !== ''} title="把引擎调用切到这把密钥（需重启引擎生效）"
+                  onClick={() => { void keyOp(row.masked, 'activate') }}>设为激活</Button>}
+                {row.disabled && <Badge tone="neutral">已停用</Badge>}
+                <Switch checked={!row.disabled} disabled={busy !== ''} aria-label={row.disabled ? '启用这把密钥' : '停用这把密钥'}
+                  onCheckedChange={value => { void keyOp(row.masked, 'toggle', !value) }} />
+                <Button type="button" variant="ghost" size="icon" className="wb-danger" title="删除这把密钥" aria-label="删除这把密钥"
+                  disabled={busy !== ''} onClick={() => { void keyOp(row.masked, 'remove') }}><Trash2 size={14} /></Button>
+              </>}
+          </div>
+        })}
+        {!addingKey && <Button type="button" variant="outline" disabled={busy !== ''} onClick={() => setAddingKey(true)}>
+          <Plus size={14} />添加密钥</Button>}
+        {addingKey && <div className="wb-keyadd">
+          <textarea autoFocus rows={2} spellCheck={false} autoComplete="off" value={newKeys}
+            placeholder="粘贴密钥，每行一把；保存后首把自动成为激活密钥"
+            disabled={busy !== ''} onChange={event => setNewKeys(event.target.value)} />
+          <Input aria-label="密钥备注" placeholder={parsedNew.length === 1 ? '备注：哪个账号（可选）' : '备注仅当一次添加一把时生效'}
+            value={newLabel} disabled={busy !== '' || parsedNew.length > 1}
+            onChange={event => setNewLabel(event.target.value)} />
+          <div className="wb-keyadd-actions">
+            <Button type="button" variant="outline" disabled={parsedNew.length === 0 || keys.length + parsedNew.length > 8} busy={busy === 'save'}
+              title={keys.length + parsedNew.length > 8 ? '密钥池最多 8 把' : undefined}
+              onClick={() => { void addKeys() }}><Save size={14} />保存{parsedNew.length > 0 ? `（${parsedNew.length} 把）` : ''}</Button>
+            <Button type="button" variant="ghost" disabled={busy !== ''} onClick={() => { setAddingKey(false); setNewKeys(''); setNewLabel('') }}>取消</Button>
+          </div>
+          {keys.length + parsedNew.length > 8 && <p className="wb-form-notes">密钥池最多 8 把，当前 {keys.length} 把。</p>}
+        </div>}
+      </fieldset>
+      {error && <p className="wb-error" role="alert"><CircleAlert size={15} />{error}</p>}
+      {status && <p className="wb-status" role="status"><Check size={15} />{status}</p>}
+      <div className="wb-form-actions">
+        <Button type="button" variant="outline" disabled={busy !== '' || keys.length === 0} busy={busy === 'restart'}
+          title={dirty ? '重启引擎让当前激活的密钥生效；进行中的推理会中断' : '重启引擎（一般无需手动操作）'}
+          onClick={() => { void restart() }}><RefreshCw size={15} />重启引擎生效</Button>
+      </div>
+      {dirty && <p className="wb-form-notes" role="status">有未生效的密钥改动——点「重启引擎生效」应用（进行中的推理会中断）。</p>}
+    </form>
+  </WorkbenchDialog>
+}
+
 export function Providers({ active, host }: { active: boolean; host: Host }) {
   const { data, error, loading, reload } = useManagementResource<Directory>('/providers', active)
+  // 引擎车道凭据（2026-11-21 用户要求 UI 入口）：工作台引擎的推理车道 key 池。
+  const lanes = useManagementResource<EngineLaneDirectory>('/engine-lanes', active)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('all')
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState<Provider>()
+  const [selectedLane, setSelectedLane] = useState<EngineLane>()
   const registry = data?.registry ?? []
   const configured = data?.configured ?? {}
+  const allLanes = lanes.data?.lanes ?? []
+  // 成行展示：引擎正在服务的车道 ∪ 已配置密钥的车道；其余 300+ 车道走选择器。
+  const laneRows = useMemo(() => allLanes.filter(lane => lane.served || lane.hasKey), [allLanes])
+  const [lanePick, setLanePick] = useState('')
   const categories = useMemo(() => [...new Set(registry.map(row => row.category))], [data])
   const totalConnected = registry.filter(row => connected(row, configured[row.id])).length
   const rows = registry.filter(row => {
@@ -333,6 +488,39 @@ export function Providers({ active, host }: { active: boolean; host: Host }) {
       {data && rows.length === 0 && <div className="wb-empty"><Search size={24} /><strong>{registry.length ? '没有匹配的渠道' : '渠道目录为空'}</strong>
         {registry.length > 0 && <Button variant="outline" onClick={() => { setSearch(''); setCategory('all'); setFilter('all') }}>清除筛选</Button>}</div>}
     </div>
+    {/* 引擎车道分区（2026-11-21）：工作台引擎的推理车道凭据，与聚合渠道同页管理。
+        在用/已配置的车道成行；其余引擎目录走选择器，不整列平铺 300+ 行。 */}
+    <div className="pd-lanes-heading">
+      <h2>引擎车道</h2>
+      <p>模型工作台引擎的推理车道凭据；切换激活密钥后需重启引擎生效。与上方聚合渠道相互独立。</p>
+    </div>
+    {laneRows.length > 0 && <div className="pd-list">
+      {laneRows.map(lane => <div className="pd-row pd-lane-row" key={lane.id}>
+        <span className={`wb-app-icon ${lane.hasKey ? 'is-green' : ''}`}><Cpu size={17} /></span>
+        <div className="pd-name">
+          <strong>{laneLabel(lane)}</strong>
+          <span className="pd-name-alt">{lane.id}</span>
+          <small title={lane.env ?? undefined}>{lane.env ? `环境变量 ${lane.env}` : '引擎快照缺失，启动一次工作台后可识别'}</small>
+        </div>
+        <div className="pd-protocol"><Badge>{lane.served ? '清单在用' : '已配置'}</Badge></div>
+        <span className="pd-model-count">{lane.models > 0 ? lane.models : '—'} <small>模型</small></span>
+        <span className="pd-key-count" title="密钥池">{lane.keyCount} 把密钥</span>
+        <Badge tone={lane.hasKey ? 'success' : 'neutral'} dot={lane.hasKey}>{lane.hasKey ? (lane.active ? '已配置' : '待激活') : '未配置'}</Badge>
+        <Button variant="outline" onClick={() => setSelectedLane(lane)}><Settings2 size={14} />配置</Button>
+      </div>)}
+    </div>}
+    <div className="pd-lane-pick">
+      <select aria-label="选择引擎车道" value={lanePick} onChange={event => setLanePick(event.target.value)}>
+        <option value="">从引擎目录选择车道（{allLanes.length} 个）…</option>
+        {allLanes.filter(lane => !lane.served && !lane.hasKey).map(lane =>
+          <option value={lane.id} key={lane.id}>{laneLabel(lane)}（{lane.env ?? '未知变量'}）</option>)}
+      </select>
+      <Button variant="outline" disabled={lanePick === ''}
+        onClick={() => { const lane = allLanes.find(row => row.id === lanePick); if (lane) { setSelectedLane(lane); setLanePick('') } }}>
+        <Plus size={14} />配置该车道</Button>
+    </div>
     {selected && active && <ProviderEditor key={selected.id} provider={selected} configuration={configured[selected.id]} onClose={() => setSelected(undefined)} onSaved={async () => { await Promise.all([reload(), host.refresh()]) }} />}
+    {selectedLane && <EngineLaneEditor key={selectedLane.id} lane={selectedLane} onClose={() => setSelectedLane(undefined)}
+      onSaved={async () => { await Promise.all([lanes.reload(), host.refresh()]) }} />}
   </div>
 }

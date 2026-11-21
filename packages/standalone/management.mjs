@@ -8,6 +8,7 @@ import { openLoginTerminal } from './login-terminal.mjs'
 import { publicModelVisibility, validateModelVisibility, isModelHidden } from '../../src/store.js'
 import { createWorkbench } from './workbench.mjs'
 import { createProviderManagement } from './providers.mjs'
+import { createEngineLaneManagement } from './engine-lanes.mjs'
 import { createWorkbenchLibrary } from './library.mjs'
 import { createRoutingManagement } from './routing.mjs'
 import { createDesktopUpdater } from './desktop-update.mjs'
@@ -163,6 +164,16 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
     ...workbenchOptions,
   }) : undefined
   const providerManagement = runtime ? createProviderManagement({ stores, runtime, persist }) : undefined
+  // 引擎车道凭据（2026-11-21 用户要求 UI 配 key）：与聚合渠道同构的池管理。
+  // servedLanes：引擎实时清单里实际在用的车道前缀（订阅前缀去掉后取首段）。
+  const engineLaneManagement = magpieEngine
+    ? createEngineLaneManagement({
+        stores, persist, dataDir: info().dataDir, magpieEngine, magpieModels, onEngineStarted,
+        servedLanes: () => new Set((magpieModels?.catalog?.() ?? [])
+          .map(row => String(row.id ?? '').slice('subscription:magpie/'.length).split('/')[0])
+          .filter(prefix => prefix !== '' && prefix !== 'magpie')),
+      })
+    : undefined
   const routingManagement = runtime ? createRoutingManagement({ stores, runtime, persist }) : undefined
   const library = workbench ? createWorkbenchLibrary({ dataDir: info().dataDir, workbench }) : undefined
   const feedback = createFeedback({ settings: () => stores.settings.get(), persist })
@@ -483,6 +494,17 @@ export function createManagement({ stores, runtime, channels, eac, subscriptions
       json(res, 200, buildStats(stores.stats.get(), runtime.catalog))
     } else if (method === 'GET' && pathname === `${PREFIX}/engine/status`) {
       json(res, 200, magpieEngine?.status() ?? { state: 'unavailable', available: false })
+    } else if (method === 'GET' && pathname === `${PREFIX}/engine-lanes`) {
+      if (!engineLaneManagement) throw fail(503, '模型工作台不可用')
+      json(res, 200, engineLaneManagement.list())
+    } else if (pathname.startsWith(`${PREFIX}/engine-lanes/`) && method === 'POST') {
+      if (!engineLaneManagement) throw fail(503, '模型工作台不可用')
+      const action = pathname.slice(`${PREFIX}/engine-lanes/`.length)
+      const body = await readBody(req, 256 * 1024)
+      if (action === 'save') json(res, 200, engineLaneManagement.save(body))
+      else if (action === 'key') json(res, 200, engineLaneManagement.key(body))
+      else if (action === 'restart') json(res, 200, await engineLaneManagement.restart())
+      else throw fail(404, '引擎车道操作不存在')
     } else if (method === 'POST' && pathname === `${PREFIX}/engine/start`) {
       await readBody(req)
       if (!magpieEngine) throw fail(503, '模型工作台不可用')
